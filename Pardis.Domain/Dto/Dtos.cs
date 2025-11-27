@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Pardis.Domain.Courses;
 
 namespace Pardis.Domain.Dto
 {
@@ -22,9 +23,9 @@ namespace Pardis.Domain.Dto
         {
             public string Title { get; set; }
             public long Price { get; set; }
-            public int CategoryId { get; set; }
+            public Guid CategoryId { get; set; }
             public string Description { get; set; }
-            public string Status { get; set; } = "draft";
+            public CourseStatus Status { get; set; }
             public string? InstructorId { get; set; } // اختیاری برای ادمین
             public IFormFile? Image { get; set; } // فایل آپلود
             public SeoDto? Seo { get; set; }

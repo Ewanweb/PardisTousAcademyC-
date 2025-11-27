@@ -23,7 +23,7 @@ namespace Pardis.Domain.Courses
         [ForeignKey("InstructorId")]
         public User Instructor { get; set; }
 
-        public int CategoryId { get; set; }
+        public Guid CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public Category Category { get; set; }
 
@@ -32,7 +32,19 @@ namespace Pardis.Domain.Courses
         public bool IsDeleted { get; set; } = false; // Soft Delete Flag
         public DateTime? DeletedAt { get; set; }
 
-        public Course(string title, string slug, string description, long price, string? thumbnail, CourseStatus status, string instructorId, User instructor, int categoryId, Category category, bool isDeleted, DateTime? deletedAt)
+        public Course() { }
+
+        public Course(
+            string title,
+            string slug,
+            string description,
+            long price,
+            string? thumbnail,
+            CourseStatus status,
+            string instructorId,
+            Guid categoryId,
+            SeoMetadata seo
+        )
         {
             Title = title;
             Slug = slug;
@@ -41,11 +53,10 @@ namespace Pardis.Domain.Courses
             Thumbnail = thumbnail;
             Status = status;
             InstructorId = instructorId;
-            Instructor = instructor;
             CategoryId = categoryId;
-            Category = category;
-            IsDeleted = isDeleted;
-            DeletedAt = deletedAt;
+            Seo = seo;
         }
+
+
     }
 }
