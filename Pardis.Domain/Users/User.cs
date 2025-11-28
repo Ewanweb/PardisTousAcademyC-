@@ -22,7 +22,7 @@ namespace Pardis.Domain.Users
         public ICollection<Course> Courses { get; set; } // Courses taught by this user
         public ICollection<Category> CreatedCategories { get; set; }
 
-        private User()
+        public User()
         {
             
         }

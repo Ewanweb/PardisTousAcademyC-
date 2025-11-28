@@ -18,7 +18,7 @@ namespace Pardis.Domain.Categories
         public bool IsActive { get; set; }
         public int CoursesCount { get; set; }
 
-        public int? ParentId { get; set; }
+        public Guid? ParentId { get; set; }
         [ForeignKey("ParentId")]
         public Category? Parent { get; set; }
         public ICollection<Category> Children { get; set; }
@@ -31,7 +31,11 @@ namespace Pardis.Domain.Categories
 
         public SeoMetadata Seo { get; set; } = new(); // Owned Type
 
-        public Category(string title, string slug, string? image, int? parentId, Category? parent, ICollection<Category> children, string? createdById, User? creator, ICollection<Course> courses)
+        private Category()
+        {
+
+        }
+        public Category(string title, string slug, string? image, Guid? parentId, Category? parent, ICollection<Category> children, string? createdById, User? creator, ICollection<Course> courses)
         {
             Title = title;
             Slug = slug;

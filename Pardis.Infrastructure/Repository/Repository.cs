@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Pardis.Domain;
 
@@ -19,6 +19,7 @@ public class Repository<T> : IRepository<T> where T : class
     {
         return await _dbSet.FindAsync(id);
     }
+
 
     public async Task<IEnumerable<T>> GetAllAsync()
     {
@@ -56,8 +57,47 @@ public class Repository<T> : IRepository<T> where T : class
         _dbSet.RemoveRange(entities);
     }
 
-    public async Task<int> SaveChangesAsync()
+    public async Task<int> SaveChangesAsync(CancellationToken cancellation)
     {
-        return await _context.SaveChangesAsync();
+        return await _context.SaveChangesAsync(cancellation);
+    }
+
+    public async Task<int> CountAsync()
+    {
+        return await _dbSet.CountAsync();
+    }
+
+    public async Task<List<T>> GetLatestAsync(int count)
+    {
+        // بررسی می‌کنیم آیا این موجودیت اصلا فیلد CreatedAt دارد یا خیر
+        var hasCreatedAt = typeof(T).GetProperty("CreatedAt") != null;
+
+        if (hasCreatedAt)
+        {
+            // استفاده از EF.Property برای دسترسی داینامیک به فیلد در کوئری SQL
+            return await _dbSet
+                .OrderByDescending(e => EF.Property<DateTime>(e, "CreatedAt"))
+                .Take(count)
+                .ToListAsync();
+        }
+
+        // اگر CreatedAt نداشت، همینطوری ۱۰ تا برگردان
+        return await _dbSet.Take(count).ToListAsync();
+    }
+
+    // پیاده‌سازی متد شمارش بر اساس تاریخ بدون اینترفیس
+    public async Task<int> CountByDateAsync(int month, int year)
+    {
+        var hasCreatedAt = typeof(T).GetProperty("CreatedAt") != null;
+
+        if (hasCreatedAt)
+        {
+            return await _dbSet
+                .Where(e => EF.Property<DateTime>(e, "CreatedAt").Month == month &&
+                            EF.Property<DateTime>(e, "CreatedAt").Year == year)
+                .CountAsync();
+        }
+
+        return 0;
     }
 }

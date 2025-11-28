@@ -1,4 +1,5 @@
 using MediatR;
+using Pardis.Application._Shared;
 using Pardis.Domain;
 using Pardis.Domain.Categories;
 using Pardis.Domain.Courses;
@@ -31,7 +32,7 @@ public class SoftDeleteCommandHandler : IRequestHandler<SoftDeleteCommand, Opera
             category.CoursesCount = Math.Max(0, category.CoursesCount - 1);
         }
 
-        await _repository.SaveChangesAsync();
+        await _repository.SaveChangesAsync(cancellationToken);
         return OperationResult.Success();
     }
 }

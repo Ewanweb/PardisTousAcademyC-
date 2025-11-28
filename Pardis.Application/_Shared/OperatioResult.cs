@@ -1,4 +1,4 @@
-namespace Pardis.Application;
+namespace Pardis.Application._Shared;
 
  public class OperationResult<TData>
     {

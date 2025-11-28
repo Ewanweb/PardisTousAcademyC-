@@ -1,4 +1,5 @@
 using MediatR;
+using Pardis.Application._Shared;
 
 namespace Pardis.Application.Courses;
 

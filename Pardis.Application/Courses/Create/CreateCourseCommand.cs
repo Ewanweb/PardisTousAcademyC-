@@ -1,4 +1,5 @@
 using MediatR;
+using Pardis.Application._Shared;
 using Pardis.Domain.Dto;
 using Pardis.Domain.Users;
 

@@ -1,0 +1,33 @@
+﻿using AutoMapper;
+using Pardis.Domain.Categories;
+using Pardis.Domain.Courses;
+using Pardis.Domain.Seo;
+using Pardis.Domain.Users;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using static Pardis.Domain.Dto.Dtos;
+
+namespace Pardis.Application._Shared
+{
+    public class MappingProfile : Profile
+    {
+        public MappingProfile()
+        {
+            // تبدیل SeoMetadata به SeoDto
+            CreateMap<SeoMetadata, SeoDto>().ReverseMap();
+
+            // تبدیل User به UserResource
+            CreateMap<User, UserResource>();
+
+            // تبدیل Category به CategoryResource
+            CreateMap<Category, CategoryResource>()
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title)); // اگر نام‌ها متفاوت است (Name -> Title)
+
+            // تبدیل Course به CourseResource
+            CreateMap<Course, CourseResource>()
+                // تبدیل Enum به String به صورت خودکار انجام می‌شود، اما اگر فرمت خاصی بخواهید:
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+        }
+    }
+}

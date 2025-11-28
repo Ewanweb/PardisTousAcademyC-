@@ -1,4 +1,5 @@
 using MediatR;
+using Pardis.Application._Shared;
 using Pardis.Application.FileUtil;
 using Pardis.Domain;
 using Pardis.Domain.Categories;
@@ -58,7 +59,7 @@ public  class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, 
             );
 
             await _repository.AddAsync(course);
-            await _repository.SaveChangesAsync();
+            await _repository.SaveChangesAsync(cancellationToken);
 
             // 4. آپدیت شمارنده دسته‌بندی
             var category = await _categoryRepository.GetByIdAsync(request.Dto.CategoryId);
@@ -66,7 +67,7 @@ public  class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, 
             {
                 category.CoursesCount++;
                 _categoryRepository.Update(category);
-                await _categoryRepository.SaveChangesAsync();
+                await _categoryRepository.SaveChangesAsync(cancellationToken);
             }
 
             await transaction.CommitAsync(cancellationToken);

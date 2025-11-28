@@ -34,9 +34,21 @@ namespace Pardis.Domain.Dto
         public class CreateCategoryDto
         {
             public string Name { get; set; }
-            public int? ParentId { get; set; }
+            public Guid? ParentId { get; set; }
             public bool IsActive { get; set; } = true;
             public IFormFile? Image { get; set; }
+            public SeoDto? Seo { get; set; }
+        }
+
+        public class UpdateCourseDto
+        {
+            public string? Title { get; set; }
+            public long? Price { get; set; }
+            public Guid? CategoryId { get; set; }
+            public string? Description { get; set; }
+            public CourseStatus? Status { get; set; }
+            public string? InstructorId { get; set; }
+            public IFormFile? Image { get; set; } 
             public SeoDto? Seo { get; set; }
         }
 
@@ -52,7 +64,7 @@ namespace Pardis.Domain.Dto
 
         public class CourseResource
         {
-            public int Id { get; set; }
+            public Guid Id { get; set; }
             public string Title { get; set; }
             public string Slug { get; set; }
             public string Description { get; set; }
@@ -64,15 +76,20 @@ namespace Pardis.Domain.Dto
             public CategoryResource Category { get; set; }
             public SeoDto Seo { get; set; }
             public DateTime CreatedAt { get; set; }
+            public DateTime UpdatedAt { get; set; }
+
+            // تغییر: این فیلد باید نال‌پذیر باشد تا با دیتابیس هماهنگ شود
+            public DateTime? DeletedAt { get; set; }
+            public bool IsDeleted { get; set; }
         }
 
         public class CategoryResource
         {
-            public int Id { get; set; }
+            public Guid Id { get; set; }
             public string Title { get; set; } // نگاشت Name به Title برای هماهنگی با فرانت
             public string Slug { get; set; }
             public string? Image { get; set; }
-            public int? ParentId { get; set; }
+            public Guid? ParentId { get; set; }
             public int CoursesCount { get; set; }
             public string Creator { get; set; } // نام سازنده
             public SeoDto Seo { get; set; }
@@ -82,6 +99,14 @@ namespace Pardis.Domain.Dto
         {
             public Dictionary<string, object> Stats { get; set; }
             public List<object> RecentActivity { get; set; }
+        }
+        public class RecentActivityDto
+        {
+            public string Id { get; set; }
+            public string Type { get; set; }   // "course", "user", "category"
+            public string Title { get; set; }
+            public string Subtitle { get; set; }
+            public DateTime Time { get; set; }
         }
     }
 }

@@ -17,5 +17,10 @@ namespace Pardis.Domain.Seo
         public string? CanonicalUrl { get; set; }
         public bool NoIndex { get; set; }
         public bool NoFollow { get; set; }
+
+        public SeoMetadata()
+        {
+            
+        }
     }
 }
