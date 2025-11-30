@@ -26,6 +26,7 @@ namespace Pardis.Query.Courses.GetCourses
                 token
             );
 
+
             return _mapper.Map<List<CourseResource>>(courses);
         }
     }

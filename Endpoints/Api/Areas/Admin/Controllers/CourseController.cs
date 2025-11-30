@@ -74,11 +74,14 @@ namespace Api.Areas.Admin.Controllers
         // ایجاد دوره
         [HttpPost()]
         [Authorize(Roles = Role.Admin + "," + Role.Manager)]
-        public async Task<IActionResult> Store([FromForm] CreateCourseCommand command)
+        public async Task<IActionResult> Store([FromForm] CreateCourseDto dto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var commandWithUser = command with { CurrentUserId = userId };
+            CreateCourseCommand commandWithUser = new CreateCourseCommand(dto, true)
+            {
+                CurrentUserId = userId
+            };
 
             // ارسال نسخه جدید به مدیات‌ر
             var result = await _mediator.Send(commandWithUser);

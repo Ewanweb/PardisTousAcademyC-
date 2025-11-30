@@ -14,7 +14,7 @@ using System.Security.Claims;
 
 namespace Api.Areas.Admin.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/categories")]
     [ApiController]
     [Authorize]
     [Authorize(Roles = "Admin,Manager")]

@@ -1,5 +1,6 @@
 using AutoMapper;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Pardis.Application._Shared;
 using Pardis.Application.FileUtil;
 using Pardis.Domain;
@@ -27,6 +28,15 @@ public  class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, 
 
     public async Task<OperationResult<CourseResource>> Handle(CreateCourseCommand request, CancellationToken cancellationToken)
     {
+        // 1. بررسی وجود دسته‌بندی (برای جلوگیری از خطای دیتابیس)
+        var categoryCheck = await _categoryRepository.GetByIdAsync(request.Dto.CategoryId);
+
+        if (categoryCheck == null)
+        {
+            // این خط جلوی ارور Foreign Key را می‌گیرد
+            throw new Exception("دسته‌بندی انتخاب شده معتبر نیست یا حذف شده است.");
+        }
+
         await using var transaction = _repository.BeginTransaction();
         try
         {
@@ -43,12 +53,13 @@ public  class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, 
             // 3. ساخت اسلاگ
             string slug = request.Dto.Title.Replace(" ", "-").ToLower() + "-" + DateTime.Now.Ticks;
 
+
             var course = new Course(
                 title: request.Dto.Title,
                 slug: slug,
                 description: request.Dto.Description,
                 price: request.Dto.Price,
-                thumbnail: imagePath,
+                thumbnail: $"/uploads/Corses/Thumbnail/{imagePath}",
                 status: request.Dto.Status,
                 instructorId: instructorId,
                 categoryId: request.Dto.CategoryId,
@@ -78,10 +89,10 @@ public  class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, 
             var result = _mapper.Map<CourseResource>(course);
             return OperationResult<CourseResource>.Success(result);
         }
-        catch
+        catch(Exception e)
         {
             await transaction.RollbackAsync(cancellationToken);
-            return OperationResult<CourseResource>.Error("خطا غیر منتظره");
+            return OperationResult<CourseResource>.Error($"{e}");
         }
     }
 }

@@ -1,5 +1,7 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Microsoft.Extensions.FileProviders;
+using Microsoft.OpenApi.Models;
 using Pardis.Infrastructure;
+using static System.Net.Mime.MediaTypeNames;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -96,9 +98,19 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection(); // بهتر است اینجا باشد
 app.UseStaticFiles();
 
-app.UseRouting();
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads");
 
-// CORS باید حتماً بین Routing و Auth باشد
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads"
+});
+
 app.UseCors("AllowAll");
 
 app.UseAuthentication();
