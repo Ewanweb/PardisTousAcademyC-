@@ -18,16 +18,27 @@ namespace Pardis.Application._Shared
             CreateMap<SeoMetadata, SeoDto>().ReverseMap();
 
             // تبدیل User به UserResource
-            CreateMap<User, UserResource>();
+            CreateMap<User, UserResource>()
+                            .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName)).ReverseMap();
 
             // تبدیل Category به CategoryResource
             CreateMap<Category, CategoryResource>()
-                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title)); // اگر نام‌ها متفاوت است (Name -> Title)
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
+                .ReverseMap(); 
+
+            CreateMap<CategoryWithCountDto, CategoryResource>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Category.Id))
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Category.Title))
+                .ForMember(dest => dest.CoursesCount, opt => opt.MapFrom(src => src.CoursesCount))
+                .ForMember(dest => dest.Slug, opt => opt.MapFrom(src => src.Category.Slug))
+                .ForMember(dest => dest.Seo, opt => opt.MapFrom(src => src.Category.Seo)).ReverseMap();
+                // Ignore کردن Children چون در این DTO لود نشده‌اند
 
             // تبدیل Course به CourseResource
             CreateMap<Course, CourseResource>()
                 // تبدیل Enum به String به صورت خودکار انجام می‌شود، اما اگر فرمت خاصی بخواهید:
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString())).ReverseMap();
         }
     }
 }

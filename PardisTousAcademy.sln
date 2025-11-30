@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36623.8
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11222.15 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pardis.Application", "Pardis.Application\Pardis.Application.csproj", "{6CA97DD9-14BD-4A4D-88B5-CD43881240B0}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Endpoints", "Endpoints", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "Endpoints\Api\Api.csproj", "{B5531A5D-FE0C-4CC6-8649-0F011DF96DD2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pardis.Query", "Pardis.Query\Pardis.Query.csproj", "{11199854-1EB9-4265-97F2-402DE21E6E9B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +43,10 @@ Global
 		{B5531A5D-FE0C-4CC6-8649-0F011DF96DD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B5531A5D-FE0C-4CC6-8649-0F011DF96DD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B5531A5D-FE0C-4CC6-8649-0F011DF96DD2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11199854-1EB9-4265-97F2-402DE21E6E9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11199854-1EB9-4265-97F2-402DE21E6E9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11199854-1EB9-4265-97F2-402DE21E6E9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11199854-1EB9-4265-97F2-402DE21E6E9B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,3 +1,4 @@
+using AutoMapper;
 using MediatR;
 using Pardis.Application._Shared;
 using Pardis.Application.FileUtil;
@@ -5,23 +6,26 @@ using Pardis.Domain;
 using Pardis.Domain.Categories;
 using Pardis.Domain.Courses;
 using Pardis.Domain.Seo;
+using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Application.Courses.Create;
 
-public  class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, OperationResult>
+public  class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, OperationResult<CourseResource>>
 {
     private readonly IRepository<Course> _repository;
     private readonly IRepository<Category> _categoryRepository;
     private readonly IFileService _fileService;
+    private readonly IMapper _mapper;
 
-    public CreateCourseCommandHandler(IRepository<Course> repository, IRepository<Category> categoryRepository, IFileService fileService)
+    public CreateCourseCommandHandler(IRepository<Course> repository, IRepository<Category> categoryRepository, IFileService fileService, IMapper mapper)
     {
         _repository = repository;
         _categoryRepository = categoryRepository;
         _fileService = fileService;
+        _mapper = mapper;
     }
 
-    public async Task<OperationResult> Handle(CreateCourseCommand request, CancellationToken cancellationToken)
+    public async Task<OperationResult<CourseResource>> Handle(CreateCourseCommand request, CancellationToken cancellationToken)
     {
         await using var transaction = _repository.BeginTransaction();
         try
@@ -30,7 +34,7 @@ public  class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, 
             string? imagePath = await _fileService.SaveFileAndGenerateName(request.Dto.Image, Directories.Course);
 
             // 2. تعیین مدرس
-            string? instructorId = request.CurrentUser.Id;
+            string? instructorId = request.CurrentUserId;
             if (request.IsAdmin && !string.IsNullOrEmpty(request.Dto.InstructorId))
             {
                 instructorId = request.Dto.InstructorId;
@@ -71,12 +75,13 @@ public  class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, 
             }
 
             await transaction.CommitAsync(cancellationToken);
-            return OperationResult.Success();
+            var result = _mapper.Map<CourseResource>(course);
+            return OperationResult<CourseResource>.Success(result);
         }
         catch
         {
             await transaction.RollbackAsync(cancellationToken);
-            return OperationResult.Error("خطا غیر منتظره");
+            return OperationResult<CourseResource>.Error("خطا غیر منتظره");
         }
     }
 }

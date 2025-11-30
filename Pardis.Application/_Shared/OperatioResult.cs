@@ -18,12 +18,13 @@ namespace Pardis.Application._Shared;
                 Data = data,
             };
         }
-        public static OperationResult<TData> NotFound()
+        public static OperationResult<TData> NotFound(string errorMassage = ErrorMessage)
         {
             return new OperationResult<TData>()
             {
                 Status = OperationResultStatus.NotFound,
                 Title = "NotFound",
+                Message = errorMassage,
                 Data = default,
             };
         }

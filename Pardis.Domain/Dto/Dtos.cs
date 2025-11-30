@@ -18,6 +18,11 @@ namespace Pardis.Domain.Dto
             public bool NoIndex { get; set; }
             public bool NoFollow { get; set; }
         }
+        public class AuthResultDto
+        {
+            public string Token { get; set; }
+            public UserResource User { get; set; }
+        }
 
         public class CreateCourseDto
         {
@@ -39,6 +44,11 @@ namespace Pardis.Domain.Dto
             public IFormFile? Image { get; set; }
             public SeoDto? Seo { get; set; }
         }
+        public class RoleDto
+        {
+            public string Name { get; set; }       // نام انگلیسی (کلید)
+            public string Description { get; set; } // عنوان فارسی
+        }
 
         public class UpdateCourseDto
         {
@@ -57,7 +67,9 @@ namespace Pardis.Domain.Dto
         public class UserResource
         {
             public string Id { get; set; }
-            public string Name { get; set; }
+            public string FullName { get; set; }
+            public string Mobile { get; set; }
+            public string IsActive { get; set; }
             public string Email { get; set; }
             public List<string> Roles { get; set; }
         }
@@ -93,6 +105,8 @@ namespace Pardis.Domain.Dto
             public int CoursesCount { get; set; }
             public string Creator { get; set; } // نام سازنده
             public SeoDto Seo { get; set; }
+            public bool IsActive { get; set; }
+
         }
 
         public class DashboardStatsDto
@@ -107,6 +121,17 @@ namespace Pardis.Domain.Dto
             public string Title { get; set; }
             public string Subtitle { get; set; }
             public DateTime Time { get; set; }
+        }
+
+        public class CategoryChildrenDto
+        {
+            public CategoryResource Parent { get; set; }
+            public List<CategoryResource> Children { get; set; }
+        }
+        public class CategoryWithCountDto
+        {
+            public Pardis.Domain.Categories.Category Category { get; set; }
+            public int CoursesCount { get; set; }
         }
     }
 }

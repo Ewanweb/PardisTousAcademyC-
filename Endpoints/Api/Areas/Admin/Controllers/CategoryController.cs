@@ -1,101 +1,98 @@
-﻿//using MediatR;
-//using Microsoft.AspNetCore.Authorization;
-//using Microsoft.AspNetCore.Http;
-//using Microsoft.AspNetCore.Mvc;
+﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Pardis.Application._Shared;
+using Pardis.Application.Categories.Create;
+using Pardis.Application.Categories.Delete;
+using Pardis.Application.Categories.Update;
+using Pardis.Domain.Users;
+using Pardis.Query.Categories.GetCategories;
+using Pardis.Query.Categories.GetCategoryById;
+using Pardis.Query.Categories.GetCategoryChildren;
+using System.Security.Claims;
 
-//namespace Api.Areas.Admin.Controllers
-//{
-//    [Route("api/[controller]")]
-//    [ApiController]
-//    public class CategoryController : ControllerBase
-//    {
-//        private readonly IMediator _mediator;
+namespace Api.Areas.Admin.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
+    [Authorize(Roles = "Admin,Manager")]
+    public class CategoryController : ControllerBase
+    {
+        private readonly IMediator _mediator;
 
-//        public CategoryController(IMediator mediator)
-//        {
-//            _mediator = mediator;
-//        }
+        public CategoryController(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
 
-//        // لیست دسته‌بندی‌ها (معادل index)
-//        [HttpGet]
-//        public async Task<IActionResult> Index()
-//        {
-//            var query = new GetCategoriesQuery { IncludeChildren = true, IncludeSeo = true };
-//            var result = await _mediator.Send(query);
-//            return Ok(new { data = result });
-//        }
+        // لیست دسته‌بندی‌ها
+        [HttpGet]
+        public async Task<IActionResult> Index()
+        {
+            var result = await _mediator.Send(new GetCategoriesQuery());
+            return Ok(new { data = result });
+        }
 
-//        // ایجاد دسته‌بندی (معادل store)
-//        [HttpPost]
-//        [Authorize(Roles = "Admin,Manager")]
-//        public async Task<IActionResult> Store([FromForm] CreateCategoryCommand command)
-//        {
-//            // پر کردن خودکار UserId از توکن
-//            command.CurrentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        // نمایش تکی
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Show(Guid id)
+        {
+            var result = await _mediator.Send(new GetCategoryByIdQuery { Id = id });
+            return Ok(new { data = result });
+        }
 
-//            var result = await _mediator.Send(command);
-//            return StatusCode(201, new { message = "دسته‌بندی با موفقیت ایجاد شد.", data = result });
-//        }
+        // نمایش زیرمجموعه‌ها
+        [HttpGet("{id}/children")]
+        public async Task<IActionResult> Children(Guid id)
+        {
+            var result = await _mediator.Send(new GetCategoryChildrenQuery { ParentId = id });
+            return Ok(result); // ساختار بازگشتی شامل Parent و Children
+        }
 
-//        // نمایش تکی (معادل show)
-//        [HttpGet("{id}")]
-//        public async Task<IActionResult> Show(Guid id)
-//        {
-//            var result = await _mediator.Send(new GetCategoryByIdQuery { Id = id });
-//            return Ok(new { message = "دسته‌بندی نمایش داده شد.", data = result });
-//        }
+        // ایجاد دسته‌بندی
+        [HttpPost]
+        [Authorize(Roles = Role.Admin + "," + Role.Manager)]
+        public async Task<IActionResult> Store([FromBody] CreateCategoryCommand command)
+        {
+            command.CurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var result = await _mediator.Send(command);
 
-//        // نمایش زیرمجموعه‌ها (معادل children)
-//        [HttpGet("{id}/children")]
-//        public async Task<IActionResult> Children(Guid id)
-//        {
-//            // این کوئری باید لیست فرزندان + تعداد دوره‌ها را برگرداند
-//            var result = await _mediator.Send(new GetCategoryChildrenQuery { ParentId = id });
+            return StatusCode(201, new { message = "دسته‌بندی با موفقیت ایجاد شد." });
+        }
 
-//            return Ok(new
-//            {
-//                message = $"زیرمجموعه‌های دسته دریافت شد.",
-//                parent = result.ParentInfo, // اطلاعات پدر
-//                data = result.Children // لیست فرزندان
-//            });
-//        }
+        // ویرایش
+        [HttpPut("{id}")]
+        [Authorize(Roles = Role.Admin + "," + Role.Manager)]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCategoryCommand command)
+        {
+            command.Id = id;
+            var result = await _mediator.Send(command);
 
-//        // ویرایش (معادل update)
-//        [HttpPut("{id}")]
-//        [Authorize(Roles = "Admin,Manager")]
-//        public async Task<IActionResult> Update(Guid id, [FromForm] UpdateCategoryCommand command)
-//        {
-//            command.Id = id;
-//            var result = await _mediator.Send(command);
-//            return Ok(new { message = "دسته‌بندی ویرایش شد.", data = result });
-//        }
+            if (result.Status == OperationResultStatus.NotFound) return NotFound(result.Message);
 
-//        // حذف (معادل destroy با قابلیت انتقال محتوا)
-//        [HttpDelete("{id}")]
-//        [Authorize(Roles = "Admin")]
-//        public async Task<IActionResult> Destroy(Guid id, [FromBody] DeleteCategoryDto requestBody)
-//        {
-//            try
-//            {
-//                var command = new DeleteCategoryCommand
-//                {
-//                    Id = id,
-//                    MigrateToId = requestBody?.MigrateToId // نال‌پذیر
-//                };
+            return Ok(new { message = "دسته‌بندی با موفقیت ویرایش شد." });
+        }
 
-//                await _mediator.Send(command);
+        // حذف (با قابلیت انتقال محتوا)
+        [HttpDelete("{id}")]
+        [Authorize(Roles = Role.Admin)]
+        public async Task<IActionResult> Destroy(Guid id, [FromQuery] Guid? migrate_to_id)
+        {
+            // نکته: در PHP پارامتر را از بادی می‌گرفتید، اینجا از کوئری استرینگ گرفتیم که استانداردتر است.
+            // اگر از بادی می‌خواهید، یک DTO بسازید و [FromBody] بگیرید.
 
-//                var msg = "دسته‌بندی با موفقیت حذف شد" + (command.MigrateToId.HasValue ? " و محتوا منتقل گردید." : ".");
-//                return Ok(new { message = msg });
-//            }
-//            catch (Exception ex)
-//            {
-//                return Conflict(new { message = ex.Message, error = "CONTENT_DEPENDENCY_ERROR" });
-//            }
-//        }
-//    }
+            var result = await _mediator.Send(new DeleteCategoryCommand { Id = id, MigrateToId = migrate_to_id });
 
-//    // کلاس کمکی برای بادیِ حذف
-//    public class DeleteCategoryDto { public Guid? MigrateToId { get; set; } }
-//}
-//}
+            if (result.Status == OperationResultStatus.Error)
+                return Conflict(new { message = result.Message, error = "CONTENT_DEPENDENCY_ERROR" });
+
+            if (result.Status == OperationResultStatus.NotFound)
+                return NotFound(new { message = result.Message });
+
+            return Ok(new { message = result.Message });
+        }
+    }
+}
+

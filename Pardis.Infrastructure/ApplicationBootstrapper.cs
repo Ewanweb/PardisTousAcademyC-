@@ -1,18 +1,22 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Pardis.Application._Shared;
 using Pardis.Application._Shared.JWT;
+using Pardis.Application.Categories.Update;
+using Pardis.Application.Categories.Update.Pardis.Application.Categories.Commands;
 using Pardis.Application.Courses.Create;
 using Pardis.Application.FileUtil;
 using Pardis.Domain;
+using Pardis.Domain.Courses;
 using Pardis.Domain.Users;
 using Pardis.Infrastructure.Repository; // اگر کلاس Repository اینجاست
+using Pardis.Query.Users.GetUserById;
 using System;
 using System.Text;
-using Pardis.Application._Shared;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace Pardis.Infrastructure
 {
@@ -22,9 +26,12 @@ namespace Pardis.Infrastructure
         {
             // 1. دیتابیس
             service.AddDbContext<AppDbContext>(options =>
-            {
-                options.UseSqlServer(config.GetConnectionString("DefaultConnection"));
-            });
+                options.UseMySql(
+                    config.GetConnectionString("DefaultConnection"),
+                    ServerVersion.AutoDetect(config.GetConnectionString("DefaultConnection"))
+                )
+            );
+
 
             // 2. تنظیمات Identity
             service.AddIdentity<User, Role>(options =>
@@ -73,15 +80,16 @@ namespace Pardis.Infrastructure
 
             service.AddMediatR(cfg =>
             {
-                cfg.RegisterServicesFromAssembly(typeof(CreateCourseCommandHandler).Assembly);
+                cfg.RegisterServicesFromAssembly(typeof(UpdateCategoryHandler).Assembly);
+                cfg.RegisterServicesFromAssembly(typeof(GetUserByIdQuery).Assembly);
             });
 
             // 5. تزریق وابستگی‌های کاستوم
             service.AddScoped<IFileService, FileService>();
             service.AddScoped<ITokenService, TokenService>(); // فقط یکبار اینجا باشد کافیست
-
-            // اگر UserRepository اختصاصی ساختید:
             service.AddScoped<IUserRepository, UserRepository>();
+            service.AddScoped<ICategoryRepository, CategoryRepository>();
+            service.AddScoped<ICourseRepository, CourseRepository>();
 
             // ریپازیتوری جنریک
             service.AddScoped(typeof(IRepository<>), typeof(Repository<>));

@@ -7,22 +7,50 @@ namespace Pardis.Infrastructure;
 
 public static class RoleSeeder
 {
-    public async static Task SeedAsync(IServiceProvider serviceProvider)
+    private static readonly Dictionary<string, string> PersianDescriptions = new()
+        {
+            { Role.Admin, "مدیر سیستم" },
+            { Role.Manager, "مدیر ارشد" },
+            { Role.User, "کاربر عادی" },
+            { Role.Student, "دانشجو" },
+            { Role.Instructor, "مدرس" },
+            { Role.FinancialManager, "مدیر مالی" },
+            { Role.ITManager, "مدیر فنی" },
+            { Role.MarketingManager, "مدیر بازاریابی" },
+            { Role.EducationManager, "مدیر آموزش" },
+            { Role.Accountant, "حسابدار" },
+            { Role.GeneralManager, "مدیر کل" },
+            { Role.DepartmentManager, "مدیر دپارتمان" },
+            { Role.CourseSupport, "پشتیبان دوره" },
+            { Role.Marketer, "بازاریاب" },
+            { Role.InternalManager, "مدیر داخلی" },
+            { Role.EducationExpert, "کارشناس آموزش" }
+        };
+
+    public static async Task SeedAsync(IServiceProvider serviceProvider)
     {
-            var roleManager = serviceProvider.GetRequiredService<RoleManager<Role>>();
+        var roleManager = serviceProvider.GetRequiredService<RoleManager<Role>>();
+        var roleFields = typeof(Role).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+            .Where(fi => fi.IsLiteral && !fi.IsInitOnly && fi.FieldType == typeof(string));
 
-            var roleFields = typeof(Role).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
-                .Where(fi => fi.IsLiteral && !fi.IsInitOnly && fi.FieldType == typeof(string));
+        foreach (var field in roleFields)
+        {
+            var roleName = (string)field.GetValue(null);
+            var description = PersianDescriptions.ContainsKey(roleName) ? PersianDescriptions[roleName] : roleName;
 
-            foreach (var field in roleFields)
+            var role = await roleManager.FindByNameAsync(roleName);
+            if (role == null)
             {
-                // حل خطای CS8600 (Nullable): استفاده از عملگر ! یا چک کردن نال
-                var roleName = (string?)field.GetValue(null);
-
-                if (!string.IsNullOrEmpty(roleName) && !await roleManager.RoleExistsAsync(roleName))
-                {
-                    await roleManager.CreateAsync(new Role(roleName));
-                }
+                // ایجاد نقش جدید با توضیحات
+                role = new Role(roleName) { Description = description };
+                await roleManager.CreateAsync(role);
             }
+            else if (role.Description != description)
+            {
+                // آپدیت توضیحات اگر قبلا وجود داشته ولی توضیحاتش فرق دارد
+                role.Description = description;
+                await roleManager.UpdateAsync(role);
+            }
+        }
     }
 }

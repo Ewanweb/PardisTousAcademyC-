@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Pardis.Domain;
+using System.Linq.Expressions;
 
 namespace Pardis.Infrastructure.Repository;
 
@@ -99,5 +100,10 @@ public class Repository<T> : IRepository<T> where T : class
         }
 
         return 0;
+    }
+
+    public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken token = default)
+    {
+        return await _dbSet.AnyAsync(predicate, token);
     }
 }

@@ -3,10 +3,11 @@ using Pardis.Application._Shared;
 using Pardis.Domain;
 using Pardis.Domain.Categories;
 using Pardis.Domain.Courses;
+using System;
 
 namespace Pardis.Application.Courses;
 
-public class SoftDeleteCommandHandler : IRequestHandler<SoftDeleteCommand, OperationResult>
+public partial class SoftDeleteCommandHandler : IRequestHandler<SoftDeleteCommand, OperationResult>
 {
     private readonly IRepository<Course> _repository;
     private readonly IRepository<Category> _categoryRepository;

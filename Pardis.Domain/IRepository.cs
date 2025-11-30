@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore.Storage;
+using System.Linq.Expressions;
 
 namespace Pardis.Domain;
 
@@ -14,6 +15,7 @@ public interface IRepository<T> where T : class
     void Remove(T entity);
     void RemoveRange(IEnumerable<T> entities);
     Task<int> SaveChangesAsync(CancellationToken cancellation);
+    Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken token = default);
 
 
     Task<int> CountAsync();

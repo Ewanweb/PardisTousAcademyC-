@@ -1,20 +1,16 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Pardis.Domain.Categories;
 using Pardis.Domain.Courses;
 using Pardis.Domain.Users;
 using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Reflection;
-using System.Text;
 
 namespace Pardis.Infrastructure
 {
     public static class ModelBuilderExtensions
     {
-        public async static void Seed(this ModelBuilder modelBuilder)
+        // اصلاح: حذف async چون OnModelCreating همگام است
+        public static void Seed(this ModelBuilder modelBuilder)
         {
             // تاریخ ثابت برای جلوگیری از خطای PendingModelChanges
             var fixedDate = new DateTime(2024, 1, 1, 12, 0, 0, DateTimeKind.Utc);
@@ -33,6 +29,7 @@ namespace Pardis.Infrastructure
 
             // --- Users ---
             var hasher = new PasswordHasher<User>();
+
             var adminUser = new User
             {
                 Id = adminId.ToString(),
@@ -67,7 +64,6 @@ namespace Pardis.Infrastructure
 
 
             // --- Categories ---
-            // تغییر: اضافه شدن UpdatedAt به تمام رکوردها
             modelBuilder.Entity<Category>().HasData(
                 new
                 {
@@ -79,7 +75,7 @@ namespace Pardis.Infrastructure
                     ParentId = (Guid?)null,
                     CreatedById = adminId.ToString(),
                     CreatedAt = fixedDate,
-                    UpdatedAt = fixedDate, // <--- اضافه شد
+                    UpdatedAt = fixedDate,
                     IsDeleted = false
                 },
                 new
@@ -92,7 +88,7 @@ namespace Pardis.Infrastructure
                     ParentId = (Guid?)catProgrammingId,
                     CreatedById = adminId.ToString(),
                     CreatedAt = fixedDate,
-                    UpdatedAt = fixedDate, // <--- اضافه شد
+                    UpdatedAt = fixedDate,
                     IsDeleted = false
                 },
                 new
@@ -105,7 +101,7 @@ namespace Pardis.Infrastructure
                     ParentId = (Guid?)catProgrammingId,
                     CreatedById = adminId.ToString(),
                     CreatedAt = fixedDate,
-                    UpdatedAt = fixedDate, // <--- اضافه شد
+                    UpdatedAt = fixedDate,
                     IsDeleted = false
                 },
                 new
@@ -118,7 +114,7 @@ namespace Pardis.Infrastructure
                     ParentId = (Guid?)null,
                     CreatedById = instructorId.ToString(),
                     CreatedAt = fixedDate,
-                    UpdatedAt = fixedDate, // <--- اضافه شد
+                    UpdatedAt = fixedDate,
                     IsDeleted = false
                 }
             );
@@ -133,7 +129,6 @@ namespace Pardis.Infrastructure
 
 
             // --- Courses ---
-            // تغییر: اضافه شدن UpdatedAt به تمام رکوردها
             modelBuilder.Entity<Course>().HasData(
                 new
                 {
@@ -146,7 +141,7 @@ namespace Pardis.Infrastructure
                     InstructorId = adminId.ToString(),
                     CategoryId = catWebId,
                     CreatedAt = fixedDate,
-                    UpdatedAt = fixedDate, // <--- اضافه شد
+                    UpdatedAt = fixedDate,
                     IsDeleted = false
                 },
                 new
@@ -160,7 +155,7 @@ namespace Pardis.Infrastructure
                     InstructorId = instructorId.ToString(),
                     CategoryId = catWebId,
                     CreatedAt = fixedDate,
-                    UpdatedAt = fixedDate, // <--- اضافه شد
+                    UpdatedAt = fixedDate,
                     IsDeleted = false
                 },
                 new
@@ -174,7 +169,7 @@ namespace Pardis.Infrastructure
                     InstructorId = adminId.ToString(),
                     CategoryId = catMobileId,
                     CreatedAt = fixedDate,
-                    UpdatedAt = fixedDate, // <--- اضافه شد
+                    UpdatedAt = fixedDate,
                     IsDeleted = false
                 }
             );
@@ -185,7 +180,6 @@ namespace Pardis.Infrastructure
                 new { CourseId = courseReactId, MetaTitle = "دوره React", MetaDescription = "آموزش فرانت اند", NoIndex = false, NoFollow = false },
                 new { CourseId = courseFlutterId, MetaTitle = "دوره Flutter", MetaDescription = "برنامه نویسی موبایل", NoIndex = true, NoFollow = false }
             );
-
         }
     }
 }
