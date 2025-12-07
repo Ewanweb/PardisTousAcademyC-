@@ -2,6 +2,7 @@
 using MediatR;
 using Pardis.Domain.Categories;
 using Pardis.Domain.Courses;
+using Pardis.Domain.Dto.Courses;
 using Pardis.Infrastructure.Repository;
 using static Pardis.Domain.Dto.Dtos;
 
@@ -26,7 +27,7 @@ namespace Pardis.Query.Courses.GetCoursesByCategory
         public async Task<object> Handle(GetCoursesByCategoryQuery request, CancellationToken token)
         {
             // 1. دریافت اطلاعات دسته بندی اصلی (برای نمایش تایتل و سئو در بالای صفحه)
-            var category = await _categoryRepository.GetCategoryWithIdWithSeo(request.CategoryId, token);
+            var category = await _categoryRepository.GetCategoryWithIdWithSeo(request.Slug, token);
             if (category == null) return null;
 
             // 2. دریافت تمام دسته‌ها برای پیدا کردن فرزندان (Recursive)
@@ -56,7 +57,8 @@ namespace Pardis.Query.Courses.GetCoursesByCategory
                     id = category.Id,
                     title = category.Title,
                     slug = category.Slug,
-                    description = category.Seo?.MetaDescription
+                    description = category.Seo?.MetaDescription,
+                    seo = category.Seo,
                 }
             };
         }

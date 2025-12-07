@@ -6,6 +6,7 @@ using Pardis.Application.FileUtil;
 using Pardis.Domain;
 using Pardis.Domain.Categories;
 using Pardis.Domain.Courses;
+using Pardis.Domain.Dto.Courses;
 using Pardis.Domain.Seo;
 using static Pardis.Domain.Dto.Dtos;
 
@@ -51,7 +52,7 @@ public  class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, 
             }
 
             // 3. ساخت اسلاگ
-            string slug = request.Dto.Title.Replace(" ", "-").ToLower() + "-" + DateTime.Now.Ticks;
+            string slug = request.Dto.Title.Replace(" ", "-").ToLower();
 
 
             var course = new Course(
@@ -59,10 +60,14 @@ public  class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, 
                 slug: slug,
                 description: request.Dto.Description,
                 price: request.Dto.Price,
-                thumbnail: $"/uploads/Corses/Thumbnail/{imagePath}",
+                thumbnail: $"/{Directories.Course}/{imagePath}",
                 status: request.Dto.Status,
                 instructorId: instructorId,
                 categoryId: request.Dto.CategoryId,
+                startFrom: request.Dto.StartFrom,
+                schedule: request.Dto.Schedule,
+                isCompleted: request.Dto.IsCompleted,
+                isStarted: request.Dto.IsStarted,
                 seo: new SeoMetadata
                 {
                     MetaTitle = request.Dto.Seo?.MetaTitle,
@@ -72,6 +77,19 @@ public  class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, 
                     NoFollow = request.Dto.Seo?.NoFollow ?? false
                 }
             );
+
+            if (request.Dto.Sections != null && request.Dto.Sections.Any())
+            {
+                int orderIndex = 1;
+                foreach (var sectionDto in request.Dto.Sections)
+                {
+                    // ایجاد موجودیت سرفصل
+                    var section = new CourseSection(sectionDto.Title, sectionDto.Description, orderIndex++, course.Id);
+
+                    // افزودن به کالکشن دوره
+                    course.Sections.Add(section);
+                }
+            }
 
             await _repository.AddAsync(course);
             await _repository.SaveChangesAsync(cancellationToken);
@@ -85,13 +103,24 @@ public  class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, 
                 await _categoryRepository.SaveChangesAsync(cancellationToken);
             }
 
+            var courseWithRelations = await _repository.Table
+                .AsNoTracking()
+                .Include(c => c.Instructor)
+                .Include(c => c.Category)
+                .Include(c => c.Sections) // ✅ لود کردن سرفصل‌ها
+                .Where(c => c.Id == course.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+
+            var result = _mapper.Map<CourseResource>(courseWithRelations);
             await transaction.CommitAsync(cancellationToken);
-            var result = _mapper.Map<CourseResource>(course);
             return OperationResult<CourseResource>.Success(result);
         }
         catch(Exception e)
         {
-            await transaction.RollbackAsync(cancellationToken);
+            if (transaction is not null)
+                await transaction.RollbackAsync(cancellationToken);
+
             return OperationResult<CourseResource>.Error($"{e}");
         }
     }

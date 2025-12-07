@@ -6,6 +6,9 @@ using Pardis.Domain.Users;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Pardis.Domain.Dto.Categories;
+using Pardis.Domain.Dto.Courses;
+using Pardis.Domain.Dto.Users;
 using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Application._Shared
@@ -33,12 +36,16 @@ namespace Pardis.Application._Shared
                 .ForMember(dest => dest.CoursesCount, opt => opt.MapFrom(src => src.CoursesCount))
                 .ForMember(dest => dest.Slug, opt => opt.MapFrom(src => src.Category.Slug))
                 .ForMember(dest => dest.Seo, opt => opt.MapFrom(src => src.Category.Seo)).ReverseMap();
-                // Ignore کردن Children چون در این DTO لود نشده‌اند
+            // Ignore کردن Children چون در این DTO لود نشده‌اند
+
+            // تبدیل Course به CourseResource
+            CreateMap<CourseSection, CourseSectionDto>().ReverseMap();
 
             // تبدیل Course به CourseResource
             CreateMap<Course, CourseResource>()
-                // تبدیل Enum به String به صورت خودکار انجام می‌شود، اما اگر فرمت خاصی بخواهید:
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString())).ReverseMap();
+                .ForMember(dest => dest.Sections, opt => opt.MapFrom(src => src.Sections)) // این خط حالا کار می‌کند
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                .ReverseMap();
         }
     }
 }

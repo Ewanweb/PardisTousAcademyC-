@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pardis.Domain.Dto.Courses;
 using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Query.Courses.GetCourses
@@ -14,8 +15,8 @@ namespace Pardis.Query.Courses.GetCourses
         public bool Trashed { get; set; }
         public Guid? CategoryId { get; set; }
 
-        // این دو فیلد در کنترلر از روی توکن پر می‌شوند
         public string? CurrentUserId { get; set; }
         public bool IsAdminOrManager { get; set; }
+        public bool IsInstructor { get; set; }
     }
 }

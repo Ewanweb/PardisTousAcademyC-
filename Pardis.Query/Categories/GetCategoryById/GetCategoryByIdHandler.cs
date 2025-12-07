@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MediatR;
+using Pardis.Domain.Dto.Categories;
 using Pardis.Infrastructure.Repository;
 using static Pardis.Domain.Dto.Dtos;
 

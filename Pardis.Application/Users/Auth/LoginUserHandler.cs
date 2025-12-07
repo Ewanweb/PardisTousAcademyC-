@@ -3,7 +3,8 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Pardis.Application._Shared;
 using Pardis.Application._Shared.JWT;
-using Pardis.Domain.Dto; // اضافه شد
+using Pardis.Domain.Dto;
+using Pardis.Domain.Dto.Users; // اضافه شد
 using Pardis.Domain.Users;
 using static Pardis.Domain.Dto.Dtos; // برای دسترسی به UserResource
 

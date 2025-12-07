@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MediatR;
 using Pardis.Domain.Courses;
+using Pardis.Domain.Dto.Courses;
 using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Query.Courses.GetCourseById

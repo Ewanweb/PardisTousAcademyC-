@@ -26,11 +26,9 @@ namespace Pardis.Infrastructure
         {
             // 1. دیتابیس
             service.AddDbContext<AppDbContext>(options =>
-                options.UseMySql(
-                    config.GetConnectionString("DefaultConnection"),
-                    ServerVersion.AutoDetect(config.GetConnectionString("DefaultConnection"))
-                )
-            );
+            {
+                options.UseSqlServer(config.GetConnectionString("DefaultConnection"));
+            });
 
 
             // 2. تنظیمات Identity

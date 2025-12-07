@@ -8,6 +8,7 @@ using Pardis.Application.Users.UpdateUserRole;
 using Pardis.Domain.Users;
 using Pardis.Query.Users.GetRoles;
 using Pardis.Query.Users.GetUsers;
+using Pardis.Query.Users.GetUsersByRole;
 using System.Security.Claims;
 using static Pardis.Query.Users.GetUsers.CreateUserByAdminHandler;
 
@@ -110,6 +111,21 @@ namespace Pardis.API.Controllers
                 return BadRequest(result.Message);
 
             return Ok(new { message = "نقش‌های کاربر بروزرسانی شد.", data = result.Data });
+        }
+
+        [HttpGet("role/{role}")] 
+        [Authorize(Roles = "Admin,Manager")]
+        public async Task<IActionResult> GetByRole(string role)
+        {
+            var query = new GetUsersByRoleQuery
+            {
+                Role = role,
+                All = true,
+                Page = 1
+            };
+
+            var result = await _mediator.Send(query);
+            return Ok(new { data = result });
         }
 
 

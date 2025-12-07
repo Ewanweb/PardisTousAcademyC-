@@ -17,6 +17,10 @@ namespace Pardis.Domain.Courses
         public string Description { get; set; }
         public long Price { get; set; }
         public string? Thumbnail { get; set; }
+        public string? StartFrom { get; set; }
+        public string Schedule { get; set; }
+        public bool IsCompleted { get; set; }
+        public bool IsStarted { get; set; }
         public CourseStatus Status { get; set; }
 
         public string InstructorId { get; set; }
@@ -26,6 +30,8 @@ namespace Pardis.Domain.Courses
         public Guid CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public Category Category { get; set; }
+
+        public ICollection<CourseSection> Sections { get; set; } = new List<CourseSection>();
 
         public SeoMetadata Seo { get; set; } = new();
 
@@ -42,6 +48,10 @@ namespace Pardis.Domain.Courses
             string? thumbnail,
             CourseStatus status,
             string instructorId,
+            string schedule,
+            bool isStarted,
+            bool isCompleted,
+            string? startFrom,
             Guid categoryId,
             SeoMetadata seo
         )
@@ -55,8 +65,13 @@ namespace Pardis.Domain.Courses
             InstructorId = instructorId;
             CategoryId = categoryId;
             Seo = seo;
+            Schedule = schedule;
+            StartFrom = startFrom;
+            IsStarted = isStarted;
+            IsCompleted = isCompleted;
         }
 
 
     }
+
 }

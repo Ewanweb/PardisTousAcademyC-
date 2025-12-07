@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Pardis.Application._Shared;
 using System.Text.Json.Serialization;
+using Pardis.Domain.Dto.Users;
 using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Query.Users.GetUsers;

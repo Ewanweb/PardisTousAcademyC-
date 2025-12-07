@@ -20,6 +20,7 @@ namespace Pardis.Infrastructure
 
         public DbSet<Category> Categories { get; set; }
         public DbSet<Course> Courses { get; set; }
+        public DbSet<CourseSection> CourseSections { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -29,6 +30,7 @@ namespace Pardis.Infrastructure
 
             builder.Entity<Category>().OwnsOne(c => c.Seo);
             builder.Entity<Course>().OwnsOne(c => c.Seo);
+            builder.Entity<Course>().OwnsMany(c => c.Sections);
             builder.Seed();
         }
 

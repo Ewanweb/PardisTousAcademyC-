@@ -142,6 +142,10 @@ namespace Pardis.Infrastructure
                     CategoryId = catWebId,
                     CreatedAt = fixedDate,
                     UpdatedAt = fixedDate,
+                    Schedule = "Saturday 10:00",
+                    StartFrom = "Saturday 10:00",
+                    IsCompleted = true,
+                    IsStarted = true,
                     IsDeleted = false
                 },
                 new
@@ -156,6 +160,10 @@ namespace Pardis.Infrastructure
                     CategoryId = catWebId,
                     CreatedAt = fixedDate,
                     UpdatedAt = fixedDate,
+                    Schedule = "Saturday 10:00",
+                    StartFrom = "Saturday 10:00",
+                    IsCompleted = false,
+                    IsStarted = true,
                     IsDeleted = false
                 },
                 new
@@ -169,6 +177,10 @@ namespace Pardis.Infrastructure
                     InstructorId = adminId.ToString(),
                     CategoryId = catMobileId,
                     CreatedAt = fixedDate,
+                    Schedule = "Saturday 10:00",
+                    StartFrom = "Saturday 10:00",
+                    IsCompleted = false,
+                    IsStarted = false,
                     UpdatedAt = fixedDate,
                     IsDeleted = false
                 }

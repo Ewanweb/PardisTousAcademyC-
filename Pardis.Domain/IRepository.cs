@@ -17,7 +17,7 @@ public interface IRepository<T> where T : class
     Task<int> SaveChangesAsync(CancellationToken cancellation);
     Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken token = default);
 
-
+    IQueryable<T> Table { get; }
     Task<int> CountAsync();
     Task<List<T>> GetLatestAsync(int count);
     Task<int> CountByDateAsync(int month, int year);

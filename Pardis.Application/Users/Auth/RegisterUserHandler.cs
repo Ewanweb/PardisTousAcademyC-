@@ -5,6 +5,7 @@ using Pardis.Application._Shared;
 using Pardis.Application._Shared.JWT;
 using Pardis.Domain.Users;
 using System.Data;
+using Pardis.Domain.Dto.Users;
 using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Application.Users.Auth;

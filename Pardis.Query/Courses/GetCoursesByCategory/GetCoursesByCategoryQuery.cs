@@ -4,7 +4,7 @@ namespace Pardis.Query.Courses.GetCoursesByCategory
 {
     public class GetCoursesByCategoryQuery : IRequest<object>
     {
-        public Guid CategoryId { get; set; }
+        public string Slug { get; set; }
         public bool IsAdminOrManager { get; set; }
     }
 }

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pardis.Domain.Dto.Categories;
 using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Infrastructure.Repository
@@ -82,6 +83,13 @@ namespace Pardis.Infrastructure.Repository
                 .ToListAsync(token);
 
             return result;
+        }
+
+        public async Task<Category?> GetCategoryWithIdWithSeo(string slug, CancellationToken token)
+        {
+            var category = await _context.Categories.Include(c => c.Seo).FirstOrDefaultAsync(c => c.Slug == slug, token);
+
+            return category;
         }
     }
 }

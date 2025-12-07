@@ -21,6 +21,7 @@ public class Repository<T> : IRepository<T> where T : class
         return await _dbSet.FindAsync(id);
     }
 
+    public IQueryable<T> Table => _dbSet;
 
     public async Task<IEnumerable<T>> GetAllAsync()
     {

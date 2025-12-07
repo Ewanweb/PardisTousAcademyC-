@@ -6,6 +6,7 @@ using Pardis.Domain.Users;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Pardis.Domain.Dto.Users;
 using static Pardis.Domain.Dto.Dtos;
 using static Pardis.Query.Users.GetUsers.CreateUserByAdminHandler;
 

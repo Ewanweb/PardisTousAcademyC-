@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Pardis.Domain.Dto.Users;
 using Pardis.Domain.Users;
 using static Pardis.Domain.Dto.Dtos;
 

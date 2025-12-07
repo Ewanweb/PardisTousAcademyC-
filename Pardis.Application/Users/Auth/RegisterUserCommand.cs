@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Pardis.Application._Shared;
+using Pardis.Domain.Dto.Users;
 using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Application.Users.Auth
