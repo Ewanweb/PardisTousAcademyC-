@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Pardis.Infrastructure;
 
@@ -11,9 +12,11 @@ using Pardis.Infrastructure;
 namespace Pardis.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251207150730_AddUserCourseFix")]
+    partial class AddUserCourseFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -252,10 +255,6 @@ namespace Pardis.Infrastructure.Migrations
                     b.Property<bool>("IsStarted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<long>("Price")
                         .HasColumnType("bigint");
 
@@ -280,9 +279,6 @@ namespace Pardis.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -305,14 +301,12 @@ namespace Pardis.Infrastructure.Migrations
                             IsCompleted = true,
                             IsDeleted = false,
                             IsStarted = true,
-                            Location = "https://google.com",
                             Price = 2500000L,
                             Schedule = "Saturday 10:00",
                             Slug = "aspnet-core-8-comprehensive",
                             StartFrom = "Saturday 10:00",
                             Status = 1,
                             Title = "دوره جامع ASP.NET Core 8",
-                            Type = 1,
                             UpdatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -325,14 +319,12 @@ namespace Pardis.Infrastructure.Migrations
                             IsCompleted = false,
                             IsDeleted = false,
                             IsStarted = true,
-                            Location = "آموزشگاه",
                             Price = 1800000L,
                             Schedule = "Saturday 10:00",
                             Slug = "react-nextjs-mastery",
                             StartFrom = "Saturday 10:00",
                             Status = 1,
                             Title = "متخصص React و Next.js",
-                            Type = 2,
                             UpdatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -345,63 +337,14 @@ namespace Pardis.Infrastructure.Migrations
                             IsCompleted = false,
                             IsDeleted = false,
                             IsStarted = false,
-                            Location = "https://google.com",
                             Price = 3000000L,
                             Schedule = "Saturday 10:00",
                             Slug = "flutter-zero-to-hero",
                             StartFrom = "Saturday 10:00",
                             Status = 0,
                             Title = "فلاتر: از صفر تا صد",
-                            Type = 1,
                             UpdatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc)
                         });
-                });
-
-            modelBuilder.Entity("Pardis.Domain.Courses.CourseSchedule", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CourseId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DayOfWeek")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<TimeOnly>("EndTime")
-                        .HasColumnType("time");
-
-                    b.Property<int>("EnrolledCount")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("MaxCapacity")
-                        .HasColumnType("int");
-
-                    b.Property<TimeOnly>("StartTime")
-                        .HasColumnType("time");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CourseId");
-
-                    b.ToTable("CourseSchedules");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Courses.UserCourse", b =>
@@ -456,36 +399,6 @@ namespace Pardis.Infrastructure.Migrations
                     b.HasIndex("CourseId");
 
                     b.ToTable("UserCourses");
-                });
-
-            modelBuilder.Entity("Pardis.Domain.Courses.UserCourseSchedule", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<Guid>("CourseScheduleId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("AbsentSessions")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AttendedSessions")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("EnrolledAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("InstructorNotes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.HasKey("UserId", "CourseScheduleId");
-
-                    b.HasIndex("CourseScheduleId");
-
-                    b.ToTable("UserCourseSchedules");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Users.Role", b =>
@@ -602,7 +515,7 @@ namespace Pardis.Infrastructure.Migrations
                         {
                             Id = "8e445865-a24d-4543-a6c6-9443d048cdb9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "342b2300-baad-42ae-ae67-a5b8c43d0444",
+                            ConcurrencyStamp = "ccc2ce25-e130-4c66-8247-80b7da6c0c6a",
                             CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@pardis.com",
                             EmailConfirmed = true,
@@ -611,7 +524,7 @@ namespace Pardis.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@PARDIS.COM",
                             NormalizedUserName = "ADMIN@PARDIS.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAELyrbSG9gICTsOQdyP8nUfrChz4YkjXdMaYRGYTMd3XtRL+0jY2kVARNKK+uxpNXzQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBIb5SF0spI316EgOHzFLyRbhActWD+qN6MKNdvj6f4+hMwGbJPNNqJUctbp8od7NQ==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "8e445865-a24d-4543-a6c6-9443d048cdb9",
                             TwoFactorEnabled = false,
@@ -621,7 +534,7 @@ namespace Pardis.Infrastructure.Migrations
                         {
                             Id = "2c4e6097-f570-4927-b2f7-5f65d1373555",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "100ceaaa-95ce-4413-886a-d651610afe86",
+                            ConcurrencyStamp = "4bb940ac-c60d-4772-9acc-b0ee8c3e7bcf",
                             CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "sara@pardis.com",
                             EmailConfirmed = true,
@@ -630,7 +543,7 @@ namespace Pardis.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "SARA@PARDIS.COM",
                             NormalizedUserName = "SARA@PARDIS.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOXq0xsabKnzMuqASS2Mc16CsqNVhiosYvvCPvNsZST3sv0gXMxxqCavxtpT/HifCg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPws3GMAamoUEppk4pV5e0QiVJNDo7qtNMyCV7yeJ17xznhNy0OjR28sdWZCC5Z84A==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "2c4e6097-f570-4927-b2f7-5f65d1373555",
                             TwoFactorEnabled = false,
@@ -883,17 +796,6 @@ namespace Pardis.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Pardis.Domain.Courses.CourseSchedule", b =>
-                {
-                    b.HasOne("Pardis.Domain.Courses.Course", "Course")
-                        .WithMany("Schedules")
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Course");
-                });
-
             modelBuilder.Entity("Pardis.Domain.Courses.UserCourse", b =>
                 {
                     b.HasOne("Pardis.Domain.Courses.Course", "Course")
@@ -913,25 +815,6 @@ namespace Pardis.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Pardis.Domain.Courses.UserCourseSchedule", b =>
-                {
-                    b.HasOne("Pardis.Domain.Courses.CourseSchedule", "CourseSchedule")
-                        .WithMany("StudentEnrollments")
-                        .HasForeignKey("CourseScheduleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Pardis.Domain.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CourseSchedule");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Pardis.Domain.Categories.Category", b =>
                 {
                     b.Navigation("Children");
@@ -941,14 +824,7 @@ namespace Pardis.Infrastructure.Migrations
 
             modelBuilder.Entity("Pardis.Domain.Courses.Course", b =>
                 {
-                    b.Navigation("Schedules");
-
                     b.Navigation("Students");
-                });
-
-            modelBuilder.Entity("Pardis.Domain.Courses.CourseSchedule", b =>
-                {
-                    b.Navigation("StudentEnrollments");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Users.User", b =>

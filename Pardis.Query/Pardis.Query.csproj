@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Pardis.Application\Pardis.Application.csproj" />
     <ProjectReference Include="..\Pardis.Domain\Pardis.Domain.csproj" />
   </ItemGroup>
 

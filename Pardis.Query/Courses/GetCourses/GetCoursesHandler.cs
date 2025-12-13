@@ -80,24 +80,30 @@ namespace Pardis.Query.Courses.GetCourses
                 Slug = c.Slug,
                 Description = c.Description,
                 Price = c.Price,
-                Status = c.Status.ToString(), // اگر استرینگ است، اگر Enum است: c.Status.ToString()
-                Thumbnail = c.Thumbnail,
+                Status = c.Status.ToString(),
+                Type = c.Type.ToString(),
+                Location = c.Location,
+                Thumbnail = c.Thumbnail ?? "",
                 StartFrom = c.StartFrom,
                 Schedule = c.Schedule,
                 IsCompleted = c.IsCompleted,
                 IsStarted = c.IsStarted,
+                CreatedAt = c.CreatedAt,
+                UpdatedAt = c.UpdatedAt,
+                IsDeleted = c.IsDeleted,
 
-                Instructor = c.Instructor != null ? new UserResource
+                Instructor = c.Instructor != null ? new InstructorBasicDto
                 {
                     Id = c.Instructor.Id,
-                    FullName = c.Instructor.FullName ?? c.Instructor.UserName,
-                    Email = c.Instructor.Email
+                    FullName = c.Instructor.FullName ?? c.Instructor.UserName ?? "",
+                    Email = c.Instructor.Email ?? "",
+                    Mobile = c.Instructor.PhoneNumber
                 } : null!,
 
                 Category = c.Category != null ? new CategoryResource
                 {
                     Id = c.Category.Id,
-                    Title = c.Category.Title, // دقت کنید Name است یا Title
+                    Title = c.Category.Title,
                     Slug = c.Category.Slug,
                     CoursesCount = c.Category.CoursesCount
                 } : null!,
@@ -120,9 +126,6 @@ namespace Pardis.Query.Courses.GetCourses
                     NoIndex = c.Seo.NoIndex,
                     NoFollow = c.Seo.NoFollow
                 } : new SeoDto(),
-
-                CreatedAt = c.CreatedAt,
-                UpdatedAt = c.UpdatedAt,
 
             }).ToList(); // ✅ تبدیل نهایی به لیست
 

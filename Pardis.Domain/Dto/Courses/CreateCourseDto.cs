@@ -12,6 +12,8 @@ public class CreateCourseDto
     public string? StartFrom { get; set; }
     public string Schedule { get; set; }
     public CourseStatus Status { get; set; }
+    public CourseType Type { get; set; }
+    public string Location { get; set; }
     public string? InstructorId { get; set; } // اختیاری برای ادمین
     public IFormFile? Image { get; set; } // فایل آپلود
     public Dtos.SeoDto? Seo { get; set; }

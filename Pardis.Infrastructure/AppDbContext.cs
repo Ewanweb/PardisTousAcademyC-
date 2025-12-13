@@ -21,6 +21,11 @@ namespace Pardis.Infrastructure
         public DbSet<Category> Categories { get; set; }
         public DbSet<Course> Courses { get; set; }
         public DbSet<CourseSection> CourseSections { get; set; }
+        public DbSet<UserCourse> UserCourses { get; set; }
+        
+        // ✅ زمان‌بندی دوره‌ها
+        public DbSet<CourseSchedule> CourseSchedules { get; set; }
+        public DbSet<UserCourseSchedule> UserCourseSchedules { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -31,6 +36,45 @@ namespace Pardis.Infrastructure
             builder.Entity<Category>().OwnsOne(c => c.Seo);
             builder.Entity<Course>().OwnsOne(c => c.Seo);
             builder.Entity<Course>().OwnsMany(c => c.Sections);
+
+            builder.Entity<UserCourse>().HasKey(uc => new { uc.UserId, uc.CourseId });
+
+            builder.Entity<UserCourse>()
+                .HasOne(uc => uc.User)
+                .WithMany(u => u.EnrolledCourses)
+                .HasForeignKey(uc => uc.UserId)
+                .OnDelete(DeleteBehavior.Restrict); // 👈 تغییر مهم: جلوگیری از حذف آبشاری
+
+
+            builder.Entity<UserCourse>()
+                .HasOne(uc => uc.Course)
+                .WithMany(c => c.Students)
+                .HasForeignKey(uc => uc.CourseId)
+                .OnDelete(DeleteBehavior.Restrict); // 👈 تغییر مهم: جلوگیری از حذف آبشاری
+
+            // ✅ تنظیمات CourseSchedule
+            builder.Entity<CourseSchedule>()
+                .HasOne(cs => cs.Course)
+                .WithMany(c => c.Schedules)
+                .HasForeignKey(cs => cs.CourseId)
+                .OnDelete(DeleteBehavior.Cascade); // حذف زمان‌بندی‌ها با حذف دوره
+
+            // ✅ تنظیمات UserCourseSchedule
+            builder.Entity<UserCourseSchedule>()
+                .HasKey(ucs => new { ucs.UserId, ucs.CourseScheduleId });
+
+            builder.Entity<UserCourseSchedule>()
+                .HasOne(ucs => ucs.User)
+                .WithMany()
+                .HasForeignKey(ucs => ucs.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<UserCourseSchedule>()
+                .HasOne(ucs => ucs.CourseSchedule)
+                .WithMany(cs => cs.StudentEnrollments)
+                .HasForeignKey(ucs => ucs.CourseScheduleId)
+                .OnDelete(DeleteBehavior.Cascade); // حذف ثبت‌نام‌ها با حذف زمان‌بندی
+
             builder.Seed();
         }
 

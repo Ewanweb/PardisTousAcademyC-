@@ -1,26 +1,27 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Pardis.Application.Courses.Create;
-using Pardis.Application.Courses.Update; // فرض بر وجود این نیم‌اسپیس
-
-using Pardis.Domain.Users; // برای دسترسی به Role Constants
-using System.Security.Claims;
-using System.Threading.Tasks;
-using System;
 using Pardis.Application._Shared;
 using Pardis.Application.Courses;
+using Pardis.Application.Courses.Create;
+using Pardis.Application.Courses.Update; // فرض بر وجود این نیم‌اسپیس
 using Pardis.Domain.Dto.Courses;
-using Pardis.Query.Courses.GetCourses;
+using Pardis.Domain.Users; // برای دسترسی به Role Constants
 using Pardis.Query.Courses.GetCourseById;
+using Pardis.Query.Courses.GetCourses;
 using Pardis.Query.Courses.GetCoursesByCategory;
-using static Pardis.Domain.Dto.Dtos;
-using static Pardis.Application.Courses.SoftDeleteCommandHandler;
 using Pardis.Query.Courses.GetCoursesBySlug; // برای OperationResultStatus
+using System;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Pardis.Application.Courses.Enroll;
+using Pardis.Query.Courses.Enroll;
+using static Pardis.Application.Courses.SoftDeleteCommandHandler;
+using static Pardis.Domain.Dto.Dtos;
 
 namespace Api.Areas.Admin.Controllers
 {
-    [Route("api/[controller]s")]
+    [Route("api/course")]
     [ApiController]
     public class CourseController : ControllerBase
     {
@@ -153,6 +154,44 @@ namespace Api.Areas.Admin.Controllers
             if (result.Status == OperationResultStatus.NotFound) return NotFound(result.Message);
 
             return Ok(new { message = "دوره به طور کامل حذف شد." });
+        }
+
+
+        // ✅ ثبت‌نام کاربر در دوره (بعد از پرداخت)
+        // POST: api/v1/courses/{id}/enroll
+        [HttpPost("{id}/enroll")]
+        [Authorize] // هر کاربر لاگین شده
+        public async Task<IActionResult> Enroll(Guid id)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var command = new EnrollUserCommand
+            {
+                UserId = userId,
+                CourseId = id
+            };
+
+            var result = await _mediator.Send(command);
+
+            if (result.Status == OperationResultStatus.NotFound) return NotFound(new { message = result.Message });
+            if (result.Status == OperationResultStatus.Error) return BadRequest(new { message = result.Message });
+
+            return Ok(new { message = "ثبت‌نام با موفقیت انجام شد." });
+        }
+
+        // ✅ دریافت لیست دوره‌های خریداری شده من
+        // GET: api/v1/courses/my-enrollments
+        [HttpGet("my-enrollments")]
+        [Authorize]
+        public async Task<IActionResult> GetMyEnrollments()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var query = new GetUserEnrollmentsQuery { UserId = userId };
+            var result = await _mediator.Send(query);
+
+            return Ok(new { data = result });
         }
     }
 }

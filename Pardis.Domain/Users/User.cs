@@ -20,6 +20,7 @@ namespace Pardis.Domain.Users
 
         // Relationships
         public ICollection<Course> Courses { get; set; } // Courses taught by this user
+        public ICollection<UserCourse> EnrolledCourses { get; set; }
         public ICollection<Category> CreatedCategories { get; set; }
 
         public User()

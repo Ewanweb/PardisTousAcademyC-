@@ -9,7 +9,12 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. ناحیه تعریف سرویس‌ها (DI Container)
 // =========================================================
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // ✅ Handle circular references
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 // حذف AddOpenApi (چون از Swashbuckle استفاده می‌کنیم)

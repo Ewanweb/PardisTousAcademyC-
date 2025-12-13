@@ -22,16 +22,22 @@ namespace Pardis.Domain.Courses
         public bool IsCompleted { get; set; }
         public bool IsStarted { get; set; }
         public CourseStatus Status { get; set; }
+        public CourseType Type { get; set; }
+        public string Location { get; set; }
 
         public string InstructorId { get; set; }
         [ForeignKey("InstructorId")]
         public User Instructor { get; set; }
+        public ICollection<UserCourse> Students { get; set; } = new List<UserCourse>();
 
         public Guid CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public Category Category { get; set; }
 
         public ICollection<CourseSection> Sections { get; set; } = new List<CourseSection>();
+        
+        // ✅ زمان‌های برگذاری دوره
+        public ICollection<CourseSchedule> Schedules { get; set; } = new List<CourseSchedule>();
 
         public SeoMetadata Seo { get; set; } = new();
 
@@ -47,6 +53,8 @@ namespace Pardis.Domain.Courses
             long price,
             string? thumbnail,
             CourseStatus status,
+            CourseType type,
+            string location,
             string instructorId,
             string schedule,
             bool isStarted,
@@ -62,6 +70,8 @@ namespace Pardis.Domain.Courses
             Price = price;
             Thumbnail = thumbnail;
             Status = status;
+            Location = location;
+            Type = type;
             InstructorId = instructorId;
             CategoryId = categoryId;
             Seo = seo;

@@ -49,7 +49,8 @@ namespace Pardis.Infrastructure
 
             // 3. تنظیمات JWT
             var jwtSettings = config.GetSection("JwtSettings");
-            var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
+            var jwtKey = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key is not configured");
+            var key = Encoding.UTF8.GetBytes(jwtKey);
 
             service.AddAuthentication(options =>
             {
@@ -67,10 +68,23 @@ namespace Pardis.Infrastructure
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtSettings["Issuer"],
-                    ValidAudience = jwtSettings["Audience"],
+                    ValidIssuer = jwtSettings["Issuer"] ?? "PardisAcademy",
+                    ValidAudience = jwtSettings["Audience"] ?? "PardisAcademyUsers",
                     IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ClockSkew = TimeSpan.Zero
+                    ClockSkew = TimeSpan.FromSeconds(5) // اجازه 5 ثانیه تفاوت زمانی
+                };
+                
+                // Handle validation errors gracefully
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+                        {
+                            context.Response.Headers.Add("Token-Expired", "true");
+                        }
+                        return Task.CompletedTask;
+                    }
                 };
             });
 

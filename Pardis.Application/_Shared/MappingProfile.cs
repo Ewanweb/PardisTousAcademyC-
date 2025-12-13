@@ -20,9 +20,11 @@ namespace Pardis.Application._Shared
             // تبدیل SeoMetadata به SeoDto
             CreateMap<SeoMetadata, SeoDto>().ReverseMap();
 
-            // تبدیل User به UserResource
+            // تبدیل User به UserResource (بدون Courses برای جلوگیری از circular reference)
             CreateMap<User, UserResource>()
-                            .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName)).ReverseMap();
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
+                .ForMember(dest => dest.Roles, opt => opt.Ignore()) // Roles رو جداگانه handle کن
+                .ReverseMap();
 
             // تبدیل Category به CategoryResource
             CreateMap<Category, CategoryResource>()
@@ -41,10 +43,39 @@ namespace Pardis.Application._Shared
             // تبدیل Course به CourseResource
             CreateMap<CourseSection, CourseSectionDto>().ReverseMap();
 
+            // تبدیل CourseSchedule به CourseScheduleDto
+            CreateMap<CourseSchedule, CourseScheduleDto>()
+                .ForMember(dest => dest.DayName, opt => opt.MapFrom(src => src.GetDayName()))
+                .ForMember(dest => dest.TimeRange, opt => opt.MapFrom(src => $"{src.StartTime:HH:mm}-{src.EndTime:HH:mm}"))
+                .ForMember(dest => dest.FullScheduleText, opt => opt.MapFrom(src => src.GetFullScheduleText()))
+                .ForMember(dest => dest.RemainingCapacity, opt => opt.MapFrom(src => src.RemainingCapacity))
+                .ForMember(dest => dest.HasCapacity, opt => opt.MapFrom(src => src.HasCapacity));
+
+            // تبدیل User به InstructorBasicDto (بدون Courses)
+            CreateMap<User, InstructorBasicDto>()
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+                .ForMember(dest => dest.Mobile, opt => opt.MapFrom(src => src.Mobile));
+
+            CreateMap<UserCourse, CourseResource>()
+                // الف) ابتدا تمام اطلاعات را از "Course" بردار (Title, Price, Image, ...)
+                // این کار باعث می‌شود از کانفیگ "Course -> CourseResource" استفاده کند
+                .IncludeMembers(s => s.Course)
+
+                // ب) سپس فیلدهای اختصاصی را از "UserCourse" بازنویسی کن
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.CourseId)) // آی‌دی دوره را بگذار نه آی‌دی جدول واسط
+                .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => src.IsCompleted)) // وضعیت تکمیل دانشجو
+                .ForMember(dest => dest.IsStarted, opt => opt.MapFrom(src => true)) // چون ثبت‌نام کرده، یعنی شروع کرده
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.Course.CreatedAt)); // تاریخ ایجاد دوره (نه تاریخ ثبت‌نام)
+            // اگر خواستید تاریخ ثبت‌نام را برگردانید، باید یک فیلد EnrolledAt به CourseResource اضافه کنید
+
             // تبدیل Course به CourseResource
             CreateMap<Course, CourseResource>()
-                .ForMember(dest => dest.Sections, opt => opt.MapFrom(src => src.Sections)) // این خط حالا کار می‌کند
+                .ForMember(dest => dest.Sections, opt => opt.MapFrom(src => src.Sections))
+                .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => src.Schedules))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()))
+                .ForMember(dest => dest.Instructor, opt => opt.MapFrom(src => src.Instructor))
                 .ReverseMap();
         }
     }

@@ -11,6 +11,8 @@ public class UpdateCourseDto
     public Guid? CategoryId { get; set; }
     public string? Description { get; set; }
     public CourseStatus Status { get; set; }
+    public CourseType Type { get; set; }
+    public string Location { get; set; }
     public string InstructorId { get; set; }
     public string? StartFrom { get; set; }
     public string Schedule { get; set; }

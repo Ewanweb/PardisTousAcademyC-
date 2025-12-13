@@ -53,6 +53,8 @@ namespace Pardis.Application.Courses.Update
             course.StartFrom = request.Dto.StartFrom;
             course.IsCompleted = request.Dto.IsCompleted;
             course.IsStarted = request.Dto.IsStarted;
+            course.Location = request.Dto.Location;
+            course.Type = request.Dto.Type;
 
             if (request.Dto.Image != null)
             {
