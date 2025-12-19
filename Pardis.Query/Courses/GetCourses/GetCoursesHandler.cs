@@ -28,6 +28,7 @@ namespace Pardis.Query.Courses.GetCourses
                 .Include(c => c.Instructor)
                 .Include(c => c.Category)
                 .Include(c => c.Sections)
+                .Include(c => c.Schedules)
                 .Include(c => c.Seo)
                 .AsNoTracking() // برای سرعت بیشتر (چون فقط خواندنی است)
                 .AsQueryable();
@@ -126,6 +127,28 @@ namespace Pardis.Query.Courses.GetCourses
                     NoIndex = c.Seo.NoIndex,
                     NoFollow = c.Seo.NoFollow
                 } : new SeoDto(),
+
+                Schedules = c.Schedules != null
+                    ? c.Schedules.Where(s => s.IsActive).Select(s => new CourseScheduleDto
+                    {
+                        Id = s.Id,
+                        CourseId = s.CourseId,
+                        Title = s.Title,
+                        DayOfWeek = s.DayOfWeek,
+                        StartTime = s.StartTime.ToString("HH:mm"),
+                        EndTime = s.EndTime.ToString("HH:mm"),
+                        MaxCapacity = s.MaxCapacity,
+                        EnrolledCount = s.EnrolledCount,
+                        IsActive = s.IsActive,
+                        Description = s.Description,
+                        DayName = s.GetDayName(),
+                        TimeRange = $"{s.StartTime:HH:mm}-{s.EndTime:HH:mm}",
+                        FullScheduleText = s.GetFullScheduleText(),
+                        RemainingCapacity = s.RemainingCapacity,
+                        HasCapacity = s.HasCapacity,
+                        CreatedAt = s.CreatedAt
+                    }).ToList()
+                    : []
 
             }).ToList(); // ✅ تبدیل نهایی به لیست
 

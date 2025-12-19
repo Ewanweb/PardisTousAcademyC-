@@ -128,6 +128,161 @@ namespace Pardis.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Pardis.Domain.Accounting.Transaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("Amount")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Gateway")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GatewayTransactionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("int");
+
+                    b.Property<long>("RefundAmount")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("RefundReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("RefundedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("TransactionId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Transactions");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Attendance.CourseSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<TimeSpan>("Duration")
+                        .HasColumnType("time");
+
+                    b.Property<Guid?>("ScheduleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("SessionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SessionNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScheduleId");
+
+                    b.HasIndex("CourseId", "SessionNumber")
+                        .IsUnique();
+
+                    b.ToTable("CourseSessions");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Attendance.StudentAttendance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CheckInTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CheckOutTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RecordedByUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecordedByUserId");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("SessionId", "StudentId")
+                        .IsUnique();
+
+                    b.ToTable("StudentAttendances");
+                });
+
             modelBuilder.Entity("Pardis.Domain.Categories.Category", b =>
                 {
                     b.Property<Guid>("Id")
@@ -218,6 +373,55 @@ namespace Pardis.Infrastructure.Migrations
                             Title = "هنر و طراحی",
                             UpdatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc)
                         });
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Comments.CourseComment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AdminNote")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReviewedByUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("ReviewedByUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CourseComments");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Courses.Course", b =>
@@ -488,6 +692,112 @@ namespace Pardis.Infrastructure.Migrations
                     b.ToTable("UserCourseSchedules");
                 });
 
+            modelBuilder.Entity("Pardis.Domain.Payments.CourseEnrollment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EnrollmentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EnrollmentStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("InstallmentCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsInstallmentAllowed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("PaidAmount")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("PaymentStatus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<long>("TotalAmount")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("CourseId", "StudentId")
+                        .IsUnique();
+
+                    b.ToTable("CourseEnrollments");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Payments.InstallmentPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("Amount")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("EnrollmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("InstallmentNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("PaidAmount")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("PaidDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("PaymentMethod")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PaymentReference")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EnrollmentId", "InstallmentNumber")
+                        .IsUnique();
+
+                    b.ToTable("InstallmentPayments");
+                });
+
             modelBuilder.Entity("Pardis.Domain.Users.Role", b =>
                 {
                     b.Property<string>("Id")
@@ -602,7 +912,7 @@ namespace Pardis.Infrastructure.Migrations
                         {
                             Id = "8e445865-a24d-4543-a6c6-9443d048cdb9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "342b2300-baad-42ae-ae67-a5b8c43d0444",
+                            ConcurrencyStamp = "d284be3e-664b-45cc-9f05-cbc451257794",
                             CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@pardis.com",
                             EmailConfirmed = true,
@@ -611,7 +921,7 @@ namespace Pardis.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@PARDIS.COM",
                             NormalizedUserName = "ADMIN@PARDIS.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAELyrbSG9gICTsOQdyP8nUfrChz4YkjXdMaYRGYTMd3XtRL+0jY2kVARNKK+uxpNXzQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJzwIesc+7j+ul7+NHF/Rretatw4Ap4nhHpfj6uxosSdo3nhjtq5fv5yOHUxtqTrbg==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "8e445865-a24d-4543-a6c6-9443d048cdb9",
                             TwoFactorEnabled = false,
@@ -621,7 +931,7 @@ namespace Pardis.Infrastructure.Migrations
                         {
                             Id = "2c4e6097-f570-4927-b2f7-5f65d1373555",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "100ceaaa-95ce-4413-886a-d651610afe86",
+                            ConcurrencyStamp = "aba9a4a2-1c34-40fb-bf39-5984d9eb3615",
                             CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "sara@pardis.com",
                             EmailConfirmed = true,
@@ -630,7 +940,7 @@ namespace Pardis.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "SARA@PARDIS.COM",
                             NormalizedUserName = "SARA@PARDIS.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOXq0xsabKnzMuqASS2Mc16CsqNVhiosYvvCPvNsZST3sv0gXMxxqCavxtpT/HifCg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMnw14ewSykqtvQylpKqkQRznW9r7fhEy+9Lnv3+ChtSJhaLiByXTsEHHxoG2S+65g==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "2c4e6097-f570-4927-b2f7-5f65d1373555",
                             TwoFactorEnabled = false,
@@ -687,6 +997,69 @@ namespace Pardis.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Accounting.Transaction", b =>
+                {
+                    b.HasOne("Pardis.Domain.Courses.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Pardis.Domain.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Attendance.CourseSession", b =>
+                {
+                    b.HasOne("Pardis.Domain.Courses.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Pardis.Domain.Courses.CourseSchedule", "Schedule")
+                        .WithMany()
+                        .HasForeignKey("ScheduleId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Course");
+
+                    b.Navigation("Schedule");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Attendance.StudentAttendance", b =>
+                {
+                    b.HasOne("Pardis.Domain.Users.User", "RecordedByUser")
+                        .WithMany()
+                        .HasForeignKey("RecordedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Pardis.Domain.Attendance.CourseSession", "Session")
+                        .WithMany("Attendances")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Pardis.Domain.Users.User", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("RecordedByUser");
+
+                    b.Navigation("Session");
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Categories.Category", b =>
@@ -767,6 +1140,32 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.Navigation("Seo")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Comments.CourseComment", b =>
+                {
+                    b.HasOne("Pardis.Domain.Courses.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Pardis.Domain.Users.User", "ReviewedByUser")
+                        .WithMany()
+                        .HasForeignKey("ReviewedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Pardis.Domain.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("ReviewedByUser");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Courses.Course", b =>
@@ -932,6 +1331,41 @@ namespace Pardis.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Pardis.Domain.Payments.CourseEnrollment", b =>
+                {
+                    b.HasOne("Pardis.Domain.Courses.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Pardis.Domain.Users.User", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Payments.InstallmentPayment", b =>
+                {
+                    b.HasOne("Pardis.Domain.Payments.CourseEnrollment", "Enrollment")
+                        .WithMany("InstallmentPayments")
+                        .HasForeignKey("EnrollmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Enrollment");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Attendance.CourseSession", b =>
+                {
+                    b.Navigation("Attendances");
+                });
+
             modelBuilder.Entity("Pardis.Domain.Categories.Category", b =>
                 {
                     b.Navigation("Children");
@@ -949,6 +1383,11 @@ namespace Pardis.Infrastructure.Migrations
             modelBuilder.Entity("Pardis.Domain.Courses.CourseSchedule", b =>
                 {
                     b.Navigation("StudentEnrollments");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Payments.CourseEnrollment", b =>
+                {
+                    b.Navigation("InstallmentPayments");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Users.User", b =>

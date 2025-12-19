@@ -28,6 +28,8 @@ public class GetScheduleStudentsHandler : IRequestHandler<GetScheduleStudentsQue
                 FullName = ucs.User.FullName ?? ucs.User.UserName ?? "",
                 Email = ucs.User.Email ?? "",
                 Mobile = ucs.User.PhoneNumber,
+                EnrollmentDate = ucs.EnrolledAt,
+                IsActive = ucs.Status == StudentScheduleStatus.Active,
                 EnrolledAt = ucs.EnrolledAt,
                 Status = ucs.Status.ToString(),
                 AttendedSessions = ucs.AttendedSessions,

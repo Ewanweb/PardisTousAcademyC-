@@ -13,6 +13,8 @@ using Pardis.Application.FileUtil;
 using Pardis.Domain;
 using Pardis.Domain.Courses;
 using Pardis.Domain.Users;
+using Pardis.Domain.Payments;
+using Pardis.Domain.Attendance;
 using Pardis.Infrastructure.Repository; // اگر کلاس Repository اینجاست
 using Pardis.Query.Users.GetUserById;
 using System;
@@ -102,6 +104,11 @@ namespace Pardis.Infrastructure
             service.AddScoped<IUserRepository, UserRepository>();
             service.AddScoped<ICategoryRepository, CategoryRepository>();
             service.AddScoped<ICourseRepository, CourseRepository>();
+            service.AddScoped<TransactionRepository>();
+            service.AddScoped<ICourseEnrollmentRepository, CourseEnrollmentRepository>();
+            service.AddScoped<ICourseSessionRepository, CourseSessionRepository>();
+            service.AddScoped<IStudentAttendanceRepository, StudentAttendanceRepository>();
+            service.AddScoped<ICourseScheduleRepository, CourseScheduleRepository>();
 
             // ریپازیتوری جنریک
             service.AddScoped(typeof(IRepository<>), typeof(Repository<>));

@@ -19,12 +19,13 @@ namespace Pardis.Query.Courses.GetCoursesBySlug
         }
         public async Task<CourseResource> Handle(GetCoursesBySlugQuery request, CancellationToken cancellationToken)
         {
-            var course = _repository.Table
+            var course = await _repository.Table
                 .Include(c => c.Seo)
                 .Include(c => c.Category)
                 .Include(c => c.Instructor)
                 .Include(c => c.Sections.OrderBy(s => s.Order))
-                .FirstOrDefault(x => x.Slug == request.Slug);
+                .Include(c => c.Schedules)
+                .FirstOrDefaultAsync(x => x.Slug == request.Slug, cancellationToken);
 
             if (course == null || course.Status is not CourseStatus.Published)
                 return null;

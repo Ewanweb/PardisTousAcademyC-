@@ -37,6 +37,9 @@ public class GetUserEnrollmentsHandler : IRequestHandler<GetUserEnrollmentsQuery
 
             // ✅ لود کردن سرفصل‌های دوره (برای نمایش در جزئیات اگر لازم باشد)
             .Include(uc => uc.Course.Sections)
+            
+            // ✅ لود کردن زمان‌بندی‌های دوره
+            .Include(uc => uc.Course.Schedules)
 
             // فیلتر روی کاربر جاری
             .Where(uc => uc.UserId == request.UserId)

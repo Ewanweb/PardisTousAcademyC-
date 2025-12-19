@@ -55,6 +55,7 @@ namespace Pardis.Query.Courses.GetCoursesByCategory
                 .AsNoTracking()
                 .Include(c => c.Instructor)
                 .Include(c => c.Category)
+                .Include(c => c.Schedules)
                 .Where(c => targetIds.Contains(c.CategoryId));
 
             // اعمال فیلتر نقش (اگر لازم است)

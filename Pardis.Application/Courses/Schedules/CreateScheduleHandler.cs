@@ -27,8 +27,14 @@ public class CreateScheduleHandler : IRequestHandler<CreateScheduleCommand, Oper
         if (course == null)
             return OperationResult<CourseScheduleDto>.NotFound("دوره یافت نشد");
 
-        // 2. اعتبارسنجی زمان
-        if (request.Dto.StartTime >= request.Dto.EndTime)
+        // 2. تبدیل و اعتبارسنجی زمان
+        if (!TimeOnly.TryParse(request.Dto.StartTime, out var startTime))
+            return OperationResult<CourseScheduleDto>.Error("فرمت ساعت شروع نامعتبر است");
+
+        if (!TimeOnly.TryParse(request.Dto.EndTime, out var endTime))
+            return OperationResult<CourseScheduleDto>.Error("فرمت ساعت پایان نامعتبر است");
+
+        if (startTime >= endTime)
             return OperationResult<CourseScheduleDto>.Error("ساعت شروع باید کمتر از ساعت پایان باشد");
 
         if (request.Dto.DayOfWeek < 0 || request.Dto.DayOfWeek > 6)
@@ -41,7 +47,7 @@ public class CreateScheduleHandler : IRequestHandler<CreateScheduleCommand, Oper
         var hasConflict = await _scheduleRepository.AnyAsync(s => 
             s.CourseId == request.Dto.CourseId &&
             s.DayOfWeek == request.Dto.DayOfWeek &&
-            ((s.StartTime < request.Dto.EndTime && s.EndTime > request.Dto.StartTime)), 
+            ((s.StartTime < endTime && s.EndTime > startTime)), 
             cancellationToken);
 
         if (hasConflict)
@@ -54,8 +60,8 @@ public class CreateScheduleHandler : IRequestHandler<CreateScheduleCommand, Oper
             Course = null!, // EF will handle this
             Title = request.Dto.Title,
             DayOfWeek = request.Dto.DayOfWeek,
-            StartTime = request.Dto.StartTime,
-            EndTime = request.Dto.EndTime,
+            StartTime = startTime,
+            EndTime = endTime,
             MaxCapacity = request.Dto.MaxCapacity,
             Description = request.Dto.Description
         };

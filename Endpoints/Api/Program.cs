@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 using Pardis.Infrastructure;
-using static System.Net.Mime.MediaTypeNames;
+using Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +9,11 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. ناحیه تعریف سرویس‌ها (DI Container)
 // =========================================================
 
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        // اضافه کردن فیلتر اعتبارسنجی مدل‌ها
+        options.Filters.Add<Api.Filters.ModelValidationFilter>();
+    })
     .AddJsonOptions(options =>
     {
         // ✅ Handle circular references
@@ -23,13 +27,31 @@ builder.Services.AddEndpointsApiExplorer();
 // کانفیگ Swagger با JWT
 builder.Services.AddSwaggerGen(option =>
 {
-    option.SwaggerDoc("v1", new OpenApiInfo { Title = "Pardis API", Version = "v1" });
+    option.SwaggerDoc("v1", new OpenApiInfo 
+    { 
+        Title = "Pardis Academy API", 
+        Version = "v1",
+        Description = "API سیستم مدیریت آموزشی پردیس - شامل مدیریت دوره‌ها، دانشجویان، پرداخت‌ها و حضور و غیاب",
+        Contact = new OpenApiContact
+        {
+            Name = "Pardis Academy",
+            Email = "support@pardisacademy.com"
+        }
+    });
+
+    // اضافه کردن XML Documentation
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        option.IncludeXmlComments(xmlPath);
+    }
 
     // الف) تعریف امنیت
     option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
-        Description = "Please enter a valid token",
+        Description = "لطفاً توکن معتبر وارد کنید (Bearer {token})",
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
         BearerFormat = "JWT",
@@ -51,6 +73,10 @@ builder.Services.AddSwaggerGen(option =>
             new string[] { }
         }
     });
+
+    // تنظیمات اضافی برای بهبود مستندات
+    option.EnableAnnotations();
+    option.OrderActionsBy(apiDesc => $"{apiDesc.ActionDescriptor.RouteValues["controller"]}_{apiDesc.HttpMethod}");
 });
 
 // کانفیگ CORS
@@ -89,6 +115,9 @@ using (var scope = app.Services.CreateScope())
 // =========================================================
 // 3. ناحیه تنظیمات پایپ‌لاین (Middleware Pipeline)
 // =========================================================
+
+// اضافه کردن میدل‌ویر مدیریت خطاهای سراسری
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

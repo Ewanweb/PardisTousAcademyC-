@@ -4,12 +4,10 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Pardis.Domain.Categories;
 using Pardis.Domain.Courses;
 using Pardis.Domain.Users;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
+using Pardis.Domain.Accounting;
+using Pardis.Domain.Comments;
+using Pardis.Domain.Attendance;
+using Pardis.Domain.Payments;
 
 namespace Pardis.Infrastructure
 {
@@ -26,6 +24,20 @@ namespace Pardis.Infrastructure
         // ✅ زمان‌بندی دوره‌ها
         public DbSet<CourseSchedule> CourseSchedules { get; set; }
         public DbSet<UserCourseSchedule> UserCourseSchedules { get; set; }
+        
+        // ✅ حسابداری
+        public DbSet<Transaction> Transactions { get; set; }
+        
+        // ✅ کامنت‌ها
+        public DbSet<CourseComment> CourseComments { get; set; }
+        
+        // ✅ حضور و غیاب
+        public DbSet<CourseSession> CourseSessions { get; set; }
+        public DbSet<StudentAttendance> StudentAttendances { get; set; }
+        
+        // ✅ ثبت‌نام و پرداخت
+        public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
+        public DbSet<InstallmentPayment> InstallmentPayments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -74,6 +86,110 @@ namespace Pardis.Infrastructure
                 .WithMany(cs => cs.StudentEnrollments)
                 .HasForeignKey(ucs => ucs.CourseScheduleId)
                 .OnDelete(DeleteBehavior.Cascade); // حذف ثبت‌نام‌ها با حذف زمان‌بندی
+
+            // ✅ تنظیمات Transaction
+            builder.Entity<Transaction>()
+                .HasIndex(t => t.TransactionId)
+                .IsUnique();
+
+            builder.Entity<Transaction>()
+                .HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Transaction>()
+                .HasOne(t => t.Course)
+                .WithMany()
+                .HasForeignKey(t => t.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ✅ تنظیمات CourseComment
+            builder.Entity<CourseComment>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CourseComment>()
+                .HasOne(c => c.Course)
+                .WithMany()
+                .HasForeignKey(c => c.CourseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<CourseComment>()
+                .HasOne(c => c.ReviewedByUser)
+                .WithMany()
+                .HasForeignKey(c => c.ReviewedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ✅ تنظیمات CourseSession
+            builder.Entity<CourseSession>()
+                .HasOne(s => s.Course)
+                .WithMany()
+                .HasForeignKey(s => s.CourseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<CourseSession>()
+                .HasOne(s => s.Schedule)
+                .WithMany()
+                .HasForeignKey(s => s.ScheduleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CourseSession>()
+                .HasIndex(s => new { s.CourseId, s.SessionNumber })
+                .IsUnique();
+
+            // ✅ تنظیمات StudentAttendance
+            builder.Entity<StudentAttendance>()
+                .HasOne(a => a.Session)
+                .WithMany(s => s.Attendances)
+                .HasForeignKey(a => a.SessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<StudentAttendance>()
+                .HasOne(a => a.Student)
+                .WithMany()
+                .HasForeignKey(a => a.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<StudentAttendance>()
+                .HasOne(a => a.RecordedByUser)
+                .WithMany()
+                .HasForeignKey(a => a.RecordedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<StudentAttendance>()
+                .HasIndex(a => new { a.SessionId, a.StudentId })
+                .IsUnique();
+
+            // ✅ تنظیمات CourseEnrollment
+            builder.Entity<CourseEnrollment>()
+                .HasOne(e => e.Course)
+                .WithMany()
+                .HasForeignKey(e => e.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CourseEnrollment>()
+                .HasOne(e => e.Student)
+                .WithMany()
+                .HasForeignKey(e => e.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CourseEnrollment>()
+                .HasIndex(e => new { e.CourseId, e.StudentId })
+                .IsUnique();
+
+            // ✅ تنظیمات InstallmentPayment
+            builder.Entity<InstallmentPayment>()
+                .HasOne(i => i.Enrollment)
+                .WithMany(e => e.InstallmentPayments)
+                .HasForeignKey(i => i.EnrollmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<InstallmentPayment>()
+                .HasIndex(i => new { i.EnrollmentId, i.InstallmentNumber })
+                .IsUnique();
 
             builder.Seed();
         }

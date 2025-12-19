@@ -1,6 +1,5 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Pardis.Application._Shared;
 using Pardis.Application.Users.Auth;
@@ -9,68 +8,145 @@ using System.Security.Claims;
 
 namespace Api.Controllers
 {
+    /// <summary>
+    /// کنترلر احراز هویت - ثبت‌نام، ورود و مدیریت کاربران
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController : ControllerBase
+    [Produces("application/json")]
+    [Tags("Authentication")]
+    public class AuthController : BaseController
     {
         private readonly IMediator _mediator;
 
-        public AuthController(IMediator mediator)
+        public AuthController(IMediator mediator, ILogger<AuthController> logger) : base(logger)
         {
             _mediator = mediator;
         }
 
+        /// <summary>
+        /// ثبت‌نام کاربر جدید در سیستم
+        /// </summary>
+        /// <param name="command">اطلاعات ثبت‌نام شامل ایمیل، رمز عبور، نام کامل و موبایل</param>
+        /// <returns>اطلاعات کاربر و توکن احراز هویت</returns>
+        /// <response code="201">ثبت‌نام با موفقیت انجام شد</response>
+        /// <response code="400">اطلاعات نامعتبر یا ایمیل تکراری</response>
+        /// <response code="500">خطای سرور</response>
         [HttpPost("register")]
+        [ProducesResponseType(typeof(object), 201)]
+        [ProducesResponseType(typeof(object), 400)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> Register([FromBody] RegisterUserCommand command)
         {
-            var result = await _mediator.Send(command);
-            if (result.Status != OperationResultStatus.Success)
+            return await ExecuteAsync(async () =>
             {
-                return BadRequest(new { message = result.Message });
-            }
-            return CreatedAtAction(nameof(Login), new { message = "ثبت‌نام با موفقیت انجام شد.", data = result.Data });
+                if (command == null)
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "اطلاعات ثبت‌نام الزامی است" 
+                    });
+
+                var result = await _mediator.Send(command);
+                
+                if (result.Status == OperationResultStatus.Success)
+                {
+                    return CreatedAtAction(nameof(Login), null, new { 
+                        success = true,
+                        message = "ثبت‌نام با موفقیت انجام شد", 
+                        data = result.Data 
+                    });
+                }
+
+                return HandleOperationResult(result);
+            }, "خطا در ثبت‌نام کاربر");
         }
 
+        /// <summary>
+        /// ورود کاربر به سیستم
+        /// </summary>
+        /// <param name="command">اطلاعات ورود شامل ایمیل و رمز عبور</param>
+        /// <returns>اطلاعات کاربر و توکن احراز هویت</returns>
+        /// <response code="200">ورود موفقیت‌آمیز</response>
+        /// <response code="400">اطلاعات نامعتبر</response>
+        /// <response code="401">ایمیل یا رمز عبور اشتباه</response>
+        /// <response code="500">خطای سرور</response>
         [HttpPost("login")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 400)]
+        [ProducesResponseType(typeof(object), 401)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> Login([FromBody] LoginUserCommand command)
         {
-            // لاگین و تولید توکن در هندلر انجام می‌شود
-            var result = await _mediator.Send(command);
-
-            if (result.Status != OperationResultStatus.Success)
-                return Unauthorized(new { message = result.Message });
-
-            return Ok(new
+            return await ExecuteAsync(async () =>
             {
-                message = "ورود موفقیت‌آمیز بود.",
-                data = result.Data
-            });
+                if (command == null)
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "اطلاعات ورود الزامی است" 
+                    });
+
+                var result = await _mediator.Send(command);
+
+                if (result.Status == OperationResultStatus.Success)
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "ورود موفقیت‌آمیز بود",
+                        data = result.Data
+                    });
+                }
+
+                // برای خطاهای احراز هویت، کد 401 برمی‌گردانیم
+                if (result.Status == OperationResultStatus.Error)
+                {
+                    return Unauthorized(new { 
+                        success = false, 
+                        message = result.Message ?? "نام کاربری یا رمز عبور اشتباه است" 
+                    });
+                }
+
+                return HandleOperationResult(result);
+            }, "خطا در ورود به سیستم");
         }
         // ... متدهای Login و Register قبلی سر جای خود بمانند ...
 
-        // --- این متد جدید را اضافه کنید ---
-        [HttpGet("~/api/user")] // آدرس دقیق را با ~ مشخص می‌کنیم تا از پیشوند Auth رد شود
-        [Authorize] // فقط کسانی که توکن دارند می‌توانند صدا بزنند
+        /// <summary>
+        /// دریافت اطلاعات کاربر فعلی بر اساس توکن
+        /// </summary>
+        /// <returns>اطلاعات کاربر احراز هویت شده</returns>
+        /// <response code="200">اطلاعات کاربر با موفقیت دریافت شد</response>
+        /// <response code="401">عدم احراز هویت یا توکن نامعتبر</response>
+        /// <response code="404">کاربر یافت نشد</response>
+        /// <response code="500">خطای سرور</response>
+        [HttpGet("~/api/user")]
+        [Authorize]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 401)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetCurrentUser()
         {
-            // 1. پیدا کردن آیدی کاربر از داخل توکن
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized(new { message = "توکن نامعتبر است." });
-
-            // 2. درخواست اطلاعات کاربر از دیتابیس (استفاده از همان کوئری GetUserById که قبلا داشتید یا مشابه آن)
-            // اگر کوئری GetUserByIdQuery ندارید، پایین توضیح دادم چکار کنید
-            var result = await _mediator.Send(new GetUserByIdQuery { Id = userId });
-
-            if (result == null)
-                return NotFound(new { message = "کاربر یافت نشد." });
-
-            // 3. ارسال اطلاعات به فرمتی که فرانت می‌خواهد
-            return Ok(new
+            return await ExecuteAsync(async () =>
             {
-                data = result // فرانت انتظار دارد اطلاعات داخل data باشد
-            });
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized(new { 
+                        success = false, 
+                        message = "توکن نامعتبر است" 
+                    });
+
+                var result = await _mediator.Send(new GetUserByIdQuery { Id = userId });
+
+                if (result == null)
+                    return NotFound(new { 
+                        success = false, 
+                        message = "کاربر یافت نشد" 
+                    });
+
+                return SuccessResponse(result, "اطلاعات کاربر با موفقیت دریافت شد");
+            }, "خطا در دریافت اطلاعات کاربر");
         }
     }
 }
