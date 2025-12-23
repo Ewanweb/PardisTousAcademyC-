@@ -6,9 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Pardis.Application._Shared;
 using Pardis.Application._Shared.JWT;
-using Pardis.Application.Categories.Update;
 using Pardis.Application.Categories.Update.Pardis.Application.Categories.Commands;
-using Pardis.Application.Courses.Create;
 using Pardis.Application.FileUtil;
 using Pardis.Domain;
 using Pardis.Domain.Courses;
@@ -17,7 +15,6 @@ using Pardis.Domain.Payments;
 using Pardis.Domain.Attendance;
 using Pardis.Infrastructure.Repository; // اگر کلاس Repository اینجاست
 using Pardis.Query.Users.GetUserById;
-using System;
 using System.Text;
 
 namespace Pardis.Infrastructure
@@ -83,7 +80,7 @@ namespace Pardis.Infrastructure
                     {
                         if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
                         {
-                            context.Response.Headers.Add("Token-Expired", "true");
+                            context.Response.Headers["Token-Expired"] = "true";
                         }
                         return Task.CompletedTask;
                     }

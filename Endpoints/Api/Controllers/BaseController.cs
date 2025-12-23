@@ -110,7 +110,8 @@ public abstract class BaseController : ControllerBase
         {
             success = true,
             message = message ?? "عملیات با موفقیت انجام شد",
-            data
+            data,
+            timestamp = DateTime.UtcNow
         });
     }
 
@@ -122,19 +123,66 @@ public abstract class BaseController : ControllerBase
         return Ok(new
         {
             success = true,
-            message = message ?? "عملیات با موفقیت انجام شد"
+            message = message ?? "عملیات با موفقیت انجام شد",
+            timestamp = DateTime.UtcNow
         });
     }
 
     /// <summary>
     /// بازگشت پاسخ خطا
     /// </summary>
-    protected IActionResult ErrorResponse(string message, int statusCode = 400)
+    protected IActionResult ErrorResponse(string message, int statusCode = 400, string? errorCode = null, object? errorDetails = null)
     {
         return StatusCode(statusCode, new
         {
             success = false,
-            message
+            message,
+            errorCode,
+            errorDetails,
+            timestamp = DateTime.UtcNow
+        });
+    }
+
+    /// <summary>
+    /// بازگشت پاسخ یافت نشد
+    /// </summary>
+    protected IActionResult NotFoundResponse(string message = "اطلاعات درخواستی یافت نشد")
+    {
+        return NotFound(new
+        {
+            success = false,
+            message,
+            errorCode = "NOT_FOUND",
+            timestamp = DateTime.UtcNow
+        });
+    }
+
+    /// <summary>
+    /// بازگشت پاسخ عدم دسترسی
+    /// </summary>
+    protected IActionResult UnauthorizedResponse(string message = "دسترسی غیرمجاز")
+    {
+        return Unauthorized(new
+        {
+            success = false,
+            message,
+            errorCode = "UNAUTHORIZED",
+            timestamp = DateTime.UtcNow
+        });
+    }
+
+    /// <summary>
+    /// بازگشت پاسخ اعتبارسنجی نامعتبر
+    /// </summary>
+    protected IActionResult ValidationErrorResponse(string message, object? validationErrors = null)
+    {
+        return BadRequest(new
+        {
+            success = false,
+            message,
+            errorCode = "VALIDATION_ERROR",
+            errorDetails = validationErrors,
+            timestamp = DateTime.UtcNow
         });
     }
 
@@ -162,7 +210,7 @@ public abstract class BaseController : ControllerBase
             return BadRequest(new
             {
                 success = false,
-                message = "اطلاعات ارسالی نامعتبر است"
+                message = ex.Message
             });
         }
         catch (Exception ex)

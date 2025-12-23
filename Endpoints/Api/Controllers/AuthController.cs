@@ -19,6 +19,11 @@ namespace Api.Controllers
     {
         private readonly IMediator _mediator;
 
+        /// <summary>
+        /// سازنده کنترلر احراز هویت
+        /// </summary>
+        /// <param name="mediator">واسط MediatR</param>
+        /// <param name="logger">لاگر</param>
         public AuthController(IMediator mediator, ILogger<AuthController> logger) : base(logger)
         {
             _mediator = mediator;
@@ -40,21 +45,34 @@ namespace Api.Controllers
         {
             return await ExecuteAsync(async () =>
             {
+                // اعتبارسنجی پارامترهای ورودی
                 if (command == null)
-                    return BadRequest(new { 
-                        success = false, 
-                        message = "اطلاعات ثبت‌نام الزامی است" 
-                    });
+                    return ValidationErrorResponse("اطلاعات ثبت‌نام الزامی است");
+
+                if (string.IsNullOrWhiteSpace(command.Email))
+                    return ValidationErrorResponse("ایمیل الزامی است", new { email = "ایمیل نمی‌تواند خالی باشد" });
+
+                if (string.IsNullOrWhiteSpace(command.Password))
+                    return ValidationErrorResponse("رمز عبور الزامی است", new { password = "رمز عبور نمی‌تواند خالی باشد" });
+
+                if (string.IsNullOrWhiteSpace(command.FullName))
+                    return ValidationErrorResponse("نام کامل الزامی است", new { fullName = "نام کامل نمی‌تواند خالی باشد" });
 
                 var result = await _mediator.Send(command);
                 
                 if (result.Status == OperationResultStatus.Success)
                 {
-                    return CreatedAtAction(nameof(Login), null, new { 
+                    return StatusCode(201, new { 
                         success = true,
-                        message = "ثبت‌نام با موفقیت انجام شد", 
-                        data = result.Data 
+                        message = "ثبت‌نام با موفقیت انجام شد. اکنون می‌توانید وارد شوید", 
+                        data = result.Data,
+                        timestamp = DateTime.UtcNow
                     });
+                }
+
+                if (result.Status == OperationResultStatus.Error)
+                {
+                    return ErrorResponse(result.Message ?? "خطا در ثبت‌نام کاربر", 400, "REGISTRATION_FAILED");
                 }
 
                 return HandleOperationResult(result);
@@ -79,31 +97,27 @@ namespace Api.Controllers
         {
             return await ExecuteAsync(async () =>
             {
+                // اعتبارسنجی پارامترهای ورودی
                 if (command == null)
-                    return BadRequest(new { 
-                        success = false, 
-                        message = "اطلاعات ورود الزامی است" 
-                    });
+                    return ValidationErrorResponse("اطلاعات ورود الزامی است");
+
+                if (string.IsNullOrWhiteSpace(command.Email))
+                    return ValidationErrorResponse("ایمیل الزامی است", new { email = "ایمیل نمی‌تواند خالی باشد" });
+
+                if (string.IsNullOrWhiteSpace(command.Password))
+                    return ValidationErrorResponse("رمز عبور الزامی است", new { password = "رمز عبور نمی‌تواند خالی باشد" });
 
                 var result = await _mediator.Send(command);
 
                 if (result.Status == OperationResultStatus.Success)
                 {
-                    return Ok(new
-                    {
-                        success = true,
-                        message = "ورود موفقیت‌آمیز بود",
-                        data = result.Data
-                    });
+                    return SuccessResponse(result.Data, "ورود موفقیت‌آمیز بود. خوش آمدید!");
                 }
 
                 // برای خطاهای احراز هویت، کد 401 برمی‌گردانیم
                 if (result.Status == OperationResultStatus.Error)
                 {
-                    return Unauthorized(new { 
-                        success = false, 
-                        message = result.Message ?? "نام کاربری یا رمز عبور اشتباه است" 
-                    });
+                    return UnauthorizedResponse(result.Message ?? "ایمیل یا رمز عبور اشتباه است");
                 }
 
                 return HandleOperationResult(result);
@@ -132,18 +146,12 @@ namespace Api.Controllers
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
                 if (string.IsNullOrEmpty(userId))
-                    return Unauthorized(new { 
-                        success = false, 
-                        message = "توکن نامعتبر است" 
-                    });
+                    return UnauthorizedResponse("توکن احراز هویت نامعتبر یا منقضی شده است");
 
                 var result = await _mediator.Send(new GetUserByIdQuery { Id = userId });
 
                 if (result == null)
-                    return NotFound(new { 
-                        success = false, 
-                        message = "کاربر یافت نشد" 
-                    });
+                    return NotFoundResponse("کاربر یافت نشد. ممکن است حساب کاربری حذف شده باشد");
 
                 return SuccessResponse(result, "اطلاعات کاربر با موفقیت دریافت شد");
             }, "خطا در دریافت اطلاعات کاربر");

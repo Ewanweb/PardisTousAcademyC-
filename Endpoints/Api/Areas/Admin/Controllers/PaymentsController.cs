@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pardis.Domain.Users;
 using Pardis.Query.Payments;
+using Pardis.Application.Payments;
 using Api.Controllers;
 
 namespace Endpoints.Api.Areas.Admin.Controllers;
@@ -49,15 +50,22 @@ public class PaymentsController : BaseController
         return await ExecuteAsync(async () =>
         {
             if (string.IsNullOrWhiteSpace(studentId))
-                return BadRequest(new { 
-                    success = false, 
-                    message = "شناسه دانشجو الزامی است" 
-                });
+                return ValidationErrorResponse("شناسه دانشجو الزامی است", new { studentId = "شناسه دانشجو نمی‌تواند خالی باشد" });
 
-            var query = new GetStudentEnrollmentsQuery { StudentId = studentId };
+            var query = new GetStudentEnrollmentsQuery { StudentId = studentId.Trim() };
             var result = await _mediator.Send(query);
             
-            return SuccessResponse(result, "اقساط دانشجو با موفقیت دریافت شد");
+            if (result == null)
+                return SuccessResponse(new List<object>(), "هیچ ثبت‌نامی برای این دانشجو یافت نشد");
+
+            // فرض می‌کنیم result از نوع IEnumerable است
+            var enrollments = result as IEnumerable<object>;
+            if (enrollments != null && enrollments.Any())
+            {
+                return SuccessResponse(result, $"اقساط {enrollments.Count()} ثبت‌نام دانشجو دریافت شد");
+            }
+
+            return SuccessResponse(new List<object>(), "هیچ ثبت‌نامی برای این دانشجو یافت نشد");
         }, "خطا در دریافت اقساط دانشجو");
     }
 
@@ -85,35 +93,37 @@ public class PaymentsController : BaseController
         return await ExecuteAsync(async () =>
         {
             if (enrollmentId == Guid.Empty)
-                return BadRequest(new { 
-                    success = false, 
-                    message = "شناسه ثبت‌نام نامعتبر است" 
-                });
+                return ValidationErrorResponse("شناسه ثبت‌نام نامعتبر است", new { enrollmentId = "شناسه ثبت‌نام نمی‌تواند خالی باشد" });
+
+            if (request == null)
+                return ValidationErrorResponse("اطلاعات پرداخت الزامی است");
 
             if (request.Amount <= 0)
-                return BadRequest(new { 
-                    success = false, 
-                    message = "مبلغ پرداخت باید بیشتر از صفر باشد" 
-                });
+                return ValidationErrorResponse("مبلغ پرداخت نامعتبر است", new { amount = "مبلغ پرداخت باید بیشتر از صفر باشد" });
+
+            if (string.IsNullOrWhiteSpace(request.PaymentMethod))
+                return ValidationErrorResponse("روش پرداخت الزامی است", new { paymentMethod = "روش پرداخت نمی‌تواند خالی باشد" });
 
             var adminUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(adminUserId))
-                return Unauthorized(new { success = false, message = "کاربر احراز هویت نشده است" });
+                return UnauthorizedResponse("کاربر احراز هویت نشده است");
 
-            // TODO: پیاده‌سازی Command برای ثبت پرداخت
-            var mockResult = new
+            var command = new RecordPaymentCommand
             {
-                id = Guid.NewGuid(),
-                enrollmentId = enrollmentId,
-                amount = request.Amount,
-                paymentMethod = request.PaymentMethod,
-                paymentDate = request.PaymentDate,
-                description = request.Description,
-                recordedByUserId = adminUserId,
-                recordedAt = DateTime.UtcNow
+                EnrollmentId = enrollmentId,
+                Amount = request.Amount,
+                PaymentMethod = request.PaymentMethod.Trim(),
+                Description = request.Description?.Trim(),
+                PaymentDate = request.PaymentDate,
+                RecordedByUserId = adminUserId
             };
+
+            var result = await _mediator.Send(command);
             
-            return SuccessResponse(mockResult, "پرداخت با موفقیت ثبت شد");
+            if (result == null)
+                return ErrorResponse("خطا در ثبت پرداخت", 500, "RECORD_PAYMENT_FAILED");
+
+            return SuccessResponse(result, "پرداخت با موفقیت ثبت شد");
         }, "خطا در ثبت پرداخت");
     }
 }

@@ -20,6 +20,11 @@ public class StudentsController : BaseController
 {
     private readonly IMediator _mediator;
 
+    /// <summary>
+    /// سازنده کنترلر مدیریت دانشجویان
+    /// </summary>
+    /// <param name="mediator">واسط MediatR</param>
+    /// <param name="logger">لاگر</param>
     public StudentsController(IMediator mediator, ILogger<StudentsController> logger) : base(logger)
     {
         _mediator = mediator;
@@ -46,19 +51,13 @@ public class StudentsController : BaseController
         return await ExecuteAsync(async () =>
         {
             if (string.IsNullOrWhiteSpace(studentId))
-                return BadRequest(new { 
-                    success = false, 
-                    message = "شناسه دانشجو الزامی است" 
-                });
+                return ValidationErrorResponse("شناسه دانشجو الزامی است", new { studentId = "شناسه دانشجو نمی‌تواند خالی باشد" });
 
-            var query = new GetStudentProfileQuery { StudentId = studentId };
+            var query = new GetStudentProfileQuery { StudentId = studentId.Trim() };
             var result = await _mediator.Send(query);
             
             if (result == null)
-                return NotFound(new { 
-                    success = false, 
-                    message = "دانشجو یافت نشد" 
-                });
+                return NotFoundResponse("دانشجو یافت نشد");
             
             return SuccessResponse(result, "پروفایل دانشجو با موفقیت دریافت شد");
         }, "خطا در دریافت پروفایل دانشجو");
@@ -87,19 +86,13 @@ public class StudentsController : BaseController
         return await ExecuteAsync(async () =>
         {
             if (string.IsNullOrWhiteSpace(studentId))
-                return BadRequest(new { 
-                    success = false, 
-                    message = "شناسه دانشجو الزامی است" 
-                });
+                return ValidationErrorResponse("شناسه دانشجو الزامی است", new { studentId = "شناسه دانشجو نمی‌تواند خالی باشد" });
 
-            var query = new GetStudentFinancialSummaryQuery { StudentId = studentId };
+            var query = new GetStudentFinancialSummaryQuery { StudentId = studentId.Trim() };
             var result = await _mediator.Send(query);
             
             if (result == null)
-                return NotFound(new { 
-                    success = false, 
-                    message = "دانشجو یافت نشد" 
-                });
+                return NotFoundResponse("دانشجو یافت نشد یا اطلاعات مالی در دسترس نیست");
             
             return SuccessResponse(result, "خلاصه مالی دانشجو با موفقیت دریافت شد");
         }, "خطا در دریافت خلاصه مالی دانشجو");
@@ -126,14 +119,14 @@ public class StudentsController : BaseController
         return await ExecuteAsync(async () =>
         {
             if (string.IsNullOrWhiteSpace(studentId))
-                return BadRequest(new { 
-                    success = false, 
-                    message = "شناسه دانشجو الزامی است" 
-                });
+                return ValidationErrorResponse("شناسه دانشجو الزامی است", new { studentId = "شناسه دانشجو نمی‌تواند خالی باشد" });
 
-            var query = new GetStudentAttendanceSummaryQuery { StudentId = studentId };
+            var query = new GetStudentAttendanceSummaryQuery { StudentId = studentId.Trim() };
             var result = await _mediator.Send(query);
             
+            if (result == null)
+                return SuccessResponse(new List<object>(), "هیچ اطلاعات حضوری برای این دانشجو یافت نشد");
+
             return SuccessResponse(result, "خلاصه حضور دانشجو با موفقیت دریافت شد");
         }, "خطا در دریافت خلاصه حضور دانشجو");
     }

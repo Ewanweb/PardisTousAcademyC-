@@ -95,7 +95,7 @@ public class GlobalExceptionMiddleware
             ValidationException => "اطلاعات ارسالی نامعتبر است",
             UnauthorizedAccessException => "دسترسی غیرمجاز. لطفاً وارد حساب کاربری خود شوید",
             ArgumentNullException => "اطلاعات ارسالی ناقص است",
-            ArgumentException => "اطلاعات ارسالی نامعتبر است",
+            ArgumentException argEx => argEx.Message, // استفاده از پیام اصلی exception
             InvalidOperationException => "عملیات درخواستی امکان‌پذیر نیست",
             TimeoutException => "زمان انتظار تمام شد. لطفاً دوباره تلاش کنید",
             HttpRequestException => "خطا در ارتباط با سرور. لطفاً اتصال اینترنت خود را بررسی کنید",

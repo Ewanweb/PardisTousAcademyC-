@@ -7,7 +7,7 @@ namespace Pardis.Application.Attendance;
 /// <summary>
 /// Handler برای بروزرسانی حضور و غیاب
 /// </summary>
-public class UpdateAttendanceHandler : IRequestHandler<UpdateAttendanceCommand, StudentAttendanceDto>
+public class UpdateAttendanceHandler : IRequestHandler<UpdateAttendanceCommand, StudentAttendanceDto?>
 {
     private readonly IStudentAttendanceRepository _attendanceRepository;
 
@@ -16,13 +16,13 @@ public class UpdateAttendanceHandler : IRequestHandler<UpdateAttendanceCommand, 
         _attendanceRepository = attendanceRepository;
     }
 
-    public async Task<StudentAttendanceDto> Handle(UpdateAttendanceCommand request, CancellationToken cancellationToken)
+    public async Task<StudentAttendanceDto?> Handle(UpdateAttendanceCommand request, CancellationToken cancellationToken)
     {
         var attendance = await _attendanceRepository.GetByIdAsync(request.AttendanceId);
         if (attendance == null)
-            throw new ArgumentException("حضور و غیاب یافت نشد", nameof(request.AttendanceId));
+            return null;
 
-        attendance.UpdateAttendance(request.Status, request.CheckInTime, null, request.Note);
+        attendance.UpdateAttendance(request.Status, request.UpdatedByUserId, request.Note);
 
         _attendanceRepository.Update(attendance);
         await _attendanceRepository.SaveChangesAsync(cancellationToken);
@@ -41,7 +41,7 @@ public class UpdateAttendanceHandler : IRequestHandler<UpdateAttendanceCommand, 
             CheckOutTime = attendance.CheckOutTime,
             AttendanceDuration = attendance.GetAttendanceDuration(),
             Note = attendance.Note,
-            RecordedByUserName = null,
+            RecordedByUserName = attendance.RecordedByUser?.FullName ?? attendance.RecordedByUser?.UserName,
             CreatedAt = attendance.CreatedAt,
             UpdatedAt = attendance.UpdatedAt
         };

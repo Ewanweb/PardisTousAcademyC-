@@ -6,6 +6,7 @@ using Pardis.Domain.Attendance;
 using Pardis.Query.Attendance;
 using Pardis.Application.Attendance;
 using Api.Controllers;
+using System.ComponentModel.DataAnnotations;
 
 namespace Endpoints.Api.Areas.Admin.Controllers;
 
@@ -40,17 +41,34 @@ public class AttendanceController : BaseController
     {
         return await ExecuteAsync(async () =>
         {
+            // اعتبارسنجی پارامترهای ورودی
+            if (request.CourseId == Guid.Empty)
+                return ValidationErrorResponse("شناسه دوره الزامی است", new { courseId = "شناسه دوره نمی‌تواند خالی باشد" });
+
+            if (string.IsNullOrWhiteSpace(request.Title))
+                return ValidationErrorResponse("عنوان جلسه الزامی است", new { title = "عنوان جلسه نمی‌تواند خالی باشد" });
+
+            if (request.Duration <= TimeSpan.Zero)
+                return ValidationErrorResponse("مدت زمان جلسه نامعتبر است", new { duration = "مدت زمان باید مثبت باشد" });
+
+            if (request.SessionNumber <= 0)
+                return ValidationErrorResponse("شماره جلسه نامعتبر است", new { sessionNumber = "شماره جلسه باید مثبت باشد" });
+
             var command = new CreateSessionCommand
             {
                 CourseId = request.CourseId,
                 ScheduleId = request.ScheduleId,
-                Title = request.Title,
+                Title = request.Title.Trim(),
                 SessionDate = request.SessionDate,
                 Duration = request.Duration,
                 SessionNumber = request.SessionNumber
             };
 
             var result = await _mediator.Send(command);
+            
+            if (result == null)
+                return ErrorResponse("خطا در ایجاد جلسه", 500, "CREATE_SESSION_FAILED");
+            
             return SuccessResponse(result, "جلسه با موفقیت ایجاد شد");
         }, "خطا در ایجاد جلسه");
     }
@@ -63,15 +81,29 @@ public class AttendanceController : BaseController
     {
         return await ExecuteAsync(async () =>
         {
+            // اعتبارسنجی پارامترهای ورودی
+            if (sessionId == Guid.Empty)
+                return ValidationErrorResponse("شناسه جلسه نامعتبر است", new { sessionId = "شناسه جلسه نمی‌تواند خالی باشد" });
+
+            if (string.IsNullOrWhiteSpace(request.Title))
+                return ValidationErrorResponse("عنوان جلسه الزامی است", new { title = "عنوان جلسه نمی‌تواند خالی باشد" });
+
+            if (request.Duration <= TimeSpan.Zero)
+                return ValidationErrorResponse("مدت زمان جلسه نامعتبر است", new { duration = "مدت زمان باید مثبت باشد" });
+
             var command = new UpdateSessionCommand
             {
                 SessionId = sessionId,
-                Title = request.Title,
+                Title = request.Title.Trim(),
                 SessionDate = request.SessionDate,
                 Duration = request.Duration
             };
 
             var result = await _mediator.Send(command);
+            
+            if (result == null)
+                return NotFoundResponse("جلسه یافت نشد");
+            
             return SuccessResponse(result, "جلسه با موفقیت بروزرسانی شد");
         }, "خطا در بروزرسانی جلسه");
     }
@@ -84,11 +116,15 @@ public class AttendanceController : BaseController
     {
         return await ExecuteAsync(async () =>
         {
+            // اعتبارسنجی پارامترهای ورودی
+            if (sessionId == Guid.Empty)
+                return ValidationErrorResponse("شناسه جلسه نامعتبر است", new { sessionId = "شناسه جلسه نمی‌تواند خالی باشد" });
+
             var command = new DeleteSessionCommand { SessionId = sessionId };
             var result = await _mediator.Send(command);
             
             if (!result)
-                return NotFound(new { success = false, message = "جلسه یافت نشد" });
+                return NotFoundResponse("جلسه یافت نشد یا قابل حذف نیست");
                 
             return SuccessResponse(new { id = sessionId }, "جلسه با موفقیت حذف شد");
         }, "خطا در حذف جلسه");
@@ -102,10 +138,17 @@ public class AttendanceController : BaseController
     {
         return await ExecuteAsync(async () =>
         {
+            // اعتبارسنجی پارامترهای ورودی
+            if (courseId == Guid.Empty)
+                return ValidationErrorResponse("شناسه دوره نامعتبر است", new { courseId = "شناسه دوره نمی‌تواند خالی باشد" });
+
             var query = new GetCourseSessionsQuery { CourseId = courseId };
             var result = await _mediator.Send(query);
             
-            return SuccessResponse(result, "جلسات دوره با موفقیت دریافت شدند");
+            if (result == null || result.Count == 0)
+                return SuccessResponse(new List<object>(), "هیچ جلسه‌ای برای این دوره یافت نشد");
+            
+            return SuccessResponse(result, $"{result.Count} جلسه برای این دوره یافت شد");
         }, "خطا در دریافت جلسات دوره");
     }
 
@@ -132,39 +175,77 @@ public class AttendanceController : BaseController
         return await ExecuteAsync(async () =>
         {
             if (scheduleId == Guid.Empty)
-                return BadRequest(new { 
-                    success = false, 
-                    message = "شناسه زمان‌بندی نامعتبر است" 
-                });
+                return ValidationErrorResponse("شناسه زمان‌بندی نامعتبر است", new { scheduleId = "شناسه زمان‌بندی نمی‌تواند خالی باشد" });
 
             var query = new GetSessionsByScheduleQuery { ScheduleId = scheduleId };
             var result = await _mediator.Send(query);
             
-            return SuccessResponse(result, "جلسات زمان‌بندی با موفقیت دریافت شدند");
+            if (result == null || result.Count == 0)
+                return SuccessResponse(new List<object>(), "هیچ جلسه‌ای برای این زمان‌بندی یافت نشد");
+            
+            return SuccessResponse(result, $"{result.Count} جلسه برای این زمان‌بندی یافت شد");
         }, "خطا در دریافت جلسات زمان‌بندی");
     }
 
     /// <summary>
     /// ثبت حضور و غیاب برای جلسه
     /// </summary>
+    /// <param name="sessionId">شناسه جلسه</param>
+    /// <param name="request">اطلاعات حضور و غیاب</param>
+    /// <returns>نتیجه ثبت حضور و غیاب</returns>
+    /// <response code="200">حضور و غیاب با موفقیت ثبت شد</response>
+    /// <response code="400">درخواست نامعتبر</response>
+    /// <response code="401">عدم احراز هویت</response>
+    /// <response code="403">عدم دسترسی - فقط ادمین و مدرس</response>
+    /// <response code="404">جلسه یا دانشجو یافت نشد</response>
+    /// <response code="500">خطای سرور</response>
     [HttpPost("session/{sessionId}")]
+    [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(typeof(object), 400)]
+    [ProducesResponseType(typeof(object), 401)]
+    [ProducesResponseType(typeof(object), 403)]
+    [ProducesResponseType(typeof(object), 404)]
+    [ProducesResponseType(typeof(object), 500)]
     public async Task<IActionResult> RecordAttendance(Guid sessionId, [FromBody] RecordAttendanceRequest request)
     {
         return await ExecuteAsync(async () =>
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            // اعتبارسنجی پارامترهای ورودی
+            if (sessionId == Guid.Empty)
+                return ValidationErrorResponse("شناسه جلسه نامعتبر است", new { sessionId = "شناسه جلسه نمی‌تواند خالی باشد" });
+
+            if (string.IsNullOrWhiteSpace(request.StudentId))
+                return ValidationErrorResponse("شناسه دانشجو الزامی است", new { studentId = "شناسه دانشجو نمی‌تواند خالی باشد" });
+
+            if (string.IsNullOrWhiteSpace(request.Status))
+                return ValidationErrorResponse("وضعیت حضور الزامی است", new { status = "وضعیت حضور نمی‌تواند خالی باشد" });
+
+            // بررسی معتبر بودن وضعیت حضور
+            if (!Enum.TryParse<AttendanceStatus>(request.Status, true, out var attendanceStatus))
+                return ValidationErrorResponse("وضعیت حضور نامعتبر است", new { 
+                    status = "مقادیر مجاز: Present, Absent, Late",
+                    allowedValues = new[] { "Present", "Absent", "Late" }
+                });
+
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return UnauthorizedResponse("کاربر احراز هویت نشده است");
             
             var command = new RecordAttendanceCommand
             {
                 SessionId = sessionId,
-                StudentId = request.StudentId,
-                Status = Enum.Parse<AttendanceStatus>(request.Status, true),
+                StudentId = request.StudentId.Trim(),
+                Status = attendanceStatus,
                 CheckInTime = request.CheckInTime,
-                Note = request.Note,
+                Note = request.Note?.Trim(),
                 RecordedByUserId = userId
             };
             
             var result = await _mediator.Send(command);
+            
+            if (result == null)
+                return ErrorResponse("خطا در ثبت حضور و غیاب", 500, "RECORD_ATTENDANCE_FAILED");
+            
             return SuccessResponse(result, "حضور و غیاب با موفقیت ثبت شد");
         }, "خطا در ثبت حضور و غیاب");
     }
@@ -172,20 +253,58 @@ public class AttendanceController : BaseController
     /// <summary>
     /// بروزرسانی حضور و غیاب
     /// </summary>
+    /// <param name="attendanceId">شناسه حضور و غیاب</param>
+    /// <param name="request">اطلاعات بروزرسانی</param>
+    /// <returns>نتیجه بروزرسانی حضور و غیاب</returns>
+    /// <response code="200">حضور و غیاب با موفقیت بروزرسانی شد</response>
+    /// <response code="400">درخواست نامعتبر</response>
+    /// <response code="401">عدم احراز هویت</response>
+    /// <response code="403">عدم دسترسی - فقط ادمین و مدرس</response>
+    /// <response code="404">حضور و غیاب یافت نشد</response>
+    /// <response code="500">خطای سرور</response>
     [HttpPut("{attendanceId}")]
+    [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(typeof(object), 400)]
+    [ProducesResponseType(typeof(object), 401)]
+    [ProducesResponseType(typeof(object), 403)]
+    [ProducesResponseType(typeof(object), 404)]
+    [ProducesResponseType(typeof(object), 500)]
     public async Task<IActionResult> UpdateAttendance(Guid attendanceId, [FromBody] UpdateAttendanceRequest request)
     {
         return await ExecuteAsync(async () =>
         {
+            // اعتبارسنجی پارامترهای ورودی
+            if (attendanceId == Guid.Empty)
+                return ValidationErrorResponse("شناسه حضور و غیاب نامعتبر است", new { attendanceId = "شناسه نمی‌تواند خالی باشد" });
+
+            if (string.IsNullOrWhiteSpace(request.Status))
+                return ValidationErrorResponse("وضعیت حضور الزامی است", new { status = "وضعیت حضور نمی‌تواند خالی باشد" });
+
+            // بررسی معتبر بودن وضعیت حضور
+            if (!Enum.TryParse<AttendanceStatus>(request.Status, true, out var attendanceStatus))
+                return ValidationErrorResponse("وضعیت حضور نامعتبر است", new { 
+                    status = "مقادیر مجاز: Present, Absent, Late",
+                    allowedValues = new[] { "Present", "Absent", "Late" }
+                });
+
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return UnauthorizedResponse("کاربر احراز هویت نشده است");
+
             var command = new UpdateAttendanceCommand
             {
                 AttendanceId = attendanceId,
-                Status = Enum.Parse<AttendanceStatus>(request.Status, true),
+                Status = attendanceStatus,
                 CheckInTime = request.CheckInTime,
-                Note = request.Note
+                Note = request.Note,
+                UpdatedByUserId = userId
             };
             
             var result = await _mediator.Send(command);
+            
+            if (result == null)
+                return NotFoundResponse("حضور و غیاب یافت نشد");
+            
             return SuccessResponse(result, "حضور و غیاب با موفقیت بروزرسانی شد");
         }, "خطا در بروزرسانی حضور و غیاب");
     }
@@ -217,21 +336,19 @@ public class AttendanceController : BaseController
         return await ExecuteAsync(async () =>
         {
             if (sessionId == Guid.Empty)
-                return BadRequest(new { 
-                    success = false, 
-                    message = "شناسه جلسه نامعتبر است" 
-                });
+                return ValidationErrorResponse("شناسه جلسه نامعتبر است", new { sessionId = "شناسه جلسه نمی‌تواند خالی باشد" });
 
             var query = new GetSessionAttendanceQuery { SessionId = sessionId };
             var result = await _mediator.Send(query);
             
             if (result == null)
-                return NotFound(new { 
-                    success = false, 
-                    message = "جلسه یافت نشد" 
-                });
+                return NotFoundResponse("جلسه یافت نشد");
             
-            return SuccessResponse(result, "حضور و غیاب جلسه با موفقیت دریافت شد");
+            var message = result.Attendances.Any() 
+                ? $"حضور و غیاب {result.Attendances.Count} دانشجو در جلسه دریافت شد"
+                : "هیچ حضور و غیابی برای این جلسه ثبت نشده است";
+            
+            return SuccessResponse(result, message);
         }, "خطا در دریافت حضور و غیاب جلسه");
     }
 
@@ -259,21 +376,22 @@ public class AttendanceController : BaseController
         return await ExecuteAsync(async () =>
         {
             if (string.IsNullOrWhiteSpace(studentId))
-                return BadRequest(new { 
-                    success = false, 
-                    message = "شناسه دانشجو الزامی است" 
-                });
+                return ValidationErrorResponse("شناسه دانشجو الزامی است", new { studentId = "شناسه دانشجو نمی‌تواند خالی باشد" });
 
             if (courseId == Guid.Empty)
-                return BadRequest(new { 
-                    success = false, 
-                    message = "شناسه دوره نامعتبر است" 
-                });
+                return ValidationErrorResponse("شناسه دوره نامعتبر است", new { courseId = "شناسه دوره نمی‌تواند خالی باشد" });
 
-            var query = new GetStudentAttendanceReportQuery(studentId, courseId);
+            var query = new GetStudentAttendanceReportQuery(studentId.Trim(), courseId);
             var result = await _mediator.Send(query);
             
-            return SuccessResponse(result, "گزارش حضور دانشجو با موفقیت دریافت شد");
+            if (result == null)
+                return NotFoundResponse("گزارش حضور برای این دانشجو و دوره یافت نشد");
+            
+            var message = result.TotalSessions > 0 
+                ? $"گزارش حضور دانشجو در {result.TotalSessions} جلسه دریافت شد - درصد حضور: {result.AttendancePercentage:F1}%"
+                : "هیچ جلسه‌ای برای این دانشجو و دوره یافت نشد";
+            
+            return SuccessResponse(result, message);
         }, "خطا در دریافت گزارش حضور دانشجو");
     }
 }
@@ -344,11 +462,13 @@ public class RecordAttendanceRequest
     /// <summary>
     /// شناسه دانشجو
     /// </summary>
+    [Required(ErrorMessage = "شناسه دانشجو الزامی است")]
     public string StudentId { get; set; } = string.Empty;
     
     /// <summary>
     /// وضعیت حضور (Present, Absent, Late)
     /// </summary>
+    [Required(ErrorMessage = "وضعیت حضور الزامی است")]
     public string Status { get; set; } = string.Empty;
     
     /// <summary>
