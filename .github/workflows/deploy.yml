@@ -3,6 +3,7 @@ name: Deploy API to Server
 on:
   push:
     branches: [master]
+  workflow_dispatch: # امکان اجرای دستی
 
 jobs:
   deploy:
@@ -15,24 +16,29 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: "9.0.x"
 
       # Build Backend Only
       - name: Build API
         run: |
+          Write-Host "🔨 شروع Build..." -ForegroundColor Cyan
           dotnet publish Endpoints/Api/Api.csproj -c Release -o ./publish/api
+          Write-Host "✅ Build تکمیل شد" -ForegroundColor Green
 
       # Create deployment folder
       - name: Prepare deployment
         run: |
+          Write-Host "📦 آماده‌سازی فایل‌ها..." -ForegroundColor Cyan
+
           # Create folders
           mkdir deployment
 
           # Copy API files to root
           xcopy /E /I /Y "publish\api\*" "deployment\"
 
-          # Create simple appsettings.json
-          echo '{
+          # Create appsettings.json
+          @"
+          {
             "ConnectionStrings": {
               "DefaultConnection": "Server=localhost\\\\SQLEXPRESS;Database=pardisto_api;User Id=ewan;Password=0gH!_kE2buHfcb0w;TrustServerCertificate=True;Encrypt=False;"
             },
@@ -41,11 +47,19 @@ jobs:
               "Issuer": "PardisAcademy",
               "Audience": "PardisAcademyUsers"
             },
-            "AllowedHosts": "*"
-          }' > deployment\appsettings.json
+            "AllowedHosts": "*",
+            "Logging": {
+              "LogLevel": {
+                "Default": "Information",
+                "Microsoft.AspNetCore": "Warning"
+              }
+            }
+          }
+          "@ | Out-File -FilePath "deployment\appsettings.json" -Encoding UTF8
 
-          # Create web.config for API
-          echo '<?xml version="1.0" encoding="utf-8"?>
+          # Create web.config
+          @"
+          <?xml version="1.0" encoding="utf-8"?>
           <configuration>
             <system.webServer>
               <handlers>
@@ -57,76 +71,13 @@ jobs:
                 </environmentVariables>
               </aspNetCore>
             </system.webServer>
-          </configuration>' > deployment\web.config
+          </configuration>
+          "@ | Out-File -FilePath "deployment\web.config" -Encoding UTF8
 
-          # Create app_offline.htm to stop the application during deployment
-          # Note: This will be uploaded separately, not included in main deployment
+          Write-Host "✅ فایل‌ها آماده شدند" -ForegroundColor Green
 
-      # Step 1: Upload app_offline.htm to stop the application
-      - name: Stop Application
-        run: |
-          # Create a simple app_offline.htm file
-          echo '<!DOCTYPE html>
-          <html>
-          <head>
-              <title>Application Offline</title>
-              <meta charset="utf-8" />
-          </head>
-          <body>
-              <h1>Application is being updated</h1>
-              <p>The application is currently being updated. Please try again in a few moments.</p>
-          </body>
-          </html>' > app_offline.htm
-
-          # Create FTP script with proper Windows syntax
-          @"
-          open ftp.api.pardistous.ir
-          ewan
-          mahan1384@
-          binary
-          put app_offline.htm
-          quit
-          "@ | Out-File -FilePath "ftp_stop.txt" -Encoding ASCII
-
-          # Execute FTP command
-          ftp -s:ftp_stop.txt
-
-          # Cleanup
-          Remove-Item ftp_stop.txt -ErrorAction SilentlyContinue
-          Remove-Item app_offline.htm -ErrorAction SilentlyContinue
-
-          Write-Host "app_offline.htm uploaded successfully"
-
-      # Wait for application to stop completely
-      - name: Wait for application to stop
-        run: |
-          Write-Host "Waiting for application to stop completely..."
-          Start-Sleep -Seconds 45
-          Write-Host "Application should be stopped now..."
-
-      # Step 2: Deploy all files (now that app is offline)
+      # Deploy to Server
       - name: Deploy to Server
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ftp.api.pardistous.ir
-          username: ewan
-          password: mahan1384@
-          local-dir: ./deployment/
-          server-dir: /
-          # Add retry and timeout settings
-          timeout: 60000
-        continue-on-error: true
-        id: deploy_attempt_1
-
-      # Retry deployment if first attempt failed
-      - name: Retry Deploy if Failed
-        if: steps.deploy_attempt_1.outcome == 'failure'
-        run: |
-          Write-Host "First deployment failed, waiting longer and retrying..."
-          Start-Sleep -Seconds 60
-
-      - name: Deploy to Server (Retry)
-        if: steps.deploy_attempt_1.outcome == 'failure'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ftp.api.pardistous.ir
@@ -136,53 +87,33 @@ jobs:
           server-dir: /
           timeout: 120000
 
-      # Step 3: Remove app_offline.htm to start the application
-      - name: Start Application
+      # Health check
+      - name: Health Check
         run: |
-          # Create FTP script to delete app_offline.htm
-          @"
-          open ftp.api.pardistous.ir
-          ewan
-          mahan1384@
-          delete app_offline.htm
-          quit
-          "@ | Out-File -FilePath "ftp_delete.txt" -Encoding ASCII
+          Write-Host "🏥 تست سلامت API..." -ForegroundColor Cyan
+          Start-Sleep -Seconds 45
 
-          # Execute FTP command
-          ftp -s:ftp_delete.txt
-
-          # Cleanup
-          Remove-Item ftp_delete.txt -ErrorAction SilentlyContinue
-
-          Write-Host "app_offline.htm removed successfully"
-
-      # Simple health check
-      - name: Check if deployed
-        run: |
-          Write-Host "Waiting for application to start..."
-          Start-Sleep -Seconds 60
-
-          $maxAttempts = 5
+          $maxAttempts = 3
           $attempt = 1
 
           while ($attempt -le $maxAttempts) {
             try {
-              Write-Host "Health check attempt $attempt of $maxAttempts"
+              Write-Host "🔍 تلاش $attempt از $maxAttempts" -ForegroundColor Yellow
               $response = Invoke-WebRequest -Uri "https://api.pardistous.ir/api/health" -UseBasicParsing -TimeoutSec 15
               if ($response.StatusCode -eq 200) {
-                Write-Host "✅ API is working! Deployment successful!"
+                Write-Host "✅ API کار می‌کنه! دیپلوی موفق بود!" -ForegroundColor Green
+                Write-Host "🌐 آدرس: https://api.pardistous.ir" -ForegroundColor Cyan
                 exit 0
               }
             } catch {
-              Write-Host "⚠️ Attempt $attempt failed: $($_.Exception.Message)"
+              Write-Host "⚠️ تلاش $attempt ناموفق: $($_.Exception.Message)" -ForegroundColor Red
             }
             
             if ($attempt -lt $maxAttempts) {
-              Write-Host "Waiting 30 seconds before next attempt..."
+              Write-Host "⏳ صبر 30 ثانیه..." -ForegroundColor Yellow
               Start-Sleep -Seconds 30
             }
             $attempt++
           }
 
-          Write-Host "❌ API health check failed after $maxAttempts attempts"
-          Write-Host "The deployment may still be successful, but the API is not responding yet"
+          Write-Host "❌ تست سلامت ناموفق ولی ممکنه دیپلوی موفق باشه" -ForegroundColor Red
