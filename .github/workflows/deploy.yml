@@ -60,6 +60,12 @@ jobs:
           </configuration>' > deployment\web.config
 
           # Create app_offline.htm to stop the application during deployment
+          # Note: This will be uploaded separately, not included in main deployment
+
+      # Step 1: Upload app_offline.htm to stop the application
+      - name: Stop Application
+        run: |
+          # Create a simple app_offline.htm file
           echo '<!DOCTYPE html>
           <html>
           <head>
@@ -70,24 +76,23 @@ jobs:
               <h1>Application is being updated</h1>
               <p>The application is currently being updated. Please try again in a few moments.</p>
           </body>
-          </html>' > deployment\app_offline.htm
+          </html>' > app_offline.htm
 
-      # Step 1: Upload app_offline.htm to stop the application
-      - name: Stop Application
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ftp.api.pardistous.ir
-          username: ewan
-          password: mahan1384@
-          local-dir: ./deployment/
-          server-dir: /
-          include: |
-            app_offline.htm
+          # Upload only app_offline.htm via FTP script
+          echo 'open ftp.api.pardistous.ir
+          ewan
+          mahan1384@
+          put app_offline.htm
+          quit' > ftp_stop.txt
+          ftp -s:ftp_stop.txt
+          del ftp_stop.txt
+          del app_offline.htm
 
-      # Wait for application to stop
+      # Wait for application to stop completely
       - name: Wait for application to stop
         run: |
-          Start-Sleep -Seconds 30
+          Write-Host "Waiting for application to stop completely..."
+          Start-Sleep -Seconds 45
           Write-Host "Application should be stopped now..."
 
       # Step 2: Deploy all files (now that app is offline)
@@ -99,8 +104,6 @@ jobs:
           password: mahan1384@
           local-dir: ./deployment/
           server-dir: /
-          exclude: |
-            app_offline.htm
           # Add retry and timeout settings
           timeout: 60000
         continue-on-error: true
@@ -122,8 +125,6 @@ jobs:
           password: mahan1384@
           local-dir: ./deployment/
           server-dir: /
-          exclude: |
-            app_offline.htm
           timeout: 120000
 
       # Step 3: Remove app_offline.htm to start the application
