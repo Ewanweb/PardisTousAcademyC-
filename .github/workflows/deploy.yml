@@ -86,7 +86,9 @@ jobs:
 
       # Wait for application to stop
       - name: Wait for application to stop
-        run: Start-Sleep -Seconds 10
+        run: |
+          Start-Sleep -Seconds 30
+          Write-Host "Application should be stopped now..."
 
       # Step 2: Deploy all files (now that app is offline)
       - name: Deploy to Server
@@ -99,6 +101,30 @@ jobs:
           server-dir: /
           exclude: |
             app_offline.htm
+          # Add retry and timeout settings
+          timeout: 60000
+        continue-on-error: true
+        id: deploy_attempt_1
+
+      # Retry deployment if first attempt failed
+      - name: Retry Deploy if Failed
+        if: steps.deploy_attempt_1.outcome == 'failure'
+        run: |
+          Write-Host "First deployment failed, waiting longer and retrying..."
+          Start-Sleep -Seconds 60
+
+      - name: Deploy to Server (Retry)
+        if: steps.deploy_attempt_1.outcome == 'failure'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ftp.api.pardistous.ir
+          username: ewan
+          password: mahan1384@
+          local-dir: ./deployment/
+          server-dir: /
+          exclude: |
+            app_offline.htm
+          timeout: 120000
 
       # Step 3: Remove app_offline.htm to start the application
       - name: Start Application
@@ -115,12 +141,30 @@ jobs:
       # Simple health check
       - name: Check if deployed
         run: |
-          Start-Sleep -Seconds 30
-          try {
-            $response = Invoke-WebRequest -Uri "https://api.pardistous.ir/api/health" -UseBasicParsing -TimeoutSec 10
-            if ($response.StatusCode -eq 200) {
-              Write-Host "✅ API is working!"
+          Write-Host "Waiting for application to start..."
+          Start-Sleep -Seconds 60
+
+          $maxAttempts = 5
+          $attempt = 1
+
+          while ($attempt -le $maxAttempts) {
+            try {
+              Write-Host "Health check attempt $attempt of $maxAttempts"
+              $response = Invoke-WebRequest -Uri "https://api.pardistous.ir/api/health" -UseBasicParsing -TimeoutSec 15
+              if ($response.StatusCode -eq 200) {
+                Write-Host "✅ API is working! Deployment successful!"
+                exit 0
+              }
+            } catch {
+              Write-Host "⚠️ Attempt $attempt failed: $($_.Exception.Message)"
             }
-          } catch {
-            Write-Host "⚠️ API might need a few more minutes"
+            
+            if ($attempt -lt $maxAttempts) {
+              Write-Host "Waiting 30 seconds before next attempt..."
+              Start-Sleep -Seconds 30
+            }
+            $attempt++
           }
+
+          Write-Host "❌ API health check failed after $maxAttempts attempts"
+          Write-Host "The deployment may still be successful, but the API is not responding yet"
