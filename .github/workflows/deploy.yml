@@ -59,7 +59,7 @@ jobs:
             </system.webServer>
           </configuration>' > deployment\web.config
 
-      # Deploy via FTP
+      # Deploy via FTP with cleanup
       - name: Deploy to Server
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
@@ -68,6 +68,13 @@ jobs:
           password: mahan1384@
           local-dir: ./deployment/
           server-dir: /
+          # Clean up old files before deploying new ones
+          dangerous-clean-slate: true
+          # Exclude certain files/folders from deletion (if needed)
+          exclude: |
+            **/.well-known/**
+            **/logs/**
+            **/App_Data/**
 
       # Simple health check
       - name: Check if deployed
