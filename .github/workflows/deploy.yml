@@ -59,7 +59,36 @@ jobs:
             </system.webServer>
           </configuration>' > deployment\web.config
 
-      # Deploy via FTP with cleanup
+          # Create app_offline.htm to stop the application during deployment
+          echo '<!DOCTYPE html>
+          <html>
+          <head>
+              <title>Application Offline</title>
+              <meta charset="utf-8" />
+          </head>
+          <body>
+              <h1>Application is being updated</h1>
+              <p>The application is currently being updated. Please try again in a few moments.</p>
+          </body>
+          </html>' > deployment\app_offline.htm
+
+      # Step 1: Upload app_offline.htm to stop the application
+      - name: Stop Application
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ftp.api.pardistous.ir
+          username: ewan
+          password: mahan1384@
+          local-dir: ./deployment/
+          server-dir: /
+          include: |
+            app_offline.htm
+
+      # Wait for application to stop
+      - name: Wait for application to stop
+        run: Start-Sleep -Seconds 10
+
+      # Step 2: Deploy all files (now that app is offline)
       - name: Deploy to Server
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
@@ -68,13 +97,20 @@ jobs:
           password: mahan1384@
           local-dir: ./deployment/
           server-dir: /
-          # Clean up old files before deploying new ones
-          dangerous-clean-slate: true
-          # Exclude certain files/folders from deletion (if needed)
           exclude: |
-            **/.well-known/**
-            **/logs/**
-            **/App_Data/**
+            app_offline.htm
+
+      # Step 3: Remove app_offline.htm to start the application
+      - name: Start Application
+        run: |
+          # Create a temporary script to delete app_offline.htm via FTP
+          echo 'open ftp.api.pardistous.ir
+          ewan
+          mahan1384@
+          delete app_offline.htm
+          quit' > ftp_delete.txt
+          ftp -s:ftp_delete.txt
+          del ftp_delete.txt
 
       # Simple health check
       - name: Check if deployed
