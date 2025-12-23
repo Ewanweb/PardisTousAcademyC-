@@ -1,8 +1,8 @@
-name: Deploy to Server
+name: Deploy API to Server
 
 on:
   push:
-    branches: [master]
+    branches: [main]
 
 jobs:
   deploy:
@@ -17,41 +17,24 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18.x"
-
-      # Build Backend
+      # Build Backend Only
       - name: Build API
         run: |
           dotnet publish Endpoints/Api/Api.csproj -c Release -o ./publish/api
-
-      # Build Frontend
-      - name: Build Frontend
-        run: |
-          cd react-frontend-code
-          npm install
-          npm run build
-          cd ..
 
       # Create deployment folder
       - name: Prepare deployment
         run: |
           # Create folders
           mkdir deployment
-          mkdir deployment\api
 
-          # Copy API files
-          xcopy /E /I /Y "publish\api\*" "deployment\api\"
-
-          # Copy Frontend files to root
-          xcopy /E /I /Y "react-frontend-code\build\*" "deployment\"
+          # Copy API files to root
+          xcopy /E /I /Y "publish\api\*" "deployment\"
 
           # Create simple appsettings.json
           echo '{
             "ConnectionStrings": {
-              "DefaultConnection": "localhost\SQLEXPRESS;Database=pardisto_api;User Id=ewan;Password=0gH!_kE2buHfcb0w;TrustServerCertificate=True;"
+              "DefaultConnection": "Server=localhost\\SQLEXPRESS;Database=pardisto_api;User Id=ewan;Password=0gH!_kE2buHfcb0w;TrustServerCertificate=True;"
             },
             "JwtSettings": {
               "Key": "n8B5C1yK4mYx7DqRZQ0pVJm0r2KzF+T9aA1XcH3sWlU=",
@@ -59,7 +42,7 @@ jobs:
               "Audience": "PardisAcademyUsers"
             },
             "AllowedHosts": "*"
-          }' > deployment\api\appsettings.json
+          }' > deployment\appsettings.json
 
           # Create web.config for API
           echo '<?xml version="1.0" encoding="utf-8"?>
@@ -73,30 +56,6 @@ jobs:
                   <environmentVariable name="ASPNETCORE_ENVIRONMENT" value="Production" />
                 </environmentVariables>
               </aspNetCore>
-            </system.webServer>
-          </configuration>' > deployment\api\web.config
-
-          # Create main web.config for routing
-          echo '<?xml version="1.0" encoding="utf-8"?>
-          <configuration>
-            <system.webServer>
-              <rewrite>
-                <rules>
-                  <rule name="API" stopProcessing="true">
-                    <match url="^api/(.*)" />
-                    <action type="Rewrite" url="api/{R:1}" />
-                  </rule>
-                  <rule name="React" stopProcessing="true">
-                    <match url=".*" />
-                    <conditions logicalGrouping="MatchAll">
-                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
-                      <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
-                      <add input="{REQUEST_URI}" pattern="^/api/" negate="true" />
-                    </conditions>
-                    <action type="Rewrite" url="/index.html" />
-                  </rule>
-                </rules>
-              </rewrite>
             </system.webServer>
           </configuration>' > deployment\web.config
 
@@ -115,10 +74,10 @@ jobs:
         run: |
           Start-Sleep -Seconds 30
           try {
-            $response = Invoke-WebRequest -Uri "https://api.pardistous.ir" -UseBasicParsing -TimeoutSec 10
+            $response = Invoke-WebRequest -Uri "https://api.pardistous.ir/api/health" -UseBasicParsing -TimeoutSec 10
             if ($response.StatusCode -eq 200) {
-              Write-Host "✅ Site is working!"
+              Write-Host "✅ API is working!"
             }
           } catch {
-            Write-Host "⚠️ Site might need a few more minutes"
+            Write-Host "⚠️ API might need a few more minutes"
           }
