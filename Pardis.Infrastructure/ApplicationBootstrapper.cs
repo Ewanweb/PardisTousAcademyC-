@@ -22,6 +22,9 @@ namespace Pardis.Infrastructure
     {
         public static IServiceCollection Inject(this IServiceCollection service, IConfiguration config)
         {
+            var cs = config.GetConnectionString("DefaultConnection");
+            Console.WriteLine("DefaultConnection=[" + cs + "]");
+
             // 1. دیتابیس
             service.AddDbContext<AppDbContext>(options =>
             {
