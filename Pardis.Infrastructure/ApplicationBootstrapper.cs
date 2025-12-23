@@ -13,8 +13,7 @@ using Pardis.Domain.Courses;
 using Pardis.Domain.Users;
 using Pardis.Domain.Payments;
 using Pardis.Domain.Attendance;
-using Pardis.Infrastructure.Repository; // اگر کلاس Repository اینجاست
-using Pardis.Query.Users.GetUserById;
+using Pardis.Infrastructure.Repository;
 using System.Text;
 
 namespace Pardis.Infrastructure
@@ -92,7 +91,7 @@ namespace Pardis.Infrastructure
             service.AddMediatR(cfg =>
             {
                 cfg.RegisterServicesFromAssembly(typeof(UpdateCategoryHandler).Assembly);
-                cfg.RegisterServicesFromAssembly(typeof(GetUserByIdQuery).Assembly);
+                // Query handlers will be registered separately in the API project
             });
 
             // 5. تزریق وابستگی‌های کاستوم

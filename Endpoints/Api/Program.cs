@@ -93,6 +93,15 @@ builder.Services.AddCors(options =>
 // تزریق سرویس‌های لایه زیرساخت
 builder.Services.Inject(builder.Configuration);
 
+// ثبت Query handlers
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(Pardis.Query.Sliders.HeroSlides.GetHeroSlides.GetHeroSlidesQuery).Assembly);
+});
+
+// ثبت Background Service برای پاک‌سازی اسلایدرها
+builder.Services.AddHostedService<Pardis.Infrastructure.BackgroundServices.SliderCleanupService>();
+
 var app = builder.Build();
 
 // =========================================================
@@ -121,14 +130,14 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.EnablePersistAuthorization(); // ذخیره توکن بعد از رفرش
-    });
+
     // app.MapOpenApi(); // حذف شد چون تداخل ایجاد می‌کرد
 }
-
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.EnablePersistAuthorization(); // ذخیره توکن بعد از رفرش
+});
 app.UseHttpsRedirection(); // بهتر است اینجا باشد
 app.UseStaticFiles();
 

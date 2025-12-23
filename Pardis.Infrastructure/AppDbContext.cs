@@ -8,6 +8,7 @@ using Pardis.Domain.Accounting;
 using Pardis.Domain.Comments;
 using Pardis.Domain.Attendance;
 using Pardis.Domain.Payments;
+using Pardis.Domain.Sliders;
 
 namespace Pardis.Infrastructure
 {
@@ -38,6 +39,10 @@ namespace Pardis.Infrastructure
         // ✅ ثبت‌نام و پرداخت
         public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
         public DbSet<InstallmentPayment> InstallmentPayments { get; set; }
+        
+        // ✅ اسلایدرها و استوری‌ها
+        public DbSet<HeroSlide> HeroSlides { get; set; }
+        public DbSet<SuccessStory> SuccessStories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

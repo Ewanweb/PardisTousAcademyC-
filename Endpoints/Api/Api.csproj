@@ -23,6 +23,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Pardis.Infrastructure\Pardis.Infrastructure.csproj" />
+		<ProjectReference Include="..\..\Pardis.Application\Pardis.Application.csproj" />
+		<ProjectReference Include="..\..\Pardis.Query\Pardis.Query.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

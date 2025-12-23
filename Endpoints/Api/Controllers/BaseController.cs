@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using MediatR;
 using Pardis.Application._Shared;
+using System.Security.Claims;
 
 namespace Api.Controllers;
 
@@ -9,11 +11,56 @@ namespace Api.Controllers;
 [ApiController]
 public abstract class BaseController : ControllerBase
 {
+    protected readonly IMediator Mediator;
     protected readonly ILogger _logger;
 
+    protected BaseController(IMediator mediator, ILogger logger)
+    {
+        Mediator = mediator;
+        _logger = logger;
+    }
+
+    // Constructor برای کنترلرهای قدیمی که فقط ILogger دارن
     protected BaseController(ILogger logger)
     {
         _logger = logger;
+        Mediator = null!; // برای کنترلرهای قدیمی که MediatR استفاده نمی‌کنن
+    }
+
+    /// <summary>
+    /// دریافت شناسه کاربر فعلی
+    /// </summary>
+    protected string? GetCurrentUserId()
+    {
+        return User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    }
+
+    /// <summary>
+    /// ایجاد پاسخ بر اساس OperationResult
+    /// </summary>
+    protected IActionResult CreateResponse(OperationResult result)
+    {
+        return result.Status switch
+        {
+            OperationResultStatus.Success => Ok(new { success = true, message = result.Message }),
+            OperationResultStatus.NotFound => NotFound(new { success = false, message = result.Message }),
+            OperationResultStatus.Error => BadRequest(new { success = false, message = result.Message }),
+            _ => StatusCode(500, new { success = false, message = "خطای غیرمنتظره" })
+        };
+    }
+
+    /// <summary>
+    /// ایجاد پاسخ بر اساس OperationResult با داده
+    /// </summary>
+    protected IActionResult CreateResponse<T>(OperationResult<T> result)
+    {
+        return result.Status switch
+        {
+            OperationResultStatus.Success => Ok(new { success = true, message = result.Message, data = result.Data }),
+            OperationResultStatus.NotFound => NotFound(new { success = false, message = result.Message }),
+            OperationResultStatus.Error => BadRequest(new { success = false, message = result.Message }),
+            _ => StatusCode(500, new { success = false, message = "خطای غیرمنتظره" })
+        };
     }
 
     /// <summary>

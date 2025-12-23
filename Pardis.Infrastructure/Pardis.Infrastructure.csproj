@@ -22,7 +22,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Pardis.Application\Pardis.Application.csproj" />
     <ProjectReference Include="..\Pardis.Domain\Pardis.Domain.csproj" />
-    <ProjectReference Include="..\Pardis.Query\Pardis.Query.csproj" />
   </ItemGroup>
 
 </Project>

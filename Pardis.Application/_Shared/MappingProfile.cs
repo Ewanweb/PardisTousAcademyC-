@@ -7,6 +7,7 @@ using Pardis.Domain.Accounting;
 using Pardis.Domain.Comments;
 using Pardis.Domain.Attendance;
 using Pardis.Domain.Payments;
+using Pardis.Domain.Sliders;
 using Pardis.Domain.Dto.Categories;
 using Pardis.Domain.Dto.Courses;
 using Pardis.Domain.Dto.Users;
@@ -14,6 +15,7 @@ using Pardis.Domain.Dto.Accounting;
 using Pardis.Domain.Dto.Comments;
 using Pardis.Domain.Dto.Attendance;
 using Pardis.Domain.Dto.Payments;
+using Pardis.Domain.Dto.Sliders;
 using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Application._Shared
@@ -24,6 +26,23 @@ namespace Pardis.Application._Shared
         {
             // تبدیل SeoMetadata به SeoDto
             CreateMap<SeoMetadata, SeoDto>().ReverseMap();
+
+            // Slider Mappings
+            CreateMap<HeroSlide, HeroSlideResource>()
+                .ForMember(dest => dest.TimeRemaining, opt => opt.MapFrom(src => src.GetTimeRemaining()))
+                .ForMember(dest => dest.IsExpired, opt => opt.MapFrom(src => src.IsExpired()));
+                
+            CreateMap<HeroSlide, HeroSlideListResource>()
+                .ForMember(dest => dest.TimeRemaining, opt => opt.MapFrom(src => src.GetTimeRemaining()))
+                .ForMember(dest => dest.IsExpired, opt => opt.MapFrom(src => src.IsExpired()));
+                
+            CreateMap<SuccessStory, SuccessStoryResource>()
+                .ForMember(dest => dest.TimeRemaining, opt => opt.MapFrom(src => src.GetTimeRemaining()))
+                .ForMember(dest => dest.IsExpired, opt => opt.MapFrom(src => src.IsExpired()));
+                
+            CreateMap<SuccessStory, SuccessStoryListResource>()
+                .ForMember(dest => dest.TimeRemaining, opt => opt.MapFrom(src => src.GetTimeRemaining()))
+                .ForMember(dest => dest.IsExpired, opt => opt.MapFrom(src => src.IsExpired()));
 
             // تبدیل User به UserResource (بدون Courses برای جلوگیری از circular reference)
             CreateMap<User, UserResource>()
