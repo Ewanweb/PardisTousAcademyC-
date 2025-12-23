@@ -1,7 +1,8 @@
 name: Simple Deploy API to Server
 
 on:
-  workflow_dispatch: # Manual trigger only
+    push:
+      branches: [master] # Manual trigger only
 
 jobs:
   deploy:
