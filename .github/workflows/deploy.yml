@@ -40,7 +40,7 @@ jobs:
           @"
           {
             "ConnectionStrings": {
-              "DefaultConnection": "Server=localhost\\\\SQLEXPRESS;Database=pardisto_api;User Id=ewan;Password=0gH!_kE2buHfcb0w;TrustServerCertificate=True;Encrypt=False;"
+              "DefaultConnection": "Server=localhost;Database=pardisto_api;User Id=mahan;Password=ewan1384@;TrustServerCertificate=True;"
             },
             "JwtSettings": {
               "Key": "n8B5C1yK4mYx7DqRZQ0pVJm0r2KzF+T9aA1XcH3sWlU=",
