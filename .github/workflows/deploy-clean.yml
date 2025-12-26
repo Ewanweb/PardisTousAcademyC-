@@ -34,50 +34,33 @@ jobs:
           </html>
           "@ | Out-File -FilePath "app_offline.htm" -Encoding UTF8
 
-          # اسکریپت FTP سازگار با Plesk
+          # اسکریپت FTP (فرمت صحیح)
           @"
           open ftp.api.pardistous.ir
-          user ewan
+          ewan
           mahan1384@
           binary
           put app_offline.htm
           quit
           "@ | Out-File -FilePath "ftp_stop.txt" -Encoding ASCII
 
-          ftp -s:ftp_stop.txt
+          # اجرای FTP و گرفتن خروجی برای بررسی موفقیت
+          $out = ftp -s:ftp_stop.txt 2>&1 | Out-String
+          Write-Host $out
 
           Remove-Item ftp_stop.txt -ErrorAction SilentlyContinue
           Remove-Item app_offline.htm -ErrorAction SilentlyContinue
 
-          Write-Host "⚠️ اگر لاگین موفق بوده باشد، app_offline.htm آپلود شده است." -ForegroundColor Yellow
-
-          Write-Host "🛑 Putting app_offline.htm to stop the app..." -ForegroundColor Yellow
-
-          # فایل maintenance
-          @"
-          <html>
-            <head><meta charset="utf-8" /></head>
-            <body style="font-family:tahoma;padding:40px">
-              <h2>سایت در حال بروزرسانی است...</h2>
-            </body>
-          </html>
-          "@ | Out-File -FilePath "app_offline.htm" -Encoding UTF8
-
-          # اسکریپت FTP صحیح
-          @"
-          open ftp.api.pardistous.ir
-          user ewan mahan1384@
-          binary
-          put app_offline.htm
-          quit
-          "@ | Out-File -FilePath "ftp_stop.txt" -Encoding ASCII
-
-          ftp -s:ftp_stop.txt
-
-          Remove-Item ftp_stop.txt -ErrorAction SilentlyContinue
-          Remove-Item app_offline.htm -ErrorAction SilentlyContinue
+          # اگر لاگین/آپلود انجام نشده بود، job fail شود
+          if ($out -match "Login failed|User cannot log in|Please login with USER and PASS") {
+            throw "FTP login failed. Check FTP username/password or server FTP policy."
+          }
+          if ($out -notmatch "Transfer complete|226") {
+            throw "FTP upload may have failed (no 'Transfer complete' / '226')."
+          }
 
           Write-Host "✅ app_offline.htm uploaded successfully." -ForegroundColor Green
+
 
 
       # مرحله 1: یک مکث کوتاه برای اینکه IIS واقعاً اپ رو unload کنه
