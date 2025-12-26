@@ -2,10 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Pardis.Domain;
 using Pardis.Domain.Courses;
-using Pardis.Domain.Dto;
 using Pardis.Domain.Dto.Categories;
 using Pardis.Domain.Dto.Courses;
-using Pardis.Domain.Dto.Users; // مطمئن شو Dto ها ایمپورت شده باشن
+using Pardis.Domain.Dto.Users;
 using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Query.Courses.GetCourses
@@ -13,7 +12,6 @@ namespace Pardis.Query.Courses.GetCourses
     public class GetCoursesHandler : IRequestHandler<GetCoursesQuery, List<CourseResource>>
     {
         private readonly IRepository<Course> _repository;
-        // private readonly IMapper _mapper; // اگر دستی مپ میکنی نیازی به این نیست
 
         public GetCoursesHandler(IRepository<Course> repository)
         {
@@ -61,10 +59,11 @@ namespace Pardis.Query.Courses.GetCourses
                 query = query.Where(c => c.Status == CourseStatus.Published);
             }
 
-            // ✅ بهینه‌سازی: محدود کردن تعداد برای صفحه اصلی
+            // ✅ بهینه‌سازی: صفحه‌بندی برای بهتر شدن performance
             var courses = await query
                 .OrderByDescending(c => c.CreatedAt)
-                .Take(request.Page > 1 ? request.Page * 12 : 12) // فقط 12 تا در هر صفحه
+                .Skip((request.Page - 1) * request.PageSize)
+                .Take(request.PageSize)
                 .ToListAsync(token);
 
             // ✅ تبدیل ساده به Resource (بدون اطلاعات اضافی)
@@ -94,7 +93,7 @@ namespace Pardis.Query.Courses.GetCourses
                     FullName = c.Instructor.FullName ?? c.Instructor.UserName ?? "",
                     Email = c.Instructor.Email ?? "",
                     Mobile = c.Instructor.PhoneNumber
-                } : null!,
+                } : null,
 
                 // ✅ فقط اطلاعات ضروری category
                 Category = c.Category != null ? new CategoryResource
@@ -103,51 +102,9 @@ namespace Pardis.Query.Courses.GetCourses
                     Title = c.Category.Title,
                     Slug = c.Category.Slug,
                     CoursesCount = c.Category.CoursesCount
-                } : null!,
+                } : null,
 
-                // ✅ برای صفحه اصلی این‌ها لازم نیست
-                Sections = new List<CourseSectionDto>(),
-                Seo = new SeoDto(),
-                Schedules = new List<CourseScheduleDto>()
-                    Mobile = c.Instructor.PhoneNumber
-                } : null!,
-
-                Category = c.Category != null ? new CategoryResource
-                {
-                    Id = c.Category.Id,
-                    Title = c.Category.Title,
-                    Slug = c.Category.Slug,
-                    CoursesCount = c.Category.CoursesCount
-                } : null!,
-
-                Sections = c.Sections != null
-                    ? c.Sections.OrderBy(s => s.Order).Select(s => new CourseSectionDto
-                    {
-                        Id = s.Id,
-                        Title = s.Title,
-                        Description = s.Description,
-                        Order = s.Order
-                    }).ToList()
-                    : new List<CourseSectionDto>(),
-
-                Seo = c.Seo != null ? new SeoDto
-                {
-                    MetaTitle = c.Seo.MetaTitle,
-                    MetaDescription = c.Seo.MetaDescription,
-                    CanonicalUrl = c.Seo.CanonicalUrl,
-                    NoIndex = c.Seo.NoIndex,
-                    NoFollow = c.Seo.NoFollow
-                } : new SeoDto(),
-
-                Schedules = c.Schedules != null
-                    ? c.Schedules.Where(s => s.IsActive).Select(s => new CourseScheduleDto
-                    {
-                        Id = s.Id,
-                        CourseId = s.CourseId,
-                        Title = s.Title,
-                        DayOfWeek = s.DayOfWeek,
-                        StartTime = s.StartTime.ToString("HH:mm"),
-                // ✅ برای صفحه اصلی این‌ها لازم نیست
+                // ✅ برای صفحه اصلی این‌ها لازم نیست - empty lists
                 Sections = new List<CourseSectionDto>(),
                 Seo = new SeoDto(),
                 Schedules = new List<CourseScheduleDto>()

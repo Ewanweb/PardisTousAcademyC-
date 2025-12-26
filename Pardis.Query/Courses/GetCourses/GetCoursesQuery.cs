@@ -1,12 +1,5 @@
 ﻿using MediatR;
-using Pardis.Domain;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Pardis.Domain.Dto.Courses;
-using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Query.Courses.GetCourses
 {
@@ -14,6 +7,8 @@ namespace Pardis.Query.Courses.GetCourses
     {
         public bool Trashed { get; set; }
         public Guid? CategoryId { get; set; }
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 12;
 
         public string? CurrentUserId { get; set; }
         public bool IsAdminOrManager { get; set; }
