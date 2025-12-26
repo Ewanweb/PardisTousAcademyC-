@@ -100,10 +100,6 @@ jobs:
           dangerous-clean-slate: false
           timeout: 180000
 
-      # 6) START: فقط حذف app_offline.htm (باز هم بدون sync)
-      - name: ▶️ Start App (remove app_offline.htm) - NO DELETE OTHER FILES
-        shell: pwsh
-        run: |
           $script = @"
           option batch abort
           option confirm off
