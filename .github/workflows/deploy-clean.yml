@@ -1,4 +1,4 @@
-name: Safe Deploy - Stop, Build, Deploy, Test (No deletes on stop)
+name: Safe Deploy - Stop, Build, Deploy (app_offline removed in deploy)
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
           </html>
           "@ | Out-File "maintenance/app_offline.htm" -Encoding UTF8
 
-      # 1) نصب WinSCP (ابزار FTP/FTPS قابل اعتماد برای put/rm بدون sync)
+      # 1) نصب WinSCP
       - name: 🔧 Install WinSCP
         shell: pwsh
         run: |
@@ -48,26 +48,18 @@ jobs:
           $script = @"
           option batch abort
           option confirm off
-
           open ftp://ewan:mahan1384@@ftp.api.pardistous.ir/
-
           put "$localFile" "/app_offline.htm"
-
           exit
           "@
 
           $script | Out-File "winscp_stop.txt" -Encoding ASCII
-
-          & "C:\Program Files (x86)\WinSCP\WinSCP.com" `
-            /ini=nul `
-            /log=winscp_stop.log `
-            /script=winscp_stop.txt
+          & "C:\Program Files (x86)\WinSCP\WinSCP.com" /ini=nul /log=winscp_stop.log /script=winscp_stop.txt
 
           if ($LASTEXITCODE -ne 0) {
             Get-Content winscp_stop.log
             throw "WinSCP stop failed"
           }
-
 
       - name: ⏳ Wait for IIS unload
         shell: pwsh
@@ -79,7 +71,7 @@ jobs:
         run: |
           dotnet publish Endpoints/Api/Api.csproj -c Release -o ./publish/api
 
-      # 4) آماده‌سازی فایل‌های Deploy
+      # 4) آماده‌سازی فایل‌های Deploy + ساخت web.config
       - name: 📦 Prepare deployment
         shell: pwsh
         run: |
@@ -88,8 +80,50 @@ jobs:
           Copy-Item publish/api/* deployment/ -Recurse -Force
           New-Item -ItemType Directory -Path deployment/logs -Force | Out-Null
 
-      # 5) DEPLOY (همون اکشن قبلی)
-      - name: 🚀 Deploy API
+          @'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <location path="." inheritInChildApplications="false">
+              <system.webServer>
+                <handlers>
+                  <add name="aspNetCore" path="*" verb="*" modules="AspNetCoreModuleV2" resourceType="Unspecified" />
+                </handlers>
+
+                <aspNetCore processPath="dotnet"
+                            arguments=".\Api.dll"
+                            stdoutLogEnabled="true"
+                            stdoutLogFile=".\logs\stdout"
+                            hostingModel="inprocess">
+                  <environmentVariables>
+                    <environmentVariable name="ASPNETCORE_ENVIRONMENT" value="Production" />
+                    <environmentVariable name="ConnectionStrings__DefaultConnection"
+                                        value="Server=localhost;Database=pardisto_api;User Id=mahan;Password=ewan1384@;TrustServerCertificate=True;" />
+                  </environmentVariables>
+                </aspNetCore>
+
+                <httpProtocol>
+                  <customHeaders>
+                    <add name="X-Content-Type-Options" value="nosniff" />
+                    <add name="X-Frame-Options" value="DENY" />
+                    <add name="X-XSS-Protection" value="1; mode=block" />
+                    <add name="Referrer-Policy" value="strict-origin-when-cross-origin" />
+                  </customHeaders>
+                </httpProtocol>
+
+                <security>
+                  <requestFiltering>
+                    <requestLimits maxAllowedContentLength="104857600" />
+                  </requestFiltering>
+                </security>
+              </system.webServer>
+            </location>
+          </configuration>
+          '@ | Out-File -FilePath "deployment/web.config" -Encoding UTF8
+
+      # 5) DEPLOY:
+      # - dangerous-clean-slate=true تا فایل‌هایی که در لوکال نیستند حذف شوند
+      # - ولی با exclude طوری قفل می‌کنیم که فقط app_offline.htm هدف حذف باشد و هیچ فایل دیگری دست نخورد
+      - name: 🚀 Deploy API (and remove app_offline.htm)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ftp.api.pardistous.ir
@@ -97,13 +131,25 @@ jobs:
           password: mahan1384@
           local-dir: ./deployment/
           server-dir: /
-          dangerous-clean-slate: false
           timeout: 180000
+          dangerous-clean-slate: true
+          exclude: |
+            **/.well-known/**
+            **/logs/**
+            **/Uploads/**
+            **/upload/**
+            **/uploads/**
+            **/App_Data/**
+            **/wwwroot/**
+            **/*.log
+            **/*.txt
+            # مهم: فقط این فایل باید حذف شود اگر روی سرور هست و در لوکال نیست
+            # (ما عمداً app_offline.htm را در deployment نداریم)
+            !app_offline.htm
 
-       
       - name: ⏳ Wait for startup
         shell: pwsh
-        run: Start-Sleep -Seconds 40  
+        run: Start-Sleep -Seconds 40
 
       - name: 📊 Final Report
         shell: pwsh
