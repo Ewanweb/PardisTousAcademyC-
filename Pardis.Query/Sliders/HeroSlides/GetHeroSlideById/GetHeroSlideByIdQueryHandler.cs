@@ -1,26 +1,24 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Pardis.Domain.Dto.Sliders;
-using Pardis.Infrastructure;
+using Pardis.Domain.Sliders;
 
 namespace Pardis.Query.Sliders.HeroSlides.GetHeroSlideById
 {
     public class GetHeroSlideByIdQueryHandler : IRequestHandler<GetHeroSlideByIdQuery, HeroSlideResource?>
     {
-        private readonly AppDbContext _context;
+        private readonly IHeroSlideRepository _heroSlideRepository;
         private readonly IMapper _mapper;
 
-        public GetHeroSlideByIdQueryHandler(AppDbContext context, IMapper mapper)
+        public GetHeroSlideByIdQueryHandler(IHeroSlideRepository heroSlideRepository, IMapper mapper)
         {
-            _context = context;
+            _heroSlideRepository = heroSlideRepository;
             _mapper = mapper;
         }
 
         public async Task<HeroSlideResource?> Handle(GetHeroSlideByIdQuery request, CancellationToken cancellationToken)
         {
-            var heroSlide = await _context.HeroSlides
-                .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+            var heroSlide = await _heroSlideRepository.GetHeroSlideByIdAsync(request.Id, cancellationToken);
 
             if (heroSlide == null)
                 return null;

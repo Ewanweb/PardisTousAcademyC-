@@ -1,18 +1,21 @@
+using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pardis.Application._Shared;
 using Pardis.Application.Sliders.HeroSlides.Create;
+using Pardis.Domain.Sliders;
+using System.Text.Json;
 
 namespace Pardis.Infrastructure.Handlers.Sliders.HeroSlides
 {
     public class CreateHeroSlideCommandHandler : IRequestHandler<CreateHeroSlideCommand, OperationResult>
     {
-        private readonly AppDbContext _context;
+        private readonly IHeroSlideRepository _heroSlideRepository;
         private readonly ILogger<CreateHeroSlideCommandHandler> _logger;
 
-        public CreateHeroSlideCommandHandler(AppDbContext context, ILogger<CreateHeroSlideCommandHandler> logger)
+        public CreateHeroSlideCommandHandler(IHeroSlideRepository heroSlideRepository, ILogger<CreateHeroSlideCommandHandler> logger)
         {
-            _context = context;
+            _heroSlideRepository = heroSlideRepository;
             _logger = logger;
         }
 
@@ -40,20 +43,38 @@ namespace Pardis.Infrastructure.Handlers.Sliders.HeroSlides
 
                 var userId = Guid.TryParse(request.CurrentUserId, out var parsedUserId) ? parsedUserId : Guid.Empty;
 
+                // Serialize stats if provided
+                string? statsJson = null;
+                if (request.Dto.Stats != null && request.Dto.Stats.Count > 0)
+                {
+                    try
+                    {
+                        statsJson = JsonSerializer.Serialize(request.Dto.Stats);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "خطا در سریالایز کردن آمار اسلاید");
+                    }
+                }
+
                 var heroSlide = Domain.Sliders.HeroSlide.Create(
                     title: request.Dto.Title,
                     imageUrl: imageUrl,
                     createdByUserId: userId,
                     description: request.Dto.Description,
-                    linkUrl: request.Dto.LinkUrl,
-                    buttonText: request.Dto.ButtonText,
+                    badge: request.Dto.Badge,
+                    primaryActionLabel: request.Dto.PrimaryActionLabel ?? request.Dto.ButtonText,
+                    primaryActionLink: request.Dto.PrimaryActionLink ?? request.Dto.LinkUrl,
+                    secondaryActionLabel: request.Dto.SecondaryActionLabel,
+                    secondaryActionLink: request.Dto.SecondaryActionLink,
+                    statsJson: statsJson,
                     order: request.Dto.Order,
                     isPermanent: request.Dto.IsPermanent,
                     expiresAt: request.Dto.IsPermanent ? null : request.Dto.ExpiresAt ?? DateTime.UtcNow.AddHours(24)
                 );
 
-                _context.HeroSlides.Add(heroSlide);
-                await _context.SaveChangesAsync(cancellationToken);
+                await _heroSlideRepository.AddAsync(heroSlide);
+                await _heroSlideRepository.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation("اسلاید جدید {Id} با موفقیت ایجاد شد", heroSlide.Id);
 

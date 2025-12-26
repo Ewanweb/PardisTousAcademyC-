@@ -1,19 +1,19 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Pardis.Application._Shared;
 using Pardis.Application.Sliders.SuccessStories.Update;
+using Pardis.Domain.Sliders;
 
 namespace Pardis.Infrastructure.Handlers.Sliders.SuccessStories
 {
     public class UpdateSuccessStoryCommandHandler : IRequestHandler<UpdateSuccessStoryCommand, OperationResult>
     {
-        private readonly AppDbContext _context;
+        private readonly ISuccessStoryRepository _successStoryRepository;
         private readonly ILogger<UpdateSuccessStoryCommandHandler> _logger;
 
-        public UpdateSuccessStoryCommandHandler(AppDbContext context, ILogger<UpdateSuccessStoryCommandHandler> logger)
+        public UpdateSuccessStoryCommandHandler(ISuccessStoryRepository successStoryRepository, ILogger<UpdateSuccessStoryCommandHandler> logger)
         {
-            _context = context;
+            _successStoryRepository = successStoryRepository;
             _logger = logger;
         }
 
@@ -21,8 +21,7 @@ namespace Pardis.Infrastructure.Handlers.Sliders.SuccessStories
         {
             try
             {
-                var successStory = await _context.SuccessStories
-                    .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+                var successStory = await _successStoryRepository.GetSuccessStoryByIdAsync(request.Id, cancellationToken);
 
                 if (successStory == null)
                 {
@@ -61,11 +60,17 @@ namespace Pardis.Infrastructure.Handlers.Sliders.SuccessStories
                 // به‌روزرسانی فیلدها
                 successStory.Update(
                     title: request.Dto.Title,
+                    subtitle: request.Dto.Subtitle,
                     description: request.Dto.Description,
                     imageUrl: newImageUrl ?? request.Dto.ImageUrl,
+                    badge: request.Dto.Badge,
+                    type: request.Dto.Type,
                     studentName: request.Dto.StudentName,
                     courseName: request.Dto.CourseName,
-                    linkUrl: request.Dto.LinkUrl,
+                    actionLabel: request.Dto.ActionLabel,
+                    actionLink: request.Dto.ActionLink ?? request.Dto.LinkUrl,
+                    statsJson: request.Dto.Stats != null ? System.Text.Json.JsonSerializer.Serialize(request.Dto.Stats) : null,
+                    duration: request.Dto.Duration,
                     courseId: request.Dto.CourseId,
                     order: request.Dto.Order,
                     isActive: request.Dto.IsActive,
@@ -73,7 +78,8 @@ namespace Pardis.Infrastructure.Handlers.Sliders.SuccessStories
                     expiresAt: request.Dto.IsPermanent == false ? request.Dto.ExpiresAt ?? DateTime.UtcNow.AddHours(24) : null
                 );
 
-                await _context.SaveChangesAsync(cancellationToken);
+                _successStoryRepository.Update(successStory);
+                await _successStoryRepository.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation("استوری موفقیت {Id} با موفقیت به‌روزرسانی شد", request.Id);
 

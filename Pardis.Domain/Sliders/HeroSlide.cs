@@ -1,5 +1,5 @@
-using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace Pardis.Domain.Sliders
 {
@@ -7,20 +7,34 @@ namespace Pardis.Domain.Sliders
     {
         [Required]
         [MaxLength(200)]
-        public string Title { get; set; }
+        public required string Title { get; set; }
 
         [MaxLength(500)]
         public string? Description { get; set; }
 
         [Required]
         [MaxLength(500)]
-        public string ImageUrl { get; set; }
-
-        [MaxLength(500)]
-        public string? LinkUrl { get; set; }
+        public required string ImageUrl { get; set; }
 
         [MaxLength(100)]
-        public string? ButtonText { get; set; }
+        public string? Badge { get; set; }
+
+        // Primary Action
+        [MaxLength(100)]
+        public string? PrimaryActionLabel { get; set; }
+
+        [MaxLength(500)]
+        public string? PrimaryActionLink { get; set; }
+
+        // Secondary Action
+        [MaxLength(100)]
+        public string? SecondaryActionLabel { get; set; }
+
+        [MaxLength(500)]
+        public string? SecondaryActionLink { get; set; }
+
+        // Stats stored as JSON
+        public string? StatsJson { get; set; }
 
         public int Order { get; set; } = 0;
 
@@ -33,6 +47,21 @@ namespace Pardis.Domain.Sliders
         // Navigation Properties
         public Guid CreatedByUserId { get; set; }
 
+        // Legacy properties for backward compatibility
+        [MaxLength(500)]
+        public string? LinkUrl 
+        { 
+            get => PrimaryActionLink; 
+            set => PrimaryActionLink = value; 
+        }
+
+        [MaxLength(100)]
+        public string? ButtonText 
+        { 
+            get => PrimaryActionLabel; 
+            set => PrimaryActionLabel = value; 
+        }
+
         private HeroSlide() { }
 
         public static HeroSlide Create(
@@ -40,8 +69,12 @@ namespace Pardis.Domain.Sliders
             string imageUrl,
             Guid createdByUserId,
             string? description = null,
-            string? linkUrl = null,
-            string? buttonText = null,
+            string? badge = null,
+            string? primaryActionLabel = null,
+            string? primaryActionLink = null,
+            string? secondaryActionLabel = null,
+            string? secondaryActionLink = null,
+            string? statsJson = null,
             int order = 0,
             bool isPermanent = true,
             DateTime? expiresAt = null)
@@ -52,8 +85,12 @@ namespace Pardis.Domain.Sliders
                 Title = title,
                 Description = description,
                 ImageUrl = imageUrl,
-                LinkUrl = linkUrl,
-                ButtonText = buttonText,
+                Badge = badge,
+                PrimaryActionLabel = primaryActionLabel,
+                PrimaryActionLink = primaryActionLink,
+                SecondaryActionLabel = secondaryActionLabel,
+                SecondaryActionLink = secondaryActionLink,
+                StatsJson = statsJson,
                 Order = order,
                 IsActive = true,
                 IsPermanent = isPermanent,
@@ -70,8 +107,12 @@ namespace Pardis.Domain.Sliders
             string? title = null,
             string? description = null,
             string? imageUrl = null,
-            string? linkUrl = null,
-            string? buttonText = null,
+            string? badge = null,
+            string? primaryActionLabel = null,
+            string? primaryActionLink = null,
+            string? secondaryActionLabel = null,
+            string? secondaryActionLink = null,
+            string? statsJson = null,
             int? order = null,
             bool? isActive = null,
             bool? isPermanent = null,
@@ -80,8 +121,12 @@ namespace Pardis.Domain.Sliders
             if (!string.IsNullOrEmpty(title)) Title = title;
             if (description != null) Description = description;
             if (!string.IsNullOrEmpty(imageUrl)) ImageUrl = imageUrl;
-            if (linkUrl != null) LinkUrl = linkUrl;
-            if (buttonText != null) ButtonText = buttonText;
+            if (badge != null) Badge = badge;
+            if (primaryActionLabel != null) PrimaryActionLabel = primaryActionLabel;
+            if (primaryActionLink != null) PrimaryActionLink = primaryActionLink;
+            if (secondaryActionLabel != null) SecondaryActionLabel = secondaryActionLabel;
+            if (secondaryActionLink != null) SecondaryActionLink = secondaryActionLink;
+            if (statsJson != null) StatsJson = statsJson;
             if (order.HasValue) Order = order.Value;
             if (isActive.HasValue) IsActive = isActive.Value;
             

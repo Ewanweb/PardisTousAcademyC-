@@ -23,13 +23,14 @@ namespace Api.Controllers
         /// دریافت لیست استوری‌های موفقیت
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetSuccessStories([FromQuery] bool includeInactive = false, [FromQuery] bool includeExpired = false, [FromQuery] bool adminView = false)
+        public async Task<IActionResult> GetSuccessStories([FromQuery] bool includeInactive = false, [FromQuery] bool includeExpired = false, [FromQuery] bool adminView = false, [FromQuery] string? type = null)
         {
             var query = new GetSuccessStoriesQuery
             {
                 IncludeInactive = includeInactive,
                 IncludeExpired = includeExpired,
-                AdminView = adminView
+                AdminView = adminView,
+                Type = type
             };
 
             var result = await Mediator.Send(query);
@@ -106,6 +107,24 @@ namespace Api.Controllers
                 IncludeInactive = false,
                 IncludeExpired = false,
                 AdminView = false
+            };
+
+            var result = await Mediator.Send(query);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// دریافت استوری‌های موفقیت بر اساس نوع
+        /// </summary>
+        [HttpGet("type/{type}")]
+        public async Task<IActionResult> GetSuccessStoriesByType(string type)
+        {
+            var query = new GetSuccessStoriesQuery
+            {
+                IncludeInactive = false,
+                IncludeExpired = false,
+                AdminView = false,
+                Type = type
             };
 
             var result = await Mediator.Send(query);

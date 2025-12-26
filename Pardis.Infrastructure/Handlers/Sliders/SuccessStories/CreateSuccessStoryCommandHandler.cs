@@ -2,17 +2,18 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Pardis.Application._Shared;
 using Pardis.Application.Sliders.SuccessStories.Create;
+using Pardis.Domain.Sliders;
 
 namespace Pardis.Infrastructure.Handlers.Sliders.SuccessStories
 {
     public class CreateSuccessStoryCommandHandler : IRequestHandler<CreateSuccessStoryCommand, OperationResult>
     {
-        private readonly AppDbContext _context;
+        private readonly ISuccessStoryRepository _successStoryRepository;
         private readonly ILogger<CreateSuccessStoryCommandHandler> _logger;
 
-        public CreateSuccessStoryCommandHandler(AppDbContext context, ILogger<CreateSuccessStoryCommandHandler> logger)
+        public CreateSuccessStoryCommandHandler(ISuccessStoryRepository successStoryRepository, ILogger<CreateSuccessStoryCommandHandler> logger)
         {
-            _context = context;
+            _successStoryRepository = successStoryRepository;
             _logger = logger;
         }
 
@@ -44,18 +45,24 @@ namespace Pardis.Infrastructure.Handlers.Sliders.SuccessStories
                     title: request.Dto.Title,
                     imageUrl: imageUrl,
                     createdByUserId: userId,
+                    subtitle: request.Dto.Subtitle,
                     description: request.Dto.Description,
+                    badge: request.Dto.Badge,
+                    type: request.Dto.Type,
                     studentName: request.Dto.StudentName,
                     courseName: request.Dto.CourseName,
-                    linkUrl: request.Dto.LinkUrl,
+                    actionLabel: request.Dto.ActionLabel,
+                    actionLink: request.Dto.ActionLink ?? request.Dto.LinkUrl,
+                    statsJson: request.Dto.Stats != null ? System.Text.Json.JsonSerializer.Serialize(request.Dto.Stats) : null,
+                    duration: request.Dto.Duration,
                     courseId: request.Dto.CourseId,
                     order: request.Dto.Order,
                     isPermanent: request.Dto.IsPermanent,
                     expiresAt: request.Dto.IsPermanent ? null : request.Dto.ExpiresAt ?? DateTime.UtcNow.AddHours(24)
                 );
 
-                _context.SuccessStories.Add(successStory);
-                await _context.SaveChangesAsync(cancellationToken);
+                await _successStoryRepository.AddAsync(successStory);
+                await _successStoryRepository.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation("استوری موفقیت جدید {Id} با موفقیت ایجاد شد", successStory.Id);
 

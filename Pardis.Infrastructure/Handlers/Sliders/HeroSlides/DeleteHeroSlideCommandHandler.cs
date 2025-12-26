@@ -1,19 +1,19 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Pardis.Application._Shared;
 using Pardis.Application.Sliders.HeroSlides.Delete;
+using Pardis.Domain.Sliders;
 
 namespace Pardis.Infrastructure.Handlers.Sliders.HeroSlides
 {
     public class DeleteHeroSlideCommandHandler : IRequestHandler<DeleteHeroSlideCommand, OperationResult>
     {
-        private readonly AppDbContext _context;
+        private readonly IHeroSlideRepository _heroSlideRepository;
         private readonly ILogger<DeleteHeroSlideCommandHandler> _logger;
 
-        public DeleteHeroSlideCommandHandler(AppDbContext context, ILogger<DeleteHeroSlideCommandHandler> logger)
+        public DeleteHeroSlideCommandHandler(IHeroSlideRepository heroSlideRepository, ILogger<DeleteHeroSlideCommandHandler> logger)
         {
-            _context = context;
+            _heroSlideRepository = heroSlideRepository;
             _logger = logger;
         }
 
@@ -21,8 +21,7 @@ namespace Pardis.Infrastructure.Handlers.Sliders.HeroSlides
         {
             try
             {
-                var heroSlide = await _context.HeroSlides
-                    .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+                var heroSlide = await _heroSlideRepository.GetHeroSlideByIdAsync(request.Id, cancellationToken);
 
                 if (heroSlide == null)
                 {
@@ -40,8 +39,8 @@ namespace Pardis.Infrastructure.Handlers.Sliders.HeroSlides
                     }
                 }
 
-                _context.HeroSlides.Remove(heroSlide);
-                await _context.SaveChangesAsync(cancellationToken);
+                _heroSlideRepository.Remove(heroSlide);
+                await _heroSlideRepository.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation("اسلاید {Id} با موفقیت حذف شد", request.Id);
 

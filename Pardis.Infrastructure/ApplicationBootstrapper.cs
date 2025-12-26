@@ -13,6 +13,7 @@ using Pardis.Domain.Courses;
 using Pardis.Domain.Users;
 using Pardis.Domain.Payments;
 using Pardis.Domain.Attendance;
+using Pardis.Domain.Sliders;
 using Pardis.Infrastructure.Repository;
 using System.Text;
 
@@ -22,8 +23,6 @@ namespace Pardis.Infrastructure
     {
         public static IServiceCollection Inject(this IServiceCollection service, IConfiguration config)
         {
-            var cs = config.GetConnectionString("DefaultConnection");
-            Console.WriteLine("DefaultConnection=[" + cs + "]");
 
             // 1. دیتابیس
             service.AddDbContext<AppDbContext>(options =>
@@ -108,6 +107,10 @@ namespace Pardis.Infrastructure
             service.AddScoped<ICourseSessionRepository, CourseSessionRepository>();
             service.AddScoped<IStudentAttendanceRepository, StudentAttendanceRepository>();
             service.AddScoped<ICourseScheduleRepository, CourseScheduleRepository>();
+            
+            // Slider Repositories
+            service.AddScoped<IHeroSlideRepository, HeroSlideRepository>();
+            service.AddScoped<ISuccessStoryRepository, SuccessStoryRepository>();
 
             // ریپازیتوری جنریک
             service.AddScoped(typeof(IRepository<>), typeof(Repository<>));

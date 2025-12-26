@@ -1,19 +1,19 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Pardis.Application._Shared;
 using Pardis.Application.Sliders.SuccessStories.Delete;
+using Pardis.Domain.Sliders;
 
 namespace Pardis.Infrastructure.Handlers.Sliders.SuccessStories
 {
     public class DeleteSuccessStoryCommandHandler : IRequestHandler<DeleteSuccessStoryCommand, OperationResult>
     {
-        private readonly AppDbContext _context;
+        private readonly ISuccessStoryRepository _successStoryRepository;
         private readonly ILogger<DeleteSuccessStoryCommandHandler> _logger;
 
-        public DeleteSuccessStoryCommandHandler(AppDbContext context, ILogger<DeleteSuccessStoryCommandHandler> logger)
+        public DeleteSuccessStoryCommandHandler(ISuccessStoryRepository successStoryRepository, ILogger<DeleteSuccessStoryCommandHandler> logger)
         {
-            _context = context;
+            _successStoryRepository = successStoryRepository;
             _logger = logger;
         }
 
@@ -21,8 +21,7 @@ namespace Pardis.Infrastructure.Handlers.Sliders.SuccessStories
         {
             try
             {
-                var successStory = await _context.SuccessStories
-                    .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+                var successStory = await _successStoryRepository.GetSuccessStoryByIdAsync(request.Id, cancellationToken);
 
                 if (successStory == null)
                 {
@@ -40,8 +39,8 @@ namespace Pardis.Infrastructure.Handlers.Sliders.SuccessStories
                     }
                 }
 
-                _context.SuccessStories.Remove(successStory);
-                await _context.SaveChangesAsync(cancellationToken);
+                _successStoryRepository.Remove(successStory);
+                await _successStoryRepository.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation("استوری موفقیت {Id} با موفقیت حذف شد", request.Id);
 

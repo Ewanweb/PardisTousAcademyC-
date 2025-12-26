@@ -1,19 +1,19 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Pardis.Application._Shared;
 using Pardis.Application.Sliders.HeroSlides.Update;
+using Pardis.Domain.Sliders;
 
 namespace Pardis.Infrastructure.Handlers.Sliders.HeroSlides
 {
     public class UpdateHeroSlideCommandHandler : IRequestHandler<UpdateHeroSlideCommand, OperationResult>
     {
-        private readonly AppDbContext _context;
+        private readonly IHeroSlideRepository _heroSlideRepository;
         private readonly ILogger<UpdateHeroSlideCommandHandler> _logger;
 
-        public UpdateHeroSlideCommandHandler(AppDbContext context, ILogger<UpdateHeroSlideCommandHandler> logger)
+        public UpdateHeroSlideCommandHandler(IHeroSlideRepository heroSlideRepository, ILogger<UpdateHeroSlideCommandHandler> logger)
         {
-            _context = context;
+            _heroSlideRepository = heroSlideRepository;
             _logger = logger;
         }
 
@@ -21,8 +21,7 @@ namespace Pardis.Infrastructure.Handlers.Sliders.HeroSlides
         {
             try
             {
-                var heroSlide = await _context.HeroSlides
-                    .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+                var heroSlide = await _heroSlideRepository.GetHeroSlideByIdAsync(request.Id, cancellationToken);
 
                 if (heroSlide == null)
                 {
@@ -63,15 +62,20 @@ namespace Pardis.Infrastructure.Handlers.Sliders.HeroSlides
                     title: request.Dto.Title,
                     description: request.Dto.Description,
                     imageUrl: newImageUrl ?? request.Dto.ImageUrl,
-                    linkUrl: request.Dto.LinkUrl,
-                    buttonText: request.Dto.ButtonText,
+                    badge: request.Dto.Badge,
+                    primaryActionLabel: request.Dto.PrimaryActionLabel ?? request.Dto.ButtonText,
+                    primaryActionLink: request.Dto.PrimaryActionLink ?? request.Dto.LinkUrl,
+                    secondaryActionLabel: request.Dto.SecondaryActionLabel,
+                    secondaryActionLink: request.Dto.SecondaryActionLink,
+                    statsJson: request.Dto.Stats != null ? System.Text.Json.JsonSerializer.Serialize(request.Dto.Stats) : null,
                     order: request.Dto.Order,
                     isActive: request.Dto.IsActive,
                     isPermanent: request.Dto.IsPermanent,
                     expiresAt: request.Dto.IsPermanent == false ? request.Dto.ExpiresAt ?? DateTime.UtcNow.AddHours(24) : null
                 );
 
-                await _context.SaveChangesAsync(cancellationToken);
+                _heroSlideRepository.Update(heroSlide);
+                await _heroSlideRepository.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation("اسلاید {Id} با موفقیت به‌روزرسانی شد", request.Id);
 

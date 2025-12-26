@@ -1,12 +1,8 @@
 name: Clean Deploy - پاک کردن کامل سرور و دیپلوی جدید
 
 on:
-  workflow_dispatch: # فقط دستی اجرا میشه
-    inputs:
-      confirm_clean:
-        description: 'برای پاک کردن کامل سرور "YES" تایپ کن'
-        required: true
-        default: "NO"
+    push:
+      branches: [master]
 
 jobs:
   clean-deploy:

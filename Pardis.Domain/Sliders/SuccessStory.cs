@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace Pardis.Domain.Sliders
@@ -7,14 +6,23 @@ namespace Pardis.Domain.Sliders
     {
         [Required]
         [MaxLength(200)]
-        public string Title { get; set; }
+        public required string Title { get; set; }
+
+        [MaxLength(100)]
+        public string? Subtitle { get; set; }
 
         [MaxLength(1000)]
         public string? Description { get; set; }
 
         [Required]
         [MaxLength(500)]
-        public string ImageUrl { get; set; }
+        public required string ImageUrl { get; set; }
+
+        [MaxLength(100)]
+        public string? Badge { get; set; }
+
+        [MaxLength(50)]
+        public string Type { get; set; } = "success"; // success, video
 
         [MaxLength(100)]
         public string? StudentName { get; set; }
@@ -22,8 +30,18 @@ namespace Pardis.Domain.Sliders
         [MaxLength(200)]
         public string? CourseName { get; set; }
 
+        // Action
+        [MaxLength(100)]
+        public string? ActionLabel { get; set; }
+
         [MaxLength(500)]
-        public string? LinkUrl { get; set; }
+        public string? ActionLink { get; set; }
+
+        // Stats stored as JSON
+        public string? StatsJson { get; set; }
+
+        // Duration in milliseconds for video type
+        public int? Duration { get; set; }
 
         public int Order { get; set; } = 0;
 
@@ -37,16 +55,30 @@ namespace Pardis.Domain.Sliders
         public Guid CreatedByUserId { get; set; }
         public Guid? CourseId { get; set; }
 
+        // Legacy property for backward compatibility
+        [MaxLength(500)]
+        public string? LinkUrl 
+        { 
+            get => ActionLink; 
+            set => ActionLink = value; 
+        }
+
         private SuccessStory() { }
 
         public static SuccessStory Create(
             string title,
             string imageUrl,
             Guid createdByUserId,
+            string? subtitle = null,
             string? description = null,
+            string? badge = null,
+            string type = "success",
             string? studentName = null,
             string? courseName = null,
-            string? linkUrl = null,
+            string? actionLabel = null,
+            string? actionLink = null,
+            string? statsJson = null,
+            int? duration = null,
             Guid? courseId = null,
             int order = 0,
             bool isPermanent = true,
@@ -56,11 +88,17 @@ namespace Pardis.Domain.Sliders
             {
                 Id = Guid.NewGuid(),
                 Title = title,
+                Subtitle = subtitle,
                 Description = description,
                 ImageUrl = imageUrl,
+                Badge = badge,
+                Type = type,
                 StudentName = studentName,
                 CourseName = courseName,
-                LinkUrl = linkUrl,
+                ActionLabel = actionLabel,
+                ActionLink = actionLink,
+                StatsJson = statsJson,
+                Duration = duration,
                 CourseId = courseId,
                 Order = order,
                 IsActive = true,
@@ -76,11 +114,17 @@ namespace Pardis.Domain.Sliders
 
         public void Update(
             string? title = null,
+            string? subtitle = null,
             string? description = null,
             string? imageUrl = null,
+            string? badge = null,
+            string? type = null,
             string? studentName = null,
             string? courseName = null,
-            string? linkUrl = null,
+            string? actionLabel = null,
+            string? actionLink = null,
+            string? statsJson = null,
+            int? duration = null,
             Guid? courseId = null,
             int? order = null,
             bool? isActive = null,
@@ -88,11 +132,17 @@ namespace Pardis.Domain.Sliders
             DateTime? expiresAt = null)
         {
             if (!string.IsNullOrEmpty(title)) Title = title;
+            if (subtitle != null) Subtitle = subtitle;
             if (description != null) Description = description;
             if (!string.IsNullOrEmpty(imageUrl)) ImageUrl = imageUrl;
+            if (badge != null) Badge = badge;
+            if (!string.IsNullOrEmpty(type)) Type = type;
             if (studentName != null) StudentName = studentName;
             if (courseName != null) CourseName = courseName;
-            if (linkUrl != null) LinkUrl = linkUrl;
+            if (actionLabel != null) ActionLabel = actionLabel;
+            if (actionLink != null) ActionLink = actionLink;
+            if (statsJson != null) StatsJson = statsJson;
+            if (duration.HasValue) Duration = duration.Value;
             if (courseId.HasValue) CourseId = courseId.Value;
             if (order.HasValue) Order = order.Value;
             if (isActive.HasValue) IsActive = isActive.Value;
