@@ -1,15 +1,14 @@
 name: Clean Deploy - پاک کردن کامل سرور و دیپلوی جدید
 
 on:
-    push:
-      branches: [master]
+  push:
+    branches: [master]
 
 jobs:
   clean-deploy:
     runs-on: windows-latest
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -18,118 +17,73 @@ jobs:
         with:
           dotnet-version: "9.0.x"
 
-      # مرحله 1: پاک کردن کامل سرور
-      - name: 🗑️ پاک کردن کامل فایل‌های سرور
+      # مرحله 0: متوقف کردن اپلیکیشن (IIS) با app_offline.htm
+      # این کار جلوی قفل شدن dll ها رو می‌گیره و Deploy رو پایدار می‌کنه.
+      - name: 🛑 Stop App (app_offline.htm)
+        shell: pwsh
         run: |
-          Write-Host "🚨 شروع پاک‌سازی کامل سرور..." -ForegroundColor Red
+          Write-Host "🛑 Putting app_offline.htm to stop the app..." -ForegroundColor Yellow
 
-          # ایجاد اسکریپت FTP برای پاک‌سازی
+          # محتوای maintenance (اختیاری ولی بهتر از فایل خالیه)
+          @"
+          <html><head><meta charset="utf-8" /></head>
+          <body style="font-family:tahoma;padding:40px">
+            <h2>سایت در حال بروزرسانی است...</h2>
+            <p>لطفاً چند لحظه بعد دوباره تلاش کنید.</p>
+          </body></html>
+          "@ | Out-File -FilePath "app_offline.htm" -Encoding UTF8
+
           @"
           open ftp.api.pardistous.ir
           ewan
           mahan1384@
           binary
-
-          # حذف فایل‌های اصلی
-          delete Api.dll
-          delete Api.exe
-          delete Api.pdb
-          delete Api.deps.json
-          delete Api.runtimeconfig.json
-          delete appsettings.json
-          delete appsettings.Development.json
-          delete appsettings.Production.json
-          delete web.config
-          delete app_offline.htm
-
-          # حذف فایل‌های .NET
-          delete Microsoft.AspNetCore.dll
-          delete Microsoft.Extensions.dll
-          delete System.Text.Json.dll
-          delete Newtonsoft.Json.dll
-          delete AutoMapper.dll
-          delete MediatR.dll
-
-          # حذف فایل‌های پروژه
-          delete Pardis.Application.dll
-          delete Pardis.Domain.dll
-          delete Pardis.Infrastructure.dll
-          delete Pardis.Query.dll
-          delete Pardis.Facade.dll
-
-          # حذف پوشه‌ها (اگر خالی باشند)
-          rmdir wwwroot
-          rmdir logs
-          rmdir Uploads
-          rmdir refs
-          rmdir runtimes
-
+          put app_offline.htm app_offline.htm
           quit
-          "@ | Out-File -FilePath "ftp_clean.txt" -Encoding ASCII
+          "@ | Out-File -FilePath "ftp_stop.txt" -Encoding ASCII
 
-          Write-Host "اجرای دستورات پاک‌سازی..." -ForegroundColor Yellow
-          ftp -s:ftp_clean.txt
+          ftp -s:ftp_stop.txt
 
-          Remove-Item ftp_clean.txt -ErrorAction SilentlyContinue
-          Write-Host "✅ پاک‌سازی اولیه انجام شد" -ForegroundColor Green
+          Remove-Item ftp_stop.txt -ErrorAction SilentlyContinue
+          Remove-Item app_offline.htm -ErrorAction SilentlyContinue
 
-      # مرحله 2: پاک‌سازی عمیق‌تر
-      - name: 🧹 پاک‌سازی عمیق فایل‌های باقی‌مانده
+          Write-Host "✅ app_offline.htm uploaded; IIS should stop the app now." -ForegroundColor Green
+
+      # مرحله 1: یک مکث کوتاه برای اینکه IIS واقعاً اپ رو unload کنه
+      - name: ⏳ Wait for IIS to unload
+        shell: pwsh
         run: |
-          Write-Host "🧹 پاک‌سازی عمیق..." -ForegroundColor Yellow
+          Start-Sleep -Seconds 8
 
-          @"
-          open ftp.api.pardistous.ir
-          ewan
-          mahan1384@
-
-          # حذف فایل‌های احتمالی دیگر
-          delete *.dll
-          delete *.exe
-          delete *.pdb
-          delete *.json
-          delete *.config
-          delete *.xml
-          delete *.htm
-          delete *.html
-
-          quit
-          "@ | Out-File -FilePath "ftp_deep_clean.txt" -Encoding ASCII
-
-          ftp -s:ftp_deep_clean.txt
-          Remove-Item ftp_deep_clean.txt -ErrorAction SilentlyContinue
-
-          Write-Host "✅ پاک‌سازی عمیق تکمیل شد" -ForegroundColor Green
-
-      # مرحله 3: صبر برای تکمیل پاک‌سازی
-      - name: ⏳ صبر برای تکمیل پاک‌سازی
+      # مرحله 2: Build/Publish
+      - name: 🔨 Build & Publish API
+        shell: pwsh
         run: |
-          Write-Host "⏳ صبر 30 ثانیه برای تکمیل پاک‌سازی..." -ForegroundColor Cyan
-          Start-Sleep -Seconds 30
-
-      # مرحله 4: Build کردن پروژه
-      - name: 🔨 Build کردن API
-        run: |
-          Write-Host "🔨 شروع Build..." -ForegroundColor Cyan
+          Write-Host "🔨 Publishing..." -ForegroundColor Cyan
           dotnet publish Endpoints/Api/Api.csproj -c Release -o ./publish/api
-          Write-Host "✅ Build تکمیل شد" -ForegroundColor Green
+          Write-Host "✅ Publish done." -ForegroundColor Green
 
-      # مرحله 5: آماده‌سازی فایل‌های deployment
-      - name: 📦 آماده‌سازی فایل‌های deployment
+      # مرحله 3: آماده‌سازی deployment
+      - name: 📦 Prepare deployment files
+        shell: pwsh
         run: |
-          Write-Host "📦 آماده‌سازی فایل‌ها..." -ForegroundColor Cyan
+          Write-Host "📦 Preparing deployment folder..." -ForegroundColor Cyan
 
-          # ایجاد پوشه deployment
-          mkdir deployment
+          # Reset deployment folder
+          if (Test-Path deployment) { Remove-Item deployment -Recurse -Force }
+          New-Item -ItemType Directory -Path deployment | Out-Null
 
-          # کپی کردن فایل‌های API
-          xcopy /E /I /Y "publish\api\*" "deployment\"
+          # Copy published output
+          Copy-Item -Path "publish/api/*" -Destination "deployment/" -Recurse -Force
 
-          # ایجاد appsettings.json
+          # Ensure logs directory exists for stdout logs (IMPORTANT)
+          New-Item -ItemType Directory -Path "deployment/logs" -Force | Out-Null
+
+          # appsettings.json (همون سبک خودت، بدون Secrets)
           @"
           {
             "ConnectionStrings": {
-              "DefaultConnection": "Server=localhost;Database=pardisto_api;User Id=mahan;Password=ewan1384@;TrustServerCertificate=True;"
+              "DefaultConnection": "Server=localhost;Database=pardisto_api;User Id=mahan;Password=ewan1384@;TrustServerCertificate=True;Encrypt=False;Connect Timeout=15;"
             },
             "JwtSettings": {
               "Key": "n8B5C1yK4mYx7DqRZQ0pVJm0r2KzF+T9aA1XcH3sWlU=",
@@ -144,9 +98,9 @@ jobs:
               }
             }
           }
-          "@ | Out-File -FilePath "deployment\appsettings.json" -Encoding UTF8
+          "@ | Out-File -FilePath "deployment/appsettings.json" -Encoding UTF8
 
-          # ایجاد web.config
+          # web.config (درست + stdout فعال)
           @"
           <?xml version="1.0" encoding="utf-8"?>
           <configuration>
@@ -154,24 +108,26 @@ jobs:
               <handlers>
                 <add name="aspNetCore" path="*" verb="*" modules="AspNetCoreModuleV2" resourceType="Unspecified" />
               </handlers>
-              <aspNetCore processPath="dotnet" arguments=".\Api.dll" stdoutLogEnabled="true" stdoutLogFile=".\logs\stdout" hostingModel="inprocess">
+
+              <aspNetCore processPath="dotnet"
+                          arguments=".\Api.dll"
+                          hostingModel="inprocess"
+                          stdoutLogEnabled="true"
+                          stdoutLogFile=".\logs\stdout">
                 <environmentVariables>
                   <environmentVariable name="ASPNETCORE_ENVIRONMENT" value="Production" />
                 </environmentVariables>
               </aspNetCore>
-              <defaultDocument>
-                <files>
-                  <clear />
-                </files>
-              </defaultDocument>
             </system.webServer>
           </configuration>
-          "@ | Out-File -FilePath "deployment\web.config" -Encoding UTF8
+          "@ | Out-File -FilePath "deployment/web.config" -Encoding UTF8
 
-          Write-Host "✅ فایل‌ها آماده شدند" -ForegroundColor Green
+          Write-Host "✅ Deployment files ready." -ForegroundColor Green
 
-      # مرحله 6: Upload کردن فایل‌های جدید
-      - name: 🚀 Upload فایل‌های جدید به سرور
+      # مرحله 4: Upload + Clean Slate
+      # این مرحله خودش کل روت رو پاک می‌کنه و فایل‌های جدید رو می‌ریزه.
+      # در نتیجه app_offline.htm هم پاک می‌شه و اپ خودکار دوباره بالا میاد.
+      - name: 🚀 Upload (Clean Slate)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ftp.api.pardistous.ir
@@ -180,66 +136,47 @@ jobs:
           local-dir: ./deployment/
           server-dir: /
           timeout: 180000
-          # آپلود تمام فایل‌ها بدون چک کردن تغییرات
           dangerous-clean-slate: true
 
-      # مرحله 7: صبر برای راه‌اندازی
-      - name: ⏳ صبر برای راه‌اندازی سرور
+      # مرحله 5: صبر برای warm up
+      - name: ⏳ Wait for app warm-up
+        shell: pwsh
         run: |
-          Write-Host "⏳ صبر برای راه‌اندازی سرور..." -ForegroundColor Cyan
-          Start-Sleep -Seconds 60
+          Start-Sleep -Seconds 25
 
-      # مرحله 8: تست سلامت API
-      - name: 🏥 تست سلامت API
+      # مرحله 6: Health Check (چند بار تلاش)
+      - name: 🏥 Health Check
+        shell: pwsh
         run: |
-          Write-Host "🏥 تست سلامت API..." -ForegroundColor Cyan
-
-          $maxAttempts = 5
-          $attempt = 1
+          $maxAttempts = 8
           $success = $false
 
-          while ($attempt -le $maxAttempts -and -not $success) {
+          for ($i = 1; $i -le $maxAttempts; $i++) {
             try {
-              Write-Host "🔍 تلاش $attempt از $maxAttempts" -ForegroundColor Yellow
-              
-              $response = Invoke-WebRequest -Uri "https://api.pardistous.ir/api/health" -UseBasicParsing -TimeoutSec 20
-              
-              if ($response.StatusCode -eq 200) {
-                Write-Host "✅ API کار می‌کنه! دیپلوی موفق بود!" -ForegroundColor Green
-                Write-Host "🌐 آدرس API: https://api.pardistous.ir" -ForegroundColor Cyan
-                Write-Host "📚 مستندات Swagger: https://api.pardistous.ir/swagger" -ForegroundColor Cyan
+              Write-Host "🔍 Attempt $i/$maxAttempts..." -ForegroundColor Yellow
+              $r = Invoke-WebRequest -Uri "https://api.pardistous.ir/api/health" -UseBasicParsing -TimeoutSec 20
+              if ($r.StatusCode -eq 200) {
+                Write-Host "✅ API is healthy." -ForegroundColor Green
                 $success = $true
+                break
               }
             } catch {
-              Write-Host "⚠️ تلاش $attempt ناموفق: $($_.Exception.Message)" -ForegroundColor Red
+              Write-Host "⚠️ Not ready: $($_.Exception.Message)" -ForegroundColor Red
             }
-            
-            if ($attempt -lt $maxAttempts -and -not $success) {
-              Write-Host "⏳ صبر 45 ثانیه قبل از تلاش بعدی..." -ForegroundColor Yellow
-              Start-Sleep -Seconds 45
-            }
-            $attempt++
+            Start-Sleep -Seconds 20
           }
 
           if (-not $success) {
-            Write-Host "❌ تست سلامت ناموفق بود ولی ممکنه دیپلوی موفق باشه" -ForegroundColor Red
-            Write-Host "🔧 چند دقیقه صبر کن و دوباره تست کن" -ForegroundColor Yellow
+            Write-Host "❌ Health check failed." -ForegroundColor Red
+            exit 1
           }
 
-      # مرحله 9: گزارش نهایی
-      - name: 📊 گزارش نهایی
+      # مرحله 7: گزارش نهایی
+      - name: 📊 Final report
+        shell: pwsh
         run: |
           Write-Host ""
-          Write-Host "🎉 دیپلوی کامل تکمیل شد!" -ForegroundColor Green
-          Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
-          Write-Host "✅ سرور کاملاً پاک شد" -ForegroundColor Green
-          Write-Host "✅ فایل‌های جدید آپلود شدند" -ForegroundColor Green
-          Write-Host "✅ تنظیمات Production اعمال شد" -ForegroundColor Green
-          Write-Host ""
-          Write-Host "🌐 لینک‌های مهم:" -ForegroundColor Cyan
-          Write-Host "   • API: https://api.pardistous.ir" -ForegroundColor White
-          Write-Host "   • Health Check: https://api.pardistous.ir/api/health" -ForegroundColor White
-          Write-Host "   • Swagger: https://api.pardistous.ir/swagger" -ForegroundColor White
-          Write-Host ""
-          Write-Host "🔧 اگر مشکلی داشتی، چند دقیقه صبر کن تا سرور کاملاً راه‌اندازی بشه" -ForegroundColor Yellow
-          Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
+          Write-Host "🎉 Deploy completed!" -ForegroundColor Green
+          Write-Host "🌐 API: https://api.pardistous.ir" -ForegroundColor Cyan
+          Write-Host "🏥 Health: https://api.pardistous.ir/api/health" -ForegroundColor Cyan
+          Write-Host "📚 Swagger: https://api.pardistous.ir/swagger" -ForegroundColor Cyan
