@@ -43,22 +43,31 @@ jobs:
       - name: 🛑 Stop App (upload app_offline.htm) - NO DELETE
         shell: pwsh
         run: |
+          $localFile = Resolve-Path "maintenance/app_offline.htm"
+
           $script = @"
           option batch abort
           option confirm off
 
-          # اگر هاستت FTPS می‌خواد، WinSCP خودش معمولاً تشخیص می‌ده؛
-          # اگر لازم شد، بعداً این خط رو به ftps:// تغییر می‌دیم.
           open ftp://ewan:mahan1384@@ftp.api.pardistous.ir/
 
-          put "maintenance/app_offline.htm" "/app_offline.htm"
+          put "$localFile" "/app_offline.htm"
 
           exit
           "@
 
           $script | Out-File "winscp_stop.txt" -Encoding ASCII
-          & "C:\Program Files (x86)\WinSCP\WinSCP.com" /ini=nul /log=winscp_stop.log /script=winscp_stop.txt
-          if ($LASTEXITCODE -ne 0) { throw "WinSCP stop failed. See winscp_stop.log" }
+
+          & "C:\Program Files (x86)\WinSCP\WinSCP.com" `
+            /ini=nul `
+            /log=winscp_stop.log `
+            /script=winscp_stop.txt
+
+          if ($LASTEXITCODE -ne 0) {
+            Get-Content winscp_stop.log
+            throw "WinSCP stop failed"
+          }
+
 
       - name: ⏳ Wait for IIS unload
         shell: pwsh
@@ -98,6 +107,7 @@ jobs:
           $script = @"
           option batch abort
           option confirm off
+
           open ftp://ewan:mahan1384@@ftp.api.pardistous.ir/
 
           rm "/app_offline.htm"
@@ -106,8 +116,16 @@ jobs:
           "@
 
           $script | Out-File "winscp_start.txt" -Encoding ASCII
-          & "C:\Program Files (x86)\WinSCP\WinSCP.com" /ini=nul /log=winscp_start.log /script=winscp_start.txt
-          if ($LASTEXITCODE -ne 0) { throw "WinSCP start failed. See winscp_start.log" }
+
+          & "C:\Program Files (x86)\WinSCP\WinSCP.com" `
+            /ini=nul `
+            /log=winscp_start.log `
+            /script=winscp_start.txt
+
+          if ($LASTEXITCODE -ne 0) {
+            Get-Content winscp_start.log
+            throw "WinSCP start failed"
+          }
 
       - name: ⏳ Wait for startup
         shell: pwsh
