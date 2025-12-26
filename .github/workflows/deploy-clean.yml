@@ -1,11 +1,11 @@
-name: Clean Deploy - پاک کردن کامل سرور و دیپلوی جدید
+name: Safe Deploy - Stop, Build, Deploy, Test
 
 on:
   push:
     branches: [master]
 
 jobs:
-  clean-deploy:
+  deploy:
     runs-on: windows-latest
 
     steps:
@@ -17,131 +17,55 @@ jobs:
         with:
           dotnet-version: "9.0.x"
 
-      # مرحله 0: متوقف کردن اپلیکیشن (IIS) با app_offline.htm
-      # این کار جلوی قفل شدن dll ها رو می‌گیره و Deploy رو پایدار می‌کنه.
-      - name: 🛑 Stop App (app_offline.htm)
+      # 1️⃣ ساخت app_offline.htm
+      - name: 🧱 Create app_offline.htm
         shell: pwsh
         run: |
-          Write-Host "🛑 Putting app_offline.htm to stop the app..." -ForegroundColor Yellow
-
-          # فایل maintenance
+          New-Item -ItemType Directory -Path maintenance -Force | Out-Null
           @"
           <html>
             <head><meta charset="utf-8" /></head>
             <body style="font-family:tahoma;padding:40px">
-              <h2>سایت در حال بروزرسانی است...</h2>
+              <h2>سایت در حال بروزرسانی است…</h2>
+              <p>لطفاً چند لحظه بعد دوباره تلاش کنید.</p>
             </body>
           </html>
-          "@ | Out-File -FilePath "app_offline.htm" -Encoding UTF8
+          "@ | Out-File "maintenance/app_offline.htm" -Encoding UTF8
 
-          # اسکریپت FTP (فرمت صحیح)
-          @"
-          open ftp.api.pardistous.ir
-          ewan
-          mahan1384@
-          binary
-          put app_offline.htm
-          quit
-          "@ | Out-File -FilePath "ftp_stop.txt" -Encoding ASCII
+      # 2️⃣ Stop برنامه (IIS)
+      - name: 🛑 Stop App (upload app_offline.htm)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ftp.api.pardistous.ir
+          username: ewan
+          password: mahan1384@
+          local-dir: ./maintenance/
+          server-dir: /
+          dangerous-clean-slate: false
+          timeout: 180000
 
-          # اجرای FTP و گرفتن خروجی برای بررسی موفقیت
-          $out = ftp -s:ftp_stop.txt 2>&1 | Out-String
-          Write-Host $out
+      # 3️⃣ صبر کوتاه برای آزاد شدن فایل‌ها
+      - name: ⏳ Wait for IIS unload
+        shell: pwsh
+        run: Start-Sleep -Seconds 10
 
-          Remove-Item ftp_stop.txt -ErrorAction SilentlyContinue
-          Remove-Item app_offline.htm -ErrorAction SilentlyContinue
-
-          # اگر لاگین/آپلود انجام نشده بود، job fail شود
-          if ($out -match "Login failed|User cannot log in|Please login with USER and PASS") {
-            throw "FTP login failed. Check FTP username/password or server FTP policy."
-          }
-          if ($out -notmatch "Transfer complete|226") {
-            throw "FTP upload may have failed (no 'Transfer complete' / '226')."
-          }
-
-          Write-Host "✅ app_offline.htm uploaded successfully." -ForegroundColor Green
-
-
-
-      # مرحله 1: یک مکث کوتاه برای اینکه IIS واقعاً اپ رو unload کنه
-      - name: ⏳ Wait for IIS to unload
+      # 4️⃣ Build
+      - name: 🔨 Build API
         shell: pwsh
         run: |
-          Start-Sleep -Seconds 8
-
-      # مرحله 2: Build/Publish
-      - name: 🔨 Build & Publish API
-        shell: pwsh
-        run: |
-          Write-Host "🔨 Publishing..." -ForegroundColor Cyan
           dotnet publish Endpoints/Api/Api.csproj -c Release -o ./publish/api
-          Write-Host "✅ Publish done." -ForegroundColor Green
 
-      # مرحله 3: آماده‌سازی deployment
-      - name: 📦 Prepare deployment files
+      # 5️⃣ آماده‌سازی فایل‌های Deploy
+      - name: 📦 Prepare deployment
         shell: pwsh
         run: |
-          Write-Host "📦 Preparing deployment folder..." -ForegroundColor Cyan
-
-          # Reset deployment folder
           if (Test-Path deployment) { Remove-Item deployment -Recurse -Force }
           New-Item -ItemType Directory -Path deployment | Out-Null
+          Copy-Item publish/api/* deployment/ -Recurse -Force
+          New-Item -ItemType Directory -Path deployment/logs -Force | Out-Null
 
-          # Copy published output
-          Copy-Item -Path "publish/api/*" -Destination "deployment/" -Recurse -Force
-
-          # Ensure logs directory exists for stdout logs (IMPORTANT)
-          New-Item -ItemType Directory -Path "deployment/logs" -Force | Out-Null
-
-          # appsettings.json (همون سبک خودت، بدون Secrets)
-          @"
-          {
-            "ConnectionStrings": {
-              "DefaultConnection": "Server=localhost;Database=pardisto_api;User Id=mahan;Password=ewan1384@;TrustServerCertificate=True;Encrypt=False;Connect Timeout=15;"
-            },
-            "JwtSettings": {
-              "Key": "n8B5C1yK4mYx7DqRZQ0pVJm0r2KzF+T9aA1XcH3sWlU=",
-              "Issuer": "PardisAcademy",
-              "Audience": "PardisAcademyUsers"
-            },
-            "AllowedHosts": "*",
-            "Logging": {
-              "LogLevel": {
-                "Default": "Information",
-                "Microsoft.AspNetCore": "Warning"
-              }
-            }
-          }
-          "@ | Out-File -FilePath "deployment/appsettings.json" -Encoding UTF8
-
-          # web.config (درست + stdout فعال)
-          @"
-          <?xml version="1.0" encoding="utf-8"?>
-          <configuration>
-            <system.webServer>
-              <handlers>
-                <add name="aspNetCore" path="*" verb="*" modules="AspNetCoreModuleV2" resourceType="Unspecified" />
-              </handlers>
-
-              <aspNetCore processPath="dotnet"
-                          arguments=".\Api.dll"
-                          hostingModel="inprocess"
-                          stdoutLogEnabled="true"
-                          stdoutLogFile=".\logs\stdout">
-                <environmentVariables>
-                  <environmentVariable name="ASPNETCORE_ENVIRONMENT" value="Production" />
-                </environmentVariables>
-              </aspNetCore>
-            </system.webServer>
-          </configuration>
-          "@ | Out-File -FilePath "deployment/web.config" -Encoding UTF8
-
-          Write-Host "✅ Deployment files ready." -ForegroundColor Green
-
-      # مرحله 4: Upload + Clean Slate
-      # این مرحله خودش کل روت رو پاک می‌کنه و فایل‌های جدید رو می‌ریزه.
-      # در نتیجه app_offline.htm هم پاک می‌شه و اپ خودکار دوباره بالا میاد.
-      - name: 🚀 Upload (Clean Slate)
+      # 6️⃣ Deploy فایل‌های جدید
+      - name: 🚀 Deploy API
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ftp.api.pardistous.ir
@@ -149,48 +73,53 @@ jobs:
           password: mahan1384@
           local-dir: ./deployment/
           server-dir: /
+          dangerous-clean-slate: false
           timeout: 180000
+
+      # 7️⃣ Start برنامه (حذف app_offline.htm با همان پکیج)
+      - name: ▶️ Start App (remove app_offline.htm)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ftp.api.pardistous.ir
+          username: ewan
+          password: mahan1384@
+          local-dir: ./empty/
+          server-dir: /
           dangerous-clean-slate: true
+          exclude: |
+            **/*
+            !app_offline.htm
+          timeout: 180000
 
-      # مرحله 5: صبر برای warm up
-      - name: ⏳ Wait for app warm-up
+      # 8️⃣ صبر برای بالا آمدن اپ
+      - name: ⏳ Wait for startup
         shell: pwsh
-        run: |
-          Start-Sleep -Seconds 25
+        run: Start-Sleep -Seconds 40
 
-      # مرحله 6: Health Check (چند بار تلاش)
+      # 9️⃣ Health Check
       - name: 🏥 Health Check
         shell: pwsh
         run: |
-          $maxAttempts = 8
-          $success = $false
-
-          for ($i = 1; $i -le $maxAttempts; $i++) {
+          $ok = $false
+          for ($i = 1; $i -le 6; $i++) {
             try {
-              Write-Host "🔍 Attempt $i/$maxAttempts..." -ForegroundColor Yellow
-              $r = Invoke-WebRequest -Uri "https://api.pardistous.ir/api/health" -UseBasicParsing -TimeoutSec 20
-              if ($r.StatusCode -eq 200) {
-                Write-Host "✅ API is healthy." -ForegroundColor Green
-                $success = $true
+              $res = Invoke-WebRequest https://api.pardistous.ir/api/health -TimeoutSec 15
+              if ($res.StatusCode -eq 200) {
+                Write-Host "✅ API is healthy"
+                $ok = $true
                 break
               }
             } catch {
-              Write-Host "⚠️ Not ready: $($_.Exception.Message)" -ForegroundColor Red
+              Write-Host "⏳ API not ready yet..."
             }
-            Start-Sleep -Seconds 20
+            Start-Sleep -Seconds 15
           }
+          if (-not $ok) { exit 1 }
 
-          if (-not $success) {
-            Write-Host "❌ Health check failed." -ForegroundColor Red
-            exit 1
-          }
-
-      # مرحله 7: گزارش نهایی
-      - name: 📊 Final report
+      # 🔟 گزارش نهایی
+      - name: 📊 Final Report
         shell: pwsh
         run: |
-          Write-Host ""
-          Write-Host "🎉 Deploy completed!" -ForegroundColor Green
-          Write-Host "🌐 API: https://api.pardistous.ir" -ForegroundColor Cyan
-          Write-Host "🏥 Health: https://api.pardistous.ir/api/health" -ForegroundColor Cyan
-          Write-Host "📚 Swagger: https://api.pardistous.ir/swagger" -ForegroundColor Cyan
+          Write-Host "🎉 Deploy completed successfully!"
+          Write-Host "API: https://api.pardistous.ir"
+          Write-Host "Swagger: https://api.pardistous.ir/swagger"
