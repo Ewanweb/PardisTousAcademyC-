@@ -1,4 +1,4 @@
-name: Safe Deploy - Stop, Build, Deploy (app_offline removed in deploy)
+name: Safe Deploy - Stop, Build, Deploy, Test (Fast & Safe)
 
 on:
   push:
@@ -17,7 +17,6 @@ jobs:
         with:
           dotnet-version: "9.0.x"
 
-      # 0) ساخت فایل app_offline.htm
       - name: 🧱 Create app_offline.htm
         shell: pwsh
         run: |
@@ -32,14 +31,12 @@ jobs:
           </html>
           "@ | Out-File "maintenance/app_offline.htm" -Encoding UTF8
 
-      # 1) نصب WinSCP
       - name: 🔧 Install WinSCP
         shell: pwsh
         run: |
           choco install winscp -y
           & "C:\Program Files (x86)\WinSCP\WinSCP.com" /help | Out-Null
 
-      # 2) STOP: فقط آپلود app_offline.htm (هیچ حذف/سینکی انجام نمی‌شود)
       - name: 🛑 Stop App (upload app_offline.htm) - NO DELETE
         shell: pwsh
         run: |
@@ -63,16 +60,14 @@ jobs:
 
       - name: ⏳ Wait for IIS unload
         shell: pwsh
-        run: Start-Sleep -Seconds 10
+        run: Start-Sleep -Seconds 5
 
-      # 3) BUILD
       - name: 🔨 Build API
         shell: pwsh
         run: |
           dotnet publish Endpoints/Api/Api.csproj -c Release -o ./publish/api
 
-      # 4) آماده‌سازی فایل‌های Deploy + ساخت web.config
-      - name: 📦 Prepare deployment
+      - name: 📦 Prepare deployment + web.config
         shell: pwsh
         run: |
           if (Test-Path deployment) { Remove-Item deployment -Recurse -Force }
@@ -120,10 +115,7 @@ jobs:
           </configuration>
           '@ | Out-File -FilePath "deployment/web.config" -Encoding UTF8
 
-      # 5) DEPLOY:
-      # - dangerous-clean-slate=true تا فایل‌هایی که در لوکال نیستند حذف شوند
-      # - ولی با exclude طوری قفل می‌کنیم که فقط app_offline.htm هدف حذف باشد و هیچ فایل دیگری دست نخورد
-      - name: 🚀 Deploy API (and remove app_offline.htm)
+      - name: 🚀 Deploy API (no clean-slate)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ftp.api.pardistous.ir
@@ -131,25 +123,31 @@ jobs:
           password: mahan1384@
           local-dir: ./deployment/
           server-dir: /
+          dangerous-clean-slate: false
           timeout: 180000
-          dangerous-clean-slate: true
-          exclude: |
-            **/.well-known/**
-            **/logs/**
-            **/Uploads/**
-            **/upload/**
-            **/uploads/**
-            **/App_Data/**
-            **/wwwroot/**
-            **/*.log
-            **/*.txt
-            # مهم: فقط این فایل باید حذف شود اگر روی سرور هست و در لوکال نیست
-            # (ما عمداً app_offline.htm را در deployment نداریم)
-            !app_offline.htm
+
+      - name: ✅ Resume App (remove app_offline.htm) - NO DELETE
+        shell: pwsh
+        run: |
+          $script = @"
+          option batch abort
+          option confirm off
+          open ftp://ewan:mahan1384@@ftp.api.pardistous.ir/
+          rm "/app_offline.htm"
+          exit
+          "@
+
+          $script | Out-File "winscp_resume.txt" -Encoding ASCII
+          & "C:\Program Files (x86)\WinSCP\WinSCP.com" /ini=nul /log=winscp_resume.log /script=winscp_resume.txt
+
+          if ($LASTEXITCODE -ne 0) {
+            Get-Content winscp_resume.log
+            throw "WinSCP resume failed"
+          }
 
       - name: ⏳ Wait for startup
         shell: pwsh
-        run: Start-Sleep -Seconds 40
+        run: Start-Sleep -Seconds 5
 
       - name: 📊 Final Report
         shell: pwsh
