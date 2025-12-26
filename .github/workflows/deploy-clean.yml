@@ -1,4 +1,4 @@
-name: Safe Deploy - Stop, Build, Deploy, Test
+name: Safe Deploy - Stop, Build, Deploy, Test (No deletes on stop)
 
 on:
   push:
@@ -17,7 +17,7 @@ jobs:
         with:
           dotnet-version: "9.0.x"
 
-      # 1️⃣ ساخت app_offline.htm
+      # 0) ساخت فایل app_offline.htm
       - name: 🧱 Create app_offline.htm
         shell: pwsh
         run: |
@@ -32,30 +32,45 @@ jobs:
           </html>
           "@ | Out-File "maintenance/app_offline.htm" -Encoding UTF8
 
-      # 2️⃣ Stop برنامه (IIS)
-      - name: 🛑 Stop App (upload app_offline.htm)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ftp.api.pardistous.ir
-          username: ewan
-          password: mahan1384@
-          local-dir: ./maintenance/
-          server-dir: /
-          dangerous-clean-slate: false
-          timeout: 180000
+      # 1) نصب WinSCP (ابزار FTP/FTPS قابل اعتماد برای put/rm بدون sync)
+      - name: 🔧 Install WinSCP
+        shell: pwsh
+        run: |
+          choco install winscp -y
+          & "C:\Program Files (x86)\WinSCP\WinSCP.com" /help | Out-Null
 
-      # 3️⃣ صبر کوتاه برای آزاد شدن فایل‌ها
+      # 2) STOP: فقط آپلود app_offline.htm (هیچ حذف/سینکی انجام نمی‌شود)
+      - name: 🛑 Stop App (upload app_offline.htm) - NO DELETE
+        shell: pwsh
+        run: |
+          $script = @"
+          option batch abort
+          option confirm off
+
+          # اگر هاستت FTPS می‌خواد، WinSCP خودش معمولاً تشخیص می‌ده؛
+          # اگر لازم شد، بعداً این خط رو به ftps:// تغییر می‌دیم.
+          open ftp://ewan:mahan1384@@ftp.api.pardistous.ir/
+
+          put "maintenance/app_offline.htm" "/app_offline.htm"
+
+          exit
+          "@
+
+          $script | Out-File "winscp_stop.txt" -Encoding ASCII
+          & "C:\Program Files (x86)\WinSCP\WinSCP.com" /ini=nul /log=winscp_stop.log /script=winscp_stop.txt
+          if ($LASTEXITCODE -ne 0) { throw "WinSCP stop failed. See winscp_stop.log" }
+
       - name: ⏳ Wait for IIS unload
         shell: pwsh
         run: Start-Sleep -Seconds 10
 
-      # 4️⃣ Build
+      # 3) BUILD
       - name: 🔨 Build API
         shell: pwsh
         run: |
           dotnet publish Endpoints/Api/Api.csproj -c Release -o ./publish/api
 
-      # 5️⃣ آماده‌سازی فایل‌های Deploy
+      # 4) آماده‌سازی فایل‌های Deploy
       - name: 📦 Prepare deployment
         shell: pwsh
         run: |
@@ -64,7 +79,7 @@ jobs:
           Copy-Item publish/api/* deployment/ -Recurse -Force
           New-Item -ItemType Directory -Path deployment/logs -Force | Out-Null
 
-      # 6️⃣ Deploy فایل‌های جدید
+      # 5) DEPLOY (همون اکشن قبلی)
       - name: 🚀 Deploy API
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
@@ -76,27 +91,29 @@ jobs:
           dangerous-clean-slate: false
           timeout: 180000
 
-      # 7️⃣ Start برنامه (حذف app_offline.htm با همان پکیج)
-      - name: ▶️ Start App (remove app_offline.htm)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ftp.api.pardistous.ir
-          username: ewan
-          password: mahan1384@
-          local-dir: ./empty/
-          server-dir: /
-          dangerous-clean-slate: true
-          exclude: |
-            **/*
-            !app_offline.htm
-          timeout: 180000
+      # 6) START: فقط حذف app_offline.htm (باز هم بدون sync)
+      - name: ▶️ Start App (remove app_offline.htm) - NO DELETE OTHER FILES
+        shell: pwsh
+        run: |
+          $script = @"
+          option batch abort
+          option confirm off
+          open ftp://ewan:mahan1384@@ftp.api.pardistous.ir/
 
-      # 8️⃣ صبر برای بالا آمدن اپ
+          rm "/app_offline.htm"
+
+          exit
+          "@
+
+          $script | Out-File "winscp_start.txt" -Encoding ASCII
+          & "C:\Program Files (x86)\WinSCP\WinSCP.com" /ini=nul /log=winscp_start.log /script=winscp_start.txt
+          if ($LASTEXITCODE -ne 0) { throw "WinSCP start failed. See winscp_start.log" }
+
       - name: ⏳ Wait for startup
         shell: pwsh
         run: Start-Sleep -Seconds 40
 
-      # 9️⃣ Health Check
+      # 7) Health Check
       - name: 🏥 Health Check
         shell: pwsh
         run: |
@@ -104,19 +121,12 @@ jobs:
           for ($i = 1; $i -le 6; $i++) {
             try {
               $res = Invoke-WebRequest https://api.pardistous.ir/api/health -TimeoutSec 15
-              if ($res.StatusCode -eq 200) {
-                Write-Host "✅ API is healthy"
-                $ok = $true
-                break
-              }
-            } catch {
-              Write-Host "⏳ API not ready yet..."
-            }
+              if ($res.StatusCode -eq 200) { $ok = $true; break }
+            } catch {}
             Start-Sleep -Seconds 15
           }
-          if (-not $ok) { exit 1 }
+          if (-not $ok) { throw "Health check failed" }
 
-      # 🔟 گزارش نهایی
       - name: 📊 Final Report
         shell: pwsh
         run: |
