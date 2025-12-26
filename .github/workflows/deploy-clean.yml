@@ -24,21 +24,22 @@ jobs:
         run: |
           Write-Host "🛑 Putting app_offline.htm to stop the app..." -ForegroundColor Yellow
 
-          # محتوای maintenance (اختیاری ولی بهتر از فایل خالیه)
+          # فایل maintenance
           @"
-          <html><head><meta charset="utf-8" /></head>
-          <body style="font-family:tahoma;padding:40px">
-            <h2>سایت در حال بروزرسانی است...</h2>
-            <p>لطفاً چند لحظه بعد دوباره تلاش کنید.</p>
-          </body></html>
+          <html>
+            <head><meta charset="utf-8" /></head>
+            <body style="font-family:tahoma;padding:40px">
+              <h2>سایت در حال بروزرسانی است...</h2>
+            </body>
+          </html>
           "@ | Out-File -FilePath "app_offline.htm" -Encoding UTF8
 
+          # اسکریپت FTP صحیح
           @"
           open ftp.api.pardistous.ir
-          ewan
-          mahan1384@
+          user ewan mahan1384@
           binary
-          put app_offline.htm app_offline.htm
+          put app_offline.htm
           quit
           "@ | Out-File -FilePath "ftp_stop.txt" -Encoding ASCII
 
@@ -47,7 +48,8 @@ jobs:
           Remove-Item ftp_stop.txt -ErrorAction SilentlyContinue
           Remove-Item app_offline.htm -ErrorAction SilentlyContinue
 
-          Write-Host "✅ app_offline.htm uploaded; IIS should stop the app now." -ForegroundColor Green
+          Write-Host "✅ app_offline.htm uploaded successfully." -ForegroundColor Green
+
 
       # مرحله 1: یک مکث کوتاه برای اینکه IIS واقعاً اپ رو unload کنه
       - name: ⏳ Wait for IIS to unload
