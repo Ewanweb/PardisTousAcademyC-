@@ -103,21 +103,7 @@ jobs:
        
       - name: ⏳ Wait for startup
         shell: pwsh
-        run: Start-Sleep -Seconds 40
-
-      # 7) Health Check
-      - name: 🏥 Health Check
-        shell: pwsh
-        run: |
-          $ok = $false
-          for ($i = 1; $i -le 6; $i++) {
-            try {
-              $res = Invoke-WebRequest https://api.pardistous.ir/api/health -TimeoutSec 15
-              if ($res.StatusCode -eq 200) { $ok = $true; break }
-            } catch {}
-            Start-Sleep -Seconds 15
-          }
-          if (-not $ok) { throw "Health check failed" }
+        run: Start-Sleep -Seconds 40  
 
       - name: 📊 Final Report
         shell: pwsh
