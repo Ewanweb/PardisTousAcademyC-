@@ -9,11 +9,6 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: بررسی تأیید پاک‌سازی
-        if: github.event.inputs.confirm_clean != 'YES'
-        run: |
-          Write-Host "❌ برای پاک کردن کامل سرور باید 'YES' وارد کنی" -ForegroundColor Red
-          exit 1
 
       - name: Checkout
         uses: actions/checkout@v4
