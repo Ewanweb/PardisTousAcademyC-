@@ -100,29 +100,7 @@ jobs:
           dangerous-clean-slate: false
           timeout: 180000
 
-          $script = @"
-          option batch abort
-          option confirm off
-
-          open ftp://ewan:mahan1384@@ftp.api.pardistous.ir/
-
-          rm "/app_offline.htm"
-
-          exit
-          "@
-
-          $script | Out-File "winscp_start.txt" -Encoding ASCII
-
-          & "C:\Program Files (x86)\WinSCP\WinSCP.com" `
-            /ini=nul `
-            /log=winscp_start.log `
-            /script=winscp_start.txt
-
-          if ($LASTEXITCODE -ne 0) {
-            Get-Content winscp_start.log
-            throw "WinSCP start failed"
-          }
-
+       
       - name: ⏳ Wait for startup
         shell: pwsh
         run: Start-Sleep -Seconds 40
