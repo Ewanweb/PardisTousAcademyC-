@@ -10,6 +10,7 @@ namespace Pardis.Infrastructure.Repository
         Task<Category?> GetCategoryWithIdWithSeo(Guid id, CancellationToken token);
         Task<Category?> GetCategoryWithIdWithSeo(string slug, CancellationToken token);
         Task<List<Category>?> GetCategories();
+        Task<List<Category>?> GetParentCategories();
         Task<Category?> GetCategoryById(Guid id, CancellationToken token);
         Task<Category?> GetCategoryChildren(Guid id, CancellationToken token);
         Task<List<CategoryWithCountDto>> GetChildrenWithCourseCountAsync(Guid parentId, CancellationToken token);

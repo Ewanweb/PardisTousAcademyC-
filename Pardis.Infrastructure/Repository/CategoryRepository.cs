@@ -30,10 +30,18 @@ namespace Pardis.Infrastructure.Repository
 
         public async Task<List<Category>?> GetCategories()
         {
-            // ✅ بهینه‌سازی: فقط categories اصلی رو بکش، بدون children
-            // برای صفحه اصلی نیاز به children نیست
+            // ✅ برای منو: همه دسته‌بندی‌ها (اصلی و فرعی) نمایش داده شوند
             return await _context.Categories
-                .Where(c => c.ParentId == null) // فقط categories اصلی
+                .Include(c => c.Seo)
+                .OrderBy(c => c.Title)
+                .ToListAsync();
+        }
+
+        public async Task<List<Category>?> GetParentCategories()
+        {
+            // ✅ فقط دسته‌بندی‌های اصلی (برای مواردی که نیاز به parent categories داریم)
+            return await _context.Categories
+                .Where(c => c.ParentId == null)
                 .Include(c => c.Seo)
                 .OrderBy(c => c.Title)
                 .ToListAsync();

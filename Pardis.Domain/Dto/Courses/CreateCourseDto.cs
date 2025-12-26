@@ -1,23 +1,40 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Pardis.Domain.Courses;
+using System.ComponentModel.DataAnnotations;
 
 namespace Pardis.Domain.Dto.Courses;
 
 public class CreateCourseDto
 {
-    public string Title { get; set; }
+    [Required(ErrorMessage = "عنوان دوره الزامی است")]
+    public string Title { get; set; } = string.Empty;
+    
     public long Price { get; set; }
+    
+    [Required(ErrorMessage = "دسته‌بندی دوره الزامی است")]
     public Guid CategoryId { get; set; }
-    public string Description { get; set; }
+    
+    [Required(ErrorMessage = "توضیحات دوره الزامی است")]
+    public string Description { get; set; } = string.Empty;
+    
     public string? StartFrom { get; set; }
-    public string Schedule { get; set; }
-    public CourseStatus Status { get; set; }
-    public CourseType Type { get; set; }
-    public string Location { get; set; }
+    
+    [Required(ErrorMessage = "زمان‌بندی دوره الزامی است")]
+    public string Schedule { get; set; } = string.Empty;
+    
+    public CourseStatus Status { get; set; } = CourseStatus.Draft;
+    public CourseType Type { get; set; } = CourseType.Online;
+    
+    [Required(ErrorMessage = "محل برگزاری دوره الزامی است")]
+    public string Location { get; set; } = string.Empty;
+    
     public string? InstructorId { get; set; } // اختیاری برای ادمین
     public IFormFile? Image { get; set; } // فایل آپلود
     public Dtos.SeoDto? Seo { get; set; }
-    public List<CourseSectionDto> Sections { get; set; }
+    
+    [Required(ErrorMessage = "حداقل یک بخش برای دوره الزامی است")]
+    public List<CourseSectionDto> Sections { get; set; } = new();
+    
     public bool IsCompleted { get; set; }
     public bool IsStarted { get; set; }
 }
