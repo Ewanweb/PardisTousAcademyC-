@@ -28,13 +28,30 @@ public class GetUsersByRoleHandler : IRequestHandler<GetUsersByRoleQuery, IEnume
         // 1. فیلتر بر اساس نقش
         if (!string.IsNullOrEmpty(request.Role))
         {
-            // استفاده از UserManager برای گرفتن کاربران یک نقش خاص
+            // ✅ بهینه‌سازی: استفاده از UserManager برای گرفتن کاربران یک نقش خاص
             var usersInRole = await _userManager.GetUsersInRoleAsync(request.Role);
 
-            // مرتب‌سازی و تبدیل به کوئری (در حافظه)
+            // مرتب‌سازی و صفحه‌بندی
             var query = usersInRole.AsQueryable().OrderByDescending(u => u.CreatedAt);
 
-            // صفحه‌بندی
+            if (!request.All)
+            {
+                users = query.Skip((request.Page - 1) * request.PageSize)
+                             .Take(request.PageSize)
+                             .ToList();
+            }
+            else
+            {
+                // ✅ برای صفحه اصلی فقط 4 تا instructor کافیه
+                users = query.Take(request.Role == Role.Instructor ? 4 : 10).ToList();
+            }
+        }
+        else
+        {
+            // 2. دریافت همه کاربران (بدون فیلتر نقش)
+            var allUsers = await _userRepository.GetAllAsync();
+            var query = allUsers.AsQueryable().OrderByDescending(u => u.CreatedAt);
+            
             if (!request.All)
             {
                 users = query.Skip((request.Page - 1) * request.PageSize)
@@ -46,37 +63,28 @@ public class GetUsersByRoleHandler : IRequestHandler<GetUsersByRoleQuery, IEnume
                 users = query.ToList();
             }
         }
-        else
-        {
-            // 2. دریافت همه کاربران (بدون فیلتر نقش) با استفاده از Repository
-            // فرض بر این است که ریپازیتوری شما متدی مثل Table یا GetQuery برای دسترسی به IQueryable دارد
-            // اگر متد خاصی دارید (مثل GetAllAsync)، آن را جایگزین کنید
-            var allUsers = await _userRepository.GetAllAsync();
 
-            // تبدیل به IQueryable برای اعمال فیلترها در حافظه
-            var query = allUsers.AsQueryable().OrderByDescending(u => u.CreatedAt);
-            if (!request.All)
-            {
-                // صفحه‌بندی روی دیتابیس انجام می‌شود
-                users = query.Skip((request.Page - 1) * request.PageSize)
-                                   .Take(request.PageSize)
-                                   .ToList();
-            }
-            else
-            {
-                users = query.ToList();
-            }
-        }
-
-        // 3. تبدیل به Resource با استفاده از AutoMapper
+        // 3. ✅ بهینه‌سازی: تبدیل به Resource بدون query اضافی برای roles
         var userResources = _mapper.Map<List<UserResource>>(users);
 
-        // 4. پر کردن نقش‌ها (چون معمولاً در مپینگ خودکار Identity پر نمی‌شوند)
-        foreach (var resource in userResources)
+        // 4. ✅ بهینه‌سازی: برای instructor ها نیاز به roles نیست در صفحه اصلی
+        if (request.Role == Role.Instructor)
         {
-            var user = users.First(u => u.Id == resource.Id);
-            var roles = await _userManager.GetRolesAsync(user);
-            resource.Roles = roles.ToList();
+            // فقط نام و عکس کافیه برای صفحه اصلی
+            foreach (var resource in userResources)
+            {
+                resource.Roles = new List<string> { Role.Instructor };
+            }
+        }
+        else
+        {
+            // فقط برای سایر موارد roles رو بکش
+            foreach (var resource in userResources)
+            {
+                var user = users.First(u => u.Id == resource.Id);
+                var roles = await _userManager.GetRolesAsync(user);
+                resource.Roles = roles.ToList();
+            }
         }
 
         return userResources;

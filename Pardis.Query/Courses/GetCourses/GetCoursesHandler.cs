@@ -22,18 +22,12 @@ namespace Pardis.Query.Courses.GetCourses
 
         public async Task<List<CourseResource>> Handle(GetCoursesQuery request, CancellationToken token)
         {
-            // 1. دسترسی مستقیم به IQueryable (هنوز درخواستی به دیتابیس زده نشده)
-            // فرض بر این است که _repository.Table یک IQueryable برمی‌گرداند
+            // ✅ بهینه‌سازی: برای صفحه اصلی فقط اطلاعات ضروری
             var query = _repository.Table
-                .Include(c => c.Instructor)
-                .Include(c => c.Category)
-                .Include(c => c.Sections)
-                .Include(c => c.Schedules)
-                .Include(c => c.Seo)
-                .AsNoTracking() // برای سرعت بیشتر (چون فقط خواندنی است)
+                .Include(c => c.Instructor) // فقط instructor
+                .Include(c => c.Category)   // فقط category
+                .AsNoTracking() // برای سرعت بیشتر
                 .AsQueryable();
-
-            // 2. اعمال فیلترها (این‌ها تبدیل به WHERE در SQL می‌شوند)
 
             // فیلتر سطل زباله
             if (request.Trashed)
@@ -54,7 +48,7 @@ namespace Pardis.Query.Courses.GetCourses
             // فیلتر نقش‌ها
             if (request.IsAdminOrManager)
             {
-                // ادمین همه را می‌بیند (بدون فیلتر)
+                // ادمین همه را می‌بیند
             }
             else if (request.IsInstructor && !string.IsNullOrEmpty(request.CurrentUserId))
             {
@@ -64,16 +58,16 @@ namespace Pardis.Query.Courses.GetCourses
             else
             {
                 // کاربر عادی فقط منتشر شده‌ها
-                // نکته: اگر Status اینام است، مطمئن شو در دیتابیس درست ذخیره شده
                 query = query.Where(c => c.Status == CourseStatus.Published);
             }
 
-            // 3. اجرا و دریافت از دیتابیس (اینجا کوئری زده می‌شود)
+            // ✅ بهینه‌سازی: محدود کردن تعداد برای صفحه اصلی
             var courses = await query
                 .OrderByDescending(c => c.CreatedAt)
+                .Take(request.Page > 1 ? request.Page * 12 : 12) // فقط 12 تا در هر صفحه
                 .ToListAsync(token);
 
-            // 4. تبدیل به Resource (در حافظه)
+            // ✅ تبدیل ساده به Resource (بدون اطلاعات اضافی)
             var result = courses.Select(c => new CourseResource
             {
                 Id = c.Id,
@@ -93,11 +87,28 @@ namespace Pardis.Query.Courses.GetCourses
                 UpdatedAt = c.UpdatedAt,
                 IsDeleted = c.IsDeleted,
 
+                // ✅ فقط اطلاعات ضروری instructor
                 Instructor = c.Instructor != null ? new InstructorBasicDto
                 {
                     Id = c.Instructor.Id,
                     FullName = c.Instructor.FullName ?? c.Instructor.UserName ?? "",
                     Email = c.Instructor.Email ?? "",
+                    Mobile = c.Instructor.PhoneNumber
+                } : null!,
+
+                // ✅ فقط اطلاعات ضروری category
+                Category = c.Category != null ? new CategoryResource
+                {
+                    Id = c.Category.Id,
+                    Title = c.Category.Title,
+                    Slug = c.Category.Slug,
+                    CoursesCount = c.Category.CoursesCount
+                } : null!,
+
+                // ✅ برای صفحه اصلی این‌ها لازم نیست
+                Sections = new List<CourseSectionDto>(),
+                Seo = new SeoDto(),
+                Schedules = new List<CourseScheduleDto>()
                     Mobile = c.Instructor.PhoneNumber
                 } : null!,
 
@@ -136,21 +147,12 @@ namespace Pardis.Query.Courses.GetCourses
                         Title = s.Title,
                         DayOfWeek = s.DayOfWeek,
                         StartTime = s.StartTime.ToString("HH:mm"),
-                        EndTime = s.EndTime.ToString("HH:mm"),
-                        MaxCapacity = s.MaxCapacity,
-                        EnrolledCount = s.EnrolledCount,
-                        IsActive = s.IsActive,
-                        Description = s.Description,
-                        DayName = s.GetDayName(),
-                        TimeRange = $"{s.StartTime:HH:mm}-{s.EndTime:HH:mm}",
-                        FullScheduleText = s.GetFullScheduleText(),
-                        RemainingCapacity = s.RemainingCapacity,
-                        HasCapacity = s.HasCapacity,
-                        CreatedAt = s.CreatedAt
-                    }).ToList()
-                    : []
+                // ✅ برای صفحه اصلی این‌ها لازم نیست
+                Sections = new List<CourseSectionDto>(),
+                Seo = new SeoDto(),
+                Schedules = new List<CourseScheduleDto>()
 
-            }).ToList(); // ✅ تبدیل نهایی به لیست
+            }).ToList();
 
             return result;
         }

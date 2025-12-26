@@ -3,26 +3,25 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Pardis.Domain;
 using Pardis.Domain.Courses;
-using Pardis.Domain.Dto;
-using Pardis.Domain.Dto.Categories;
 using Pardis.Domain.Dto.Courses;
-using Pardis.Domain.Dto.Users;
 
 namespace Pardis.Query.Courses.Enroll;
 
-public class GetUserEnrollmentsHandler : IRequestHandler<GetUserEnrollmentsQuery, List<CourseResource>>
+/// <summary>
+/// Handler برای دریافت دوره‌های ثبت‌نام شده یک کاربر
+/// </summary>
+public class GetUserEnrollmentsHandler(IRepository<UserCourse> context, IMapper mapper) 
+    : IRequestHandler<GetUserEnrollmentsQuery, List<CourseResource>>
 {
-    private readonly IRepository<UserCourse> _context;
-    private readonly IMapper _mapper;
-
-    public GetUserEnrollmentsHandler(IRepository<UserCourse> context, IMapper mapper)
-    {
-        _context = context;
-        _mapper = mapper;
-    }
+    private readonly IRepository<UserCourse> _context = context;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<List<CourseResource>> Handle(GetUserEnrollmentsQuery request, CancellationToken cancellationToken)
     {
+        // اعتبارسنجی ورودی
+        if (string.IsNullOrWhiteSpace(request.UserId))
+            return new List<CourseResource>();
+
         var enrollments = await _context.Table
             .AsNoTracking() // فقط خواندنی (برای سرعت بیشتر)
 
@@ -41,16 +40,17 @@ public class GetUserEnrollmentsHandler : IRequestHandler<GetUserEnrollmentsQuery
             // ✅ لود کردن زمان‌بندی‌های دوره
             .Include(uc => uc.Course.Schedules)
 
-            // فیلتر روی کاربر جاری
-            .Where(uc => uc.UserId == request.UserId)
+            // فیلتر روی کاربر جاری و دوره‌های غیرحذف شده
+            .Where(uc => uc.UserId == request.UserId && !uc.Course.IsDeleted)
+            
+            // مرتب‌سازی بر اساس تاریخ ثبت‌نام (جدیدترین اول)
             .OrderByDescending(uc => uc.EnrolledAt)
             .ToListAsync(cancellationToken);
 
-        // 2. تبدیل به Resource با استفاده از AutoMapper
+        // تبدیل به Resource با استفاده از AutoMapper
         // چون در MappingProfile تنظیم کردیم (IncludeMembers)، اطلاعات دوره و کاربر ترکیب می‌شوند
         var result = _mapper.Map<List<CourseResource>>(enrollments);
 
         return result;
-
     }
 }

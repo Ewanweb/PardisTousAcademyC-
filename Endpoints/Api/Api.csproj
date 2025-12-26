@@ -19,9 +19,6 @@
 
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
 		<PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.6.2" />
-		  <None Include="web.config">
-			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
-		</None>
 	</ItemGroup>
 
 	<ItemGroup>

@@ -307,29 +307,8 @@ namespace Api.Areas.Admin.Controllers
             }, "خطا در ثبت‌نام در دوره");
         }
 
-        /// <summary>
-        /// دریافت لیست دوره‌های خریداری شده کاربر فعلی
-        /// </summary>
-        /// <returns>لیست دوره‌های ثبت‌نام شده</returns>
-        [HttpGet("my-enrollments")]
-        [Authorize]
-        public async Task<IActionResult> GetMyEnrollments()
-        {
-            return await ExecuteAsync(async () =>
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                    return UnauthorizedResponse("کاربر احراز هویت نشده است");
-
-                var query = new GetUserEnrollmentsQuery { UserId = userId };
-                var result = await _mediator.Send(query);
-
-                if (result == null || result.Count == 0)
-                    return SuccessResponse(new List<object>(), "شما در هیچ دوره‌ای ثبت‌نام نکرده‌اید");
-
-                return SuccessResponse(result, $"شما در {result.Count} دوره ثبت‌نام کرده‌اید");
-            }, "خطا در دریافت دوره‌های ثبت‌نام شده");
-        }
+        // ✅ endpoint my-enrollments به کنترلر عمومی /api/courses منتقل شد
+        // برای دسترسی به دوره‌های ثبت‌نام شده از /api/courses/my-enrollments استفاده کنید
 
         // ✅ زمان‌بندی‌های دوره حالا در CourseScheduleController مدیریت می‌شوند
         // برای دسترسی به زمان‌بندی‌ها از /api/courses/{courseId}/schedules استفاده کنید

@@ -1,15 +1,16 @@
 ﻿using MediatR;
 using Pardis.Domain.Dto.Courses;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pardis.Query.Courses.Enroll
 {
+    /// <summary>
+    /// Query برای دریافت دوره‌های ثبت‌نام شده یک کاربر
+    /// </summary>
     public class GetUserEnrollmentsQuery : IRequest<List<CourseResource>>
     {
-        public string UserId { get; set; }
+        /// <summary>
+        /// شناسه کاربر
+        /// </summary>
+        public required string UserId { get; set; }
     }
 }

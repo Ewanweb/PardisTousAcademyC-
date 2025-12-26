@@ -137,6 +137,8 @@ app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
     options.EnablePersistAuthorization(); // ذخیره توکن بعد از رفرش
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
+    options.RoutePrefix = ""; // یعنی Swagger UI روی روت اصلی
 });
 app.UseHttpsRedirection(); // بهتر است اینجا باشد
 app.UseStaticFiles();

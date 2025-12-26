@@ -30,12 +30,13 @@ namespace Pardis.Infrastructure.Repository
 
         public async Task<List<Category>?> GetCategories()
         {
-            var query = _context.Categories
+            // ✅ بهینه‌سازی: فقط categories اصلی رو بکش، بدون children
+            // برای صفحه اصلی نیاز به children نیست
+            return await _context.Categories
+                .Where(c => c.ParentId == null) // فقط categories اصلی
                 .Include(c => c.Seo)
-                .AsQueryable();
-
-            return await query.Include(c => c.Children).ThenInclude(c => c.Seo).ToListAsync();
-
+                .OrderBy(c => c.Title)
+                .ToListAsync();
         }
 
         public async Task<bool> IsExist(string title)
