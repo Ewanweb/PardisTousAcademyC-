@@ -10,7 +10,7 @@ using Pardis.Domain.Dto.Users;
 using static Pardis.Domain.Dto.Dtos;
 using static Pardis.Query.Users.GetUsers.CreateUserByAdminHandler;
 
-namespace Pardis.Application.Users.Commands // یا فضای نام درست پروژه شما
+namespace Pardis.Application.Users.UpdateUser // یا فضای نام درست پروژه شما
 {
     public class UpdateUserHandler : IRequestHandler<UpdateUserCommand, OperationResult<UserResource>>
     {

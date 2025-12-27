@@ -1,5 +1,6 @@
 using MediatR;
 using Pardis.Application._Shared;
+using Pardis.Application.Courses.SoftDelete;
 using Pardis.Domain;
 using Pardis.Domain.Categories;
 using Pardis.Domain.Courses;

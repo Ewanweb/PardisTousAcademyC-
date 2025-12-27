@@ -10,6 +10,7 @@ using Pardis.Query.Users.GetUsersByRole;
 using System.Security.Claims;
 using static Pardis.Query.Users.GetUsers.CreateUserByAdminHandler;
 using Api.Controllers;
+using Pardis.Application.Users.CreateUserByAdmin;
 
 namespace Pardis.API.Controllers
 {

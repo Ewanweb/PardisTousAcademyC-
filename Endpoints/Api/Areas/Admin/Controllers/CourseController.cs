@@ -16,6 +16,7 @@ using Pardis.Application.Courses.Enroll;
 using Pardis.Query.Courses.Enroll;
 using static Pardis.Application.Courses.SoftDeleteCommandHandler;
 using Api.Controllers;
+using Pardis.Application.Courses.SoftDelete;
 
 namespace Api.Areas.Admin.Controllers
 {

@@ -1,10 +1,9 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pardis.Application._Shared;
-using Pardis.Application.Sliders.SuccessStories.Delete;
 using Pardis.Domain.Sliders;
 
-namespace Pardis.Infrastructure.Handlers.Sliders.SuccessStories
+namespace Pardis.Application.Sliders.SuccessStories.Delete
 {
     public class DeleteSuccessStoryCommandHandler : IRequestHandler<DeleteSuccessStoryCommand, OperationResult>
     {

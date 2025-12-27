@@ -24,4 +24,9 @@
     <ProjectReference Include="..\Pardis.Domain\Pardis.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Handlers\Sliders\HeroSlides\" />
+    <Folder Include="Handlers\Sliders\SuccessStories\" />
+  </ItemGroup>
+
 </Project>

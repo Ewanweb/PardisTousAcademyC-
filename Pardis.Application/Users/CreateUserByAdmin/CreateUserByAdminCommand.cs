@@ -3,7 +3,7 @@ using Pardis.Application._Shared;
 using Pardis.Domain.Dto.Users;
 using static Pardis.Domain.Dto.Dtos;
 
-namespace Pardis.Query.Users.GetUsers;
+namespace Pardis.Application.Users.CreateUserByAdmin;
 
 public class CreateUserByAdminCommand : IRequest<OperationResult<UserResource>>
 {

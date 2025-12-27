@@ -2,11 +2,10 @@ using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pardis.Application._Shared;
-using Pardis.Application.Sliders.HeroSlides.Create;
 using Pardis.Domain.Sliders;
 using System.Text.Json;
 
-namespace Pardis.Infrastructure.Handlers.Sliders.HeroSlides
+namespace Pardis.Application.Sliders.HeroSlides.Create
 {
     public class CreateHeroSlideCommandHandler : IRequestHandler<CreateHeroSlideCommand, OperationResult>
     {

@@ -1,10 +1,9 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pardis.Application._Shared;
-using Pardis.Application.Sliders.HeroSlides.Delete;
 using Pardis.Domain.Sliders;
 
-namespace Pardis.Infrastructure.Handlers.Sliders.HeroSlides
+namespace Pardis.Application.Sliders.HeroSlides.Delete
 {
     public class DeleteHeroSlideCommandHandler : IRequestHandler<DeleteHeroSlideCommand, OperationResult>
     {

@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Pardis.Application._Shared;
+using Pardis.Application.Users.CreateUserByAdmin;
 using Pardis.Domain.Dto.Users;
 using Pardis.Domain.Users;
 using static Pardis.Domain.Dto.Dtos;
