@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pardis.Application._Shared;
+using Pardis.Application.Sliders._Shared;
 using Pardis.Domain.Sliders;
 
 namespace Pardis.Application.Sliders.SuccessStories.Create
@@ -8,11 +9,16 @@ namespace Pardis.Application.Sliders.SuccessStories.Create
     public class CreateSuccessStoryCommandHandler : IRequestHandler<CreateSuccessStoryCommand, OperationResult>
     {
         private readonly ISuccessStoryRepository _successStoryRepository;
+        private readonly ISliderImageService _imageService;
         private readonly ILogger<CreateSuccessStoryCommandHandler> _logger;
 
-        public CreateSuccessStoryCommandHandler(ISuccessStoryRepository successStoryRepository, ILogger<CreateSuccessStoryCommandHandler> logger)
+        public CreateSuccessStoryCommandHandler(
+            ISuccessStoryRepository successStoryRepository, 
+            ISliderImageService imageService,
+            ILogger<CreateSuccessStoryCommandHandler> logger)
         {
             _successStoryRepository = successStoryRepository;
+            _imageService = imageService;
             _logger = logger;
         }
 
@@ -20,57 +26,115 @@ namespace Pardis.Application.Sliders.SuccessStories.Create
         {
             try
             {
-                // مدیریت آپلود تصویر
-                string imageUrl = request.Dto.ImageUrl ?? "";
-                if (request.Dto.ImageFile != null)
+                // Validate input
+                if (request?.Dto == null)
                 {
-                    var uploadsPath = Path.Combine("Uploads", "sliders", "stories");
-                    Directory.CreateDirectory(uploadsPath);
-
-                    var fileName = $"{Guid.NewGuid()}{Path.GetExtension(request.Dto.ImageFile.FileName)}";
-                    var filePath = Path.Combine(uploadsPath, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await request.Dto.ImageFile.CopyToAsync(stream, cancellationToken);
-                    }
-
-                    imageUrl = $"/uploads/sliders/stories/{fileName}";
+                    _logger.LogError("CreateSuccessStoryCommand یا Dto آن null است");
+                    return OperationResult.Error("درخواست نامعتبر: داده‌های ورودی موجود نیست");
                 }
 
-                var userId = Guid.TryParse(request.CurrentUserId, out var parsedUserId) ? parsedUserId : Guid.Empty;
+                if (string.IsNullOrWhiteSpace(request.Dto.Title))
+                {
+                    _logger.LogError("عنوان استوری موفقیت خالی یا null است");
+                    return OperationResult.Error("عنوان استوری موفقیت الزامی است");
+                }
 
-                var successStory = Domain.Sliders.SuccessStory.Create(
-                    title: request.Dto.Title,
-                    imageUrl: imageUrl,
-                    createdByUserId: userId,
-                    subtitle: request.Dto.Subtitle,
-                    description: request.Dto.Description,
-                    badge: request.Dto.Badge,
-                    type: request.Dto.Type,
-                    studentName: request.Dto.StudentName,
-                    courseName: request.Dto.CourseName,
-                    actionLabel: request.Dto.ActionLabel,
-                    actionLink: request.Dto.ActionLink ?? request.Dto.LinkUrl,
-                    statsJson: request.Dto.Stats != null ? System.Text.Json.JsonSerializer.Serialize(request.Dto.Stats) : null,
-                    duration: request.Dto.Duration,
-                    courseId: request.Dto.CourseId,
-                    order: request.Dto.Order,
-                    isPermanent: request.Dto.IsPermanent,
-                    expiresAt: request.Dto.IsPermanent ? null : request.Dto.ExpiresAt ?? DateTime.UtcNow.AddHours(24)
-                );
+                // Handle image upload
+                string imageUrl = "";
+                if (request.Dto.ImageFile != null)
+                {
+                    try
+                    {
+                        imageUrl = await _imageService.HandleImageUploadAsync(request.Dto.ImageFile);
+                        _logger.LogInformation("فایل تصویر با موفقیت آپلود شد: {ImageUrl}", imageUrl);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "خطا در آپلود فایل تصویر");
+                        return OperationResult.Error($"خطا در آپلود تصویر: {ex.Message}");
+                    }
+                }
+                else if (!string.IsNullOrWhiteSpace(request.Dto.ImageUrl))
+                {
+                    imageUrl = request.Dto.ImageUrl;
+                }
+                else
+                {
+                    _logger.LogError("تصویر ارسال نشده است");
+                    return OperationResult.Error("تصویر الزامی است (فایل یا URL)");
+                }
 
-                await _successStoryRepository.AddAsync(successStory);
-                await _successStoryRepository.SaveChangesAsync(cancellationToken);
+                // Validate and parse user ID
+                if (string.IsNullOrWhiteSpace(request.CurrentUserId))
+                {
+                    _logger.LogError("شناسه کاربر موجود نیست");
+                    return OperationResult.Error("شناسه کاربر الزامی است");
+                }
 
-                _logger.LogInformation("استوری موفقیت جدید {Id} با موفقیت ایجاد شد", successStory.Id);
+                if (!Guid.TryParse(request.CurrentUserId, out var userId))
+                {
+                    _logger.LogError("شناسه کاربر {UserId} نامعتبر است", request.CurrentUserId);
+                    return OperationResult.Error("شناسه کاربر نامعتبر است");
+                }
 
-                return OperationResult.Success("استوری موفقیت با موفقیت ایجاد شد");
+                // Create success story with simplified structure
+                Domain.Sliders.SuccessStory successStory;
+                try
+                {
+                    successStory = Domain.Sliders.SuccessStory.Create(
+                        title: request.Dto.Title,
+                        imageUrl: imageUrl,
+                        createdByUserId: userId,
+                        description: request.Dto.Description,
+                        actionLabel: request.Dto.ActionLabel,
+                        actionLink: request.Dto.ActionLink,
+                        order: request.Dto.Order
+                    );
+                }
+                catch (ArgumentException ex)
+                {
+                    _logger.LogError(ex, "خطا در اعتبارسنجی داده‌های استوری موفقیت: {Message}", ex.Message);
+                    return OperationResult.Error($"داده‌های ورودی نامعتبر: {ex.Message}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "خطا در ایجاد شیء استوری موفقیت");
+                    return OperationResult.Error("خطا در ایجاد استوری موفقیت: داده‌های ورودی نامعتبر");
+                }
+
+                // Save to database
+                try
+                {
+                    await _successStoryRepository.AddAsync(successStory);
+                    await _successStoryRepository.SaveChangesAsync(cancellationToken);
+                    
+                    _logger.LogInformation("استوری موفقیت جدید {Id} با موفقیت ایجاد شد. عنوان: {Title}", successStory.Id, successStory.Title);
+                    return OperationResult.Success("استوری موفقیت با موفقیت ایجاد شد");
+                }
+                catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+                {
+                    _logger.LogError(ex, "خطا در ذخیره استوری موفقیت در پایگاه داده. Inner Exception: {InnerException}", ex.InnerException?.Message);
+                    return OperationResult.Error("خطا در ذخیره استوری موفقیت: مشکل در پایگاه داده");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "خطای غیرمنتظره در ذخیره استوری موفقیت");
+                    return OperationResult.Error("خطا در ذخیره استوری موفقیت");
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("عملیات ایجاد استوری موفقیت لغو شد");
+                return OperationResult.Error("عملیات لغو شد");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "خطا در ایجاد استوری موفقیت جدید");
-                return OperationResult.Error("خطا در ایجاد استوری موفقیت");
+                _logger.LogError(ex, "خطای غیرمنتظره در ایجاد استوری موفقیت جدید. Request: {@Request}", new { 
+                    Title = request?.Dto?.Title, 
+                    UserId = request?.CurrentUserId,
+                    HasImageFile = request?.Dto?.ImageFile != null
+                });
+                return OperationResult.Error("خطای غیرمنتظره در ایجاد استوری موفقیت");
             }
         }
     }

@@ -2,8 +2,23 @@
 using Microsoft.OpenApi.Models;
 using Pardis.Infrastructure;
 using Api.Middleware;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File("Logs/pardis-academy-.txt", 
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
+
+// Use Serilog
+builder.Host.UseSerilog();
 
 // =========================================================
 // 1. ناحیه تعریف سرویس‌ها (DI Container)
@@ -98,9 +113,6 @@ builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(Pardis.Query.Sliders.HeroSlides.GetHeroSlides.GetHeroSlidesQuery).Assembly);
 });
-
-// ثبت Background Service برای پاک‌سازی اسلایدرها
-builder.Services.AddHostedService<Pardis.Infrastructure.BackgroundServices.SliderCleanupService>();
 
 var app = builder.Build();
 

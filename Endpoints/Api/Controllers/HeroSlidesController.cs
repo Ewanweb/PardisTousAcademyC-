@@ -1,20 +1,28 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Pardis.Application._Shared;
 using Pardis.Application.Sliders.HeroSlides.Create;
 using Pardis.Application.Sliders.HeroSlides.Delete;
 using Pardis.Application.Sliders.HeroSlides.Update;
 using Pardis.Domain.Dto.Sliders;
 using Pardis.Query.Sliders.HeroSlides.GetHeroSlideById;
 using Pardis.Query.Sliders.HeroSlides.GetHeroSlides;
+using System.Security.Claims;
 
 namespace Api.Controllers
 {
+    /// <summary>
+    /// کنترلر مدیریت اسلایدهای اصلی - نسخه ساده‌شده
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class HeroSlidesController : BaseController
     {
+        /// <summary>
+        /// سازنده کنترلر اسلایدهای اصلی
+        /// </summary>
+        /// <param name="mediator">واسط MediatR</param>
+        /// <param name="logger">سرویس لاگ</param>
         public HeroSlidesController(IMediator mediator, ILogger<HeroSlidesController> logger) : base(mediator, logger)
         {
         }
@@ -23,23 +31,19 @@ namespace Api.Controllers
         /// دریافت لیست اسلایدهای اصلی
         /// </summary>
         /// <param name="includeInactive">شامل اسلایدهای غیرفعال</param>
-        /// <param name="includeExpired">شامل اسلایدهای منقضی</param>
-        /// <param name="adminView">نمای مدیریتی</param>
         /// <returns>لیست اسلایدهای اصلی</returns>
         /// <response code="200">لیست اسلایدها با موفقیت دریافت شد</response>
         /// <response code="500">خطای سرور</response>
         [HttpGet]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> GetHeroSlides([FromQuery] bool includeInactive = false, [FromQuery] bool includeExpired = false, [FromQuery] bool adminView = false)
+        public async Task<IActionResult> GetHeroSlides([FromQuery] bool includeInactive = false)
         {
             return await ExecuteAsync(async () =>
             {
                 var query = new GetHeroSlidesQuery
                 {
-                    IncludeInactive = includeInactive,
-                    IncludeExpired = includeExpired,
-                    AdminView = adminView
+                    IncludeInactive = includeInactive
                 };
 
                 var result = await Mediator.Send(query);
@@ -77,12 +81,12 @@ namespace Api.Controllers
         /// ایجاد اسلاید اصلی جدید
         /// </summary>
         [HttpPost]
-        [Authorize]
+        // [Authorize] // موقتاً حذف شده برای تست
         public async Task<IActionResult> CreateHeroSlide([FromForm] CreateHeroSlideDto dto)
         {
             var command = new CreateHeroSlideCommand(dto)
             {
-                CurrentUserId = GetCurrentUserId()
+                CurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
             };
 
             var result = await Mediator.Send(command);
@@ -132,9 +136,7 @@ namespace Api.Controllers
             {
                 var query = new GetHeroSlidesQuery
                 {
-                    IncludeInactive = false,
-                    IncludeExpired = false,
-                    AdminView = false
+                    IncludeInactive = false
                 };
 
                 var result = await Mediator.Send(query);

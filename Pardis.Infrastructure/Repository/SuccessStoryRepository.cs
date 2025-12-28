@@ -11,10 +11,8 @@ namespace Pardis.Infrastructure.Repository
 
         public async Task<List<SuccessStory>> GetActiveSuccessStoriesAsync(CancellationToken cancellationToken = default)
         {
-            var now = DateTime.UtcNow;
-            
             return await _dbSet
-                .Where(x => x.IsActive && (x.IsPermanent || !x.ExpiresAt.HasValue || x.ExpiresAt.Value > now))
+                .Where(x => x.IsActive)
                 .OrderBy(x => x.Order)
                 .ThenByDescending(x => x.CreatedAt)
                 .ToListAsync(cancellationToken);
@@ -30,18 +28,8 @@ namespace Pardis.Infrastructure.Repository
                 query = query.Where(x => x.IsActive);
             }
 
-            // فیلتر بر اساس انقضا
-            if (!includeExpired)
-            {
-                var now = DateTime.UtcNow;
-                query = query.Where(x => x.IsPermanent || !x.ExpiresAt.HasValue || x.ExpiresAt.Value > now);
-            }
-
-            // فیلتر بر اساس نوع (اختیاری)
-            if (!string.IsNullOrEmpty(type))
-            {
-                query = query.Where(x => x.Type == type);
-            }
+            // Note: includeExpired and type parameters are kept for backward compatibility but not used
+            // since the simplified slider system doesn't have expiration logic or type classification
 
             // مرتب‌سازی
             query = query.OrderBy(x => x.Order).ThenByDescending(x => x.CreatedAt);
@@ -56,12 +44,10 @@ namespace Pardis.Infrastructure.Repository
 
         public async Task<List<SuccessStory>> GetSuccessStoriesByTypeAsync(string type, CancellationToken cancellationToken = default)
         {
-            var now = DateTime.UtcNow;
-            
+            // Note: type parameter is kept for backward compatibility but not used
+            // since the simplified slider system doesn't have type classification
             return await _dbSet
-                .Where(x => x.IsActive && 
-                           x.Type == type && 
-                           (x.IsPermanent || !x.ExpiresAt.HasValue || x.ExpiresAt.Value > now))
+                .Where(x => x.IsActive)
                 .OrderBy(x => x.Order)
                 .ThenByDescending(x => x.CreatedAt)
                 .ToListAsync(cancellationToken);

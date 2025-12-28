@@ -1,5 +1,3 @@
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -27,24 +25,8 @@ namespace Pardis.Query.Sliders.HeroSlides.GetHeroSlideById
             if (heroSlide == null)
                 return null;
 
-            return new HeroSlideResource
-            {
-                Id = heroSlide.Id,
-                Title = heroSlide.Title,
-                Description = heroSlide.Description,
-                ImageUrl = heroSlide.ImageUrl,
-                LinkUrl = heroSlide.LinkUrl,
-                ButtonText = heroSlide.ButtonText,
-                Order = heroSlide.Order,
-                IsActive = heroSlide.IsActive,
-                IsPermanent = heroSlide.IsPermanent,
-                ExpiresAt = heroSlide.ExpiresAt,
-                TimeRemaining = heroSlide.GetTimeRemaining(),
-                IsExpired = heroSlide.IsExpired(),
-                CreatedAt = heroSlide.CreatedAt,
-                UpdatedAt = heroSlide.UpdatedAt,
-                CreatedByUserId = heroSlide.CreatedByUserId
-            };
+            // Use AutoMapper for simplified mapping
+            return _mapper.Map<HeroSlideResource>(heroSlide);
         }
     }
 }

@@ -11,10 +11,8 @@ namespace Pardis.Infrastructure.Repository
 
         public async Task<List<HeroSlide>> GetActiveHeroSlidesAsync(CancellationToken cancellationToken = default)
         {
-            var now = DateTime.UtcNow;
-            
             return await _dbSet
-                .Where(x => x.IsActive && (x.IsPermanent || !x.ExpiresAt.HasValue || x.ExpiresAt.Value > now))
+                .Where(x => x.IsActive)
                 .OrderBy(x => x.Order)
                 .ThenByDescending(x => x.CreatedAt)
                 .ToListAsync(cancellationToken);
@@ -30,12 +28,8 @@ namespace Pardis.Infrastructure.Repository
                 query = query.Where(x => x.IsActive);
             }
 
-            // فیلتر بر اساس انقضا
-            if (!includeExpired)
-            {
-                var now = DateTime.UtcNow;
-                query = query.Where(x => x.IsPermanent || !x.ExpiresAt.HasValue || x.ExpiresAt.Value > now);
-            }
+            // Note: includeExpired parameter is kept for backward compatibility but not used
+            // since the simplified slider system doesn't have expiration logic
 
             // مرتب‌سازی
             query = query.OrderBy(x => x.Order).ThenByDescending(x => x.CreatedAt);

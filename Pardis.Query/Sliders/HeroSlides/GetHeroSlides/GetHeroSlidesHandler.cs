@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -32,32 +27,16 @@ namespace Pardis.Query.Sliders.HeroSlides.GetHeroSlides
                 query = query.Where(x => x.IsActive);
             }
 
-            if (!request.IncludeExpired)
-            {
-                query = query.Where(x => x.IsPermanent || (x.ExpiresAt.HasValue && x.ExpiresAt.Value > DateTime.UtcNow));
-            }
+            // Note: IncludeExpired parameter is kept for backward compatibility but not used
+            // since the simplified slider system doesn't have expiration logic
 
             var heroSlides = await query
                 .OrderBy(x => x.Order)
                 .ThenByDescending(x => x.CreatedAt)
                 .ToListAsync(cancellationToken);
 
-            var result = heroSlides.Select(slide => new HeroSlideListResource
-            {
-                Id = slide.Id,
-                Title = slide.Title,
-                ImageUrl = slide.ImageUrl,
-                LinkUrl = slide.LinkUrl,
-                ButtonText = slide.ButtonText,
-                Order = slide.Order,
-                IsActive = slide.IsActive,
-                IsPermanent = slide.IsPermanent,
-                ExpiresAt = slide.ExpiresAt,
-                TimeRemaining = slide.GetTimeRemaining(),
-                IsExpired = slide.IsExpired()
-            }).ToList();
-
-            return result;
+            // Use AutoMapper for simplified mapping
+            return _mapper.Map<List<HeroSlideListResource>>(heroSlides);
         }
     }
 }

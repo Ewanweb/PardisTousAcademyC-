@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Pardis.Application._Shared;
 using Pardis.Application.Sliders.SuccessStories.Create;
 using Pardis.Application.Sliders.SuccessStories.Update;
 using Pardis.Application.Sliders.SuccessStories.Delete;
@@ -11,10 +10,18 @@ using Pardis.Query.Sliders.SuccessStories.GetSuccessStoryById;
 
 namespace Api.Controllers
 {
+    /// <summary>
+    /// کنترلر مدیریت استوری‌های موفقیت - نسخه ساده‌شده
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class SuccessStoriesController : BaseController
     {
+        /// <summary>
+        /// سازنده کنترلر استوری‌های موفقیت
+        /// </summary>
+        /// <param name="mediator">واسط MediatR</param>
+        /// <param name="logger">سرویس لاگ</param>
         public SuccessStoriesController(IMediator mediator, ILogger<SuccessStoriesController> logger) : base(mediator, logger)
         {
         }
@@ -23,25 +30,19 @@ namespace Api.Controllers
         /// دریافت لیست استوری‌های موفقیت
         /// </summary>
         /// <param name="includeInactive">شامل استوری‌های غیرفعال</param>
-        /// <param name="includeExpired">شامل استوری‌های منقضی</param>
-        /// <param name="adminView">نمای مدیریتی</param>
-        /// <param name="type">نوع استوری</param>
         /// <returns>لیست استوری‌های موفقیت</returns>
         /// <response code="200">لیست استوری‌ها با موفقیت دریافت شد</response>
         /// <response code="500">خطای سرور</response>
         [HttpGet]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> GetSuccessStories([FromQuery] bool includeInactive = false, [FromQuery] bool includeExpired = false, [FromQuery] bool adminView = false, [FromQuery] string? type = null)
+        public async Task<IActionResult> GetSuccessStories([FromQuery] bool includeInactive = false)
         {
             return await ExecuteAsync(async () =>
             {
                 var query = new GetSuccessStoriesQuery
                 {
-                    IncludeInactive = includeInactive,
-                    IncludeExpired = includeExpired,
-                    AdminView = adminView,
-                    Type = type
+                    IncludeInactive = includeInactive
                 };
 
                 var result = await Mediator.Send(query);
@@ -134,9 +135,7 @@ namespace Api.Controllers
             {
                 var query = new GetSuccessStoriesQuery
                 {
-                    IncludeInactive = false,
-                    IncludeExpired = false,
-                    AdminView = false
+                    IncludeInactive = false
                 };
 
                 var result = await Mediator.Send(query);
@@ -144,31 +143,5 @@ namespace Api.Controllers
             }, "خطا در دریافت استوری‌های فعال");
         }
 
-        /// <summary>
-        /// دریافت استوری‌های موفقیت بر اساس نوع
-        /// </summary>
-        /// <param name="type">نوع استوری</param>
-        /// <returns>لیست استوری‌های موفقیت بر اساس نوع</returns>
-        /// <response code="200">استوری‌ها با موفقیت دریافت شد</response>
-        /// <response code="500">خطای سرور</response>
-        [HttpGet("type/{type}")]
-        [ProducesResponseType(typeof(object), 200)]
-        [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> GetSuccessStoriesByType(string type)
-        {
-            return await ExecuteAsync(async () =>
-            {
-                var query = new GetSuccessStoriesQuery
-                {
-                    IncludeInactive = false,
-                    IncludeExpired = false,
-                    AdminView = false,
-                    Type = type
-                };
-
-                var result = await Mediator.Send(query);
-                return SuccessResponse(result, $"استوری‌های نوع {type} با موفقیت دریافت شد");
-            }, "خطا در دریافت استوری‌ها بر اساس نوع");
-        }
     }
 }

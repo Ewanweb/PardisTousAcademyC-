@@ -1,20 +1,25 @@
-using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pardis.Application._Shared;
+using Pardis.Application.FileUtil;
+using Pardis.Application.Sliders._Shared;
 using Pardis.Domain.Sliders;
-using System.Text.Json;
 
 namespace Pardis.Application.Sliders.HeroSlides.Create
 {
     public class CreateHeroSlideCommandHandler : IRequestHandler<CreateHeroSlideCommand, OperationResult>
     {
         private readonly IHeroSlideRepository _heroSlideRepository;
+        private readonly IFileService _imageService;
         private readonly ILogger<CreateHeroSlideCommandHandler> _logger;
 
-        public CreateHeroSlideCommandHandler(IHeroSlideRepository heroSlideRepository, ILogger<CreateHeroSlideCommandHandler> logger)
+        public CreateHeroSlideCommandHandler(
+            IHeroSlideRepository heroSlideRepository, 
+            IFileService imageService,
+            ILogger<CreateHeroSlideCommandHandler> logger)
         {
             _heroSlideRepository = heroSlideRepository;
+            _imageService = imageService;
             _logger = logger;
         }
 
@@ -22,68 +27,130 @@ namespace Pardis.Application.Sliders.HeroSlides.Create
         {
             try
             {
-                // مدیریت آپلود تصویر
-                string imageUrl = request.Dto.ImageUrl ?? "";
-                if (request.Dto.ImageFile != null)
+                // Validate input
+                if (request?.Dto == null)
                 {
-                    var uploadsPath = Path.Combine("Uploads", "sliders", "hero");
-                    Directory.CreateDirectory(uploadsPath);
-
-                    var fileName = $"{Guid.NewGuid()}{Path.GetExtension(request.Dto.ImageFile.FileName)}";
-                    var filePath = Path.Combine(uploadsPath, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await request.Dto.ImageFile.CopyToAsync(stream, cancellationToken);
-                    }
-
-                    imageUrl = $"/uploads/sliders/hero/{fileName}";
+                    _logger.LogError("CreateHeroSlideCommand یا Dto آن null است");
+                    return OperationResult.Error("درخواست نامعتبر: داده‌های ورودی موجود نیست");
                 }
 
-                var userId = Guid.TryParse(request.CurrentUserId, out var parsedUserId) ? parsedUserId : Guid.Empty;
+                if (string.IsNullOrWhiteSpace(request.Dto.Title))
+                {
+                    _logger.LogError("عنوان اسلاید خالی یا null است");
+                    return OperationResult.Error("عنوان اسلاید الزامی است");
+                }
 
-                // Serialize stats if provided
-                string? statsJson = null;
-                if (request.Dto.Stats != null && request.Dto.Stats.Count > 0)
+                // Handle image upload
+                string imageUrl = "";
+                if (request.Dto.ImageFile != null)
                 {
                     try
                     {
-                        statsJson = JsonSerializer.Serialize(request.Dto.Stats);
+                        if (!Directory.Exists(Directories.Slider))
+                            Directory.CreateDirectory(Directories.Slider);
+                        
+                        imageUrl = await _imageService.SaveFileAndGenerateName(request.Dto.ImageFile, Directories.Slider);
+                        _logger.LogInformation("فایل تصویر با موفقیت آپلود شد: {ImageUrl}", imageUrl);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "خطا در سریالایز کردن آمار اسلاید");
+                        _logger.LogError(ex, "خطا در آپلود فایل تصویر");
+                        return OperationResult.Error($"خطا در آپلود تصویر: {ex.Message}");
                     }
                 }
+                else
+                {
+                    _logger.LogError("تصویر ارسال نشده است");
+                    return OperationResult.Error("تصویر الزامی است (فایل یا URL)");
+                }
 
-                var heroSlide = Domain.Sliders.HeroSlide.Create(
-                    title: request.Dto.Title,
-                    imageUrl: imageUrl,
-                    createdByUserId: userId,
-                    description: request.Dto.Description,
-                    badge: request.Dto.Badge,
-                    primaryActionLabel: request.Dto.PrimaryActionLabel ?? request.Dto.ButtonText,
-                    primaryActionLink: request.Dto.PrimaryActionLink ?? request.Dto.LinkUrl,
-                    secondaryActionLabel: request.Dto.SecondaryActionLabel,
-                    secondaryActionLink: request.Dto.SecondaryActionLink,
-                    statsJson: statsJson,
-                    order: request.Dto.Order,
-                    isPermanent: request.Dto.IsPermanent,
-                    expiresAt: request.Dto.IsPermanent ? null : request.Dto.ExpiresAt ?? DateTime.UtcNow.AddHours(24)
-                );
+                // Validate and parse user ID
+                if (string.IsNullOrWhiteSpace(request.CurrentUserId))
+                {
+                    _logger.LogError("شناسه کاربر موجود نیست");
+                    return OperationResult.Error("شناسه کاربر الزامی است");
+                }
 
-                await _heroSlideRepository.AddAsync(heroSlide);
-                await _heroSlideRepository.SaveChangesAsync(cancellationToken);
+                if (!Guid.TryParse(request.CurrentUserId, out var userId))
+                {
+                    _logger.LogError("شناسه کاربر {UserId} نامعتبر است", request.CurrentUserId);
+                    return OperationResult.Error("شناسه کاربر نامعتبر است");
+                }
 
-                _logger.LogInformation("اسلاید جدید {Id} با موفقیت ایجاد شد", heroSlide.Id);
+                // Create hero slide with simplified structure
+                Domain.Sliders.HeroSlide heroSlide;
+                try
+                {
+                    heroSlide = Domain.Sliders.HeroSlide.Create(
+                        title: request.Dto.Title,
+                        imageUrl: imageUrl,
+                        createdByUserId: userId,
+                        description: request.Dto.Description,
+                        actionLabel: request.Dto.ActionLabel,
+                        actionLink: request.Dto.ActionLink,
+                        order: request.Dto.Order
+                    );
+                }
+                catch (ArgumentException ex)
+                {
+                    _logger.LogError(ex, "خطا در اعتبارسنجی داده‌های اسلاید: {Message}", ex.Message);
+                    return OperationResult.Error($"داده‌های ورودی نامعتبر: {ex.Message}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "خطا در ایجاد شیء اسلاید");
+                    return OperationResult.Error("خطا در ایجاد اسلاید: داده‌های ورودی نامعتبر");
+                }
 
-                return OperationResult.Success("اسلاید با موفقیت ایجاد شد");
+                // Save to database
+                try
+                {
+                    await _heroSlideRepository.AddAsync(heroSlide);
+                    await _heroSlideRepository.SaveChangesAsync(cancellationToken);
+                    
+                    _logger.LogInformation("اسلاید جدید {Id} با موفقیت ایجاد شد. عنوان: {Title}", heroSlide.Id, heroSlide.Title);
+                    return OperationResult.Success("اسلاید با موفقیت ایجاد شد");
+                }
+                catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+                {
+                    _logger.LogError(ex, "خطا در ذخیره اسلاید در پایگاه داده. Inner Exception: {InnerException}", ex.InnerException?.Message);
+                    return OperationResult.Error("خطا در ذخیره اسلاید: مشکل در پایگاه داده");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "خطای غیرمنتظره در ذخیره اسلاید");
+                    Console.WriteLine(GetFullException(ex));
+                    return OperationResult.Error("خطا در ذخیره اسلاید");
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("عملیات ایجاد اسلاید لغو شد");
+                return OperationResult.Error("عملیات لغو شد");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "خطا در ایجاد اسلاید جدید");
-                return OperationResult.Error("خطا در ایجاد اسلاید");
+                _logger.LogError(ex, "خطای غیرمنتظره در ایجاد اسلاید جدید. Request: {@Request}", new { 
+                    Title = request?.Dto?.Title, 
+                    UserId = request?.CurrentUserId,
+                    HasImageFile = request?.Dto?.ImageFile != null
+                });
+                return OperationResult.Error("خطای غیرمنتظره در ایجاد اسلاید");
             }
         }
+        private static string GetFullException(Exception ex)
+        {
+            var sb = new System.Text.StringBuilder();
+            var cur = ex;
+            var i = 0;
+            while (cur != null)
+            {
+                sb.AppendLine($"[{i}] {cur.GetType().FullName}: {cur.Message}");
+                cur = cur.InnerException;
+                i++;
+            }
+            return sb.ToString();
+        }
+
     }
 }

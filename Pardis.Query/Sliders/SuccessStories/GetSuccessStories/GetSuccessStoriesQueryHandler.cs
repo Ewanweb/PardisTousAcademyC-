@@ -18,11 +18,19 @@ namespace Pardis.Query.Sliders.SuccessStories.GetSuccessStories
 
         public async Task<List<SuccessStoryListResource>> Handle(GetSuccessStoriesQuery request, CancellationToken cancellationToken)
         {
-            var successStories = await _successStoryRepository.GetSuccessStoriesWithFiltersAsync(
-                includeInactive: request.IncludeInactive,
-                includeExpired: request.IncludeExpired,
-                type: request.Type,
-                cancellationToken: cancellationToken);
+            List<SuccessStory> successStories;
+            
+            if (request.IncludeInactive)
+            {
+                // Get all stories (active and inactive) ordered by Order then CreatedAt
+                var allStories = await _successStoryRepository.GetAllAsync();
+                successStories = allStories.OrderBy(x => x.Order).ThenBy(x => x.CreatedAt).ToList();
+            }
+            else
+            {
+                // Get only active stories
+                successStories = await _successStoryRepository.GetActiveSuccessStoriesAsync(cancellationToken);
+            }
 
             return _mapper.Map<List<SuccessStoryListResource>>(successStories);
         }

@@ -18,10 +18,19 @@ namespace Pardis.Query.Sliders.HeroSlides.GetHeroSlides
 
         public async Task<List<HeroSlideListResource>> Handle(GetHeroSlidesQuery request, CancellationToken cancellationToken)
         {
-            var heroSlides = await _heroSlideRepository.GetHeroSlidesWithFiltersAsync(
-                includeInactive: request.IncludeInactive,
-                includeExpired: request.IncludeExpired,
-                cancellationToken: cancellationToken);
+            List<HeroSlide> heroSlides;
+            
+            if (request.IncludeInactive)
+            {
+                // Get all slides (active and inactive) ordered by Order then CreatedAt
+                var allSlides = await _heroSlideRepository.GetAllAsync();
+                heroSlides = allSlides.OrderBy(x => x.Order).ThenBy(x => x.CreatedAt).ToList();
+            }
+            else
+            {
+                // Get only active slides
+                heroSlides = await _heroSlideRepository.GetActiveHeroSlidesAsync(cancellationToken);
+            }
 
             return _mapper.Map<List<HeroSlideListResource>>(heroSlides);
         }

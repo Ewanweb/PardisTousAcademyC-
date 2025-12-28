@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pardis.Application._Shared;
+using Pardis.Application.FileUtil;
+using Pardis.Application.Sliders._Shared;
 using Pardis.Domain.Sliders;
 
 namespace Pardis.Application.Sliders.HeroSlides.Update
@@ -8,11 +10,16 @@ namespace Pardis.Application.Sliders.HeroSlides.Update
     public class UpdateHeroSlideCommandHandler : IRequestHandler<UpdateHeroSlideCommand, OperationResult>
     {
         private readonly IHeroSlideRepository _heroSlideRepository;
+        private readonly IFileService _imageService;
         private readonly ILogger<UpdateHeroSlideCommandHandler> _logger;
 
-        public UpdateHeroSlideCommandHandler(IHeroSlideRepository heroSlideRepository, ILogger<UpdateHeroSlideCommandHandler> logger)
+        public UpdateHeroSlideCommandHandler(
+            IHeroSlideRepository heroSlideRepository, 
+            IFileService imageService,
+            ILogger<UpdateHeroSlideCommandHandler> logger)
         {
             _heroSlideRepository = heroSlideRepository;
+            _imageService = imageService;
             _logger = logger;
         }
 
@@ -27,50 +34,38 @@ namespace Pardis.Application.Sliders.HeroSlides.Update
                     return OperationResult.Error("اسلاید یافت نشد");
                 }
 
-                // مدیریت تصویر جدید
+                // Handle image update
                 string? newImageUrl = null;
                 if (request.Dto.ImageFile != null)
                 {
-                    // حذف تصویر قبلی
-                    if (!string.IsNullOrEmpty(heroSlide.ImageUrl) && heroSlide.ImageUrl.StartsWith("/uploads/"))
+                    try
                     {
-                        var oldImagePath = Path.Combine("Uploads", heroSlide.ImageUrl.TrimStart('/'));
-                        if (File.Exists(oldImagePath))
+                        // Delete old image
+                        if (!string.IsNullOrEmpty(heroSlide.ImageUrl))
                         {
-                            File.Delete(oldImagePath);
+                            _imageService.DeleteFile(Directories.Slider,heroSlide.ImageUrl);
                         }
+
+                        // Upload new image
+                        newImageUrl = await _imageService.SaveFileAndGenerateName(request.Dto.ImageFile, Directories.Slider);
+                        _logger.LogInformation("تصویر جدید با موفقیت آپلود شد: {ImageUrl}", newImageUrl);
                     }
-
-                    // ذخیره تصویر جدید
-                    var uploadsPath = Path.Combine("Uploads", "sliders", "hero");
-                    Directory.CreateDirectory(uploadsPath);
-
-                    var fileName = $"{Guid.NewGuid()}{Path.GetExtension(request.Dto.ImageFile.FileName)}";
-                    var filePath = Path.Combine(uploadsPath, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    catch (Exception ex)
                     {
-                        await request.Dto.ImageFile.CopyToAsync(stream, cancellationToken);
+                        _logger.LogError(ex, "خطا در آپلود تصویر جدید");
+                        return OperationResult.Error($"خطا در آپلود تصویر: {ex.Message}");
                     }
-
-                    newImageUrl = $"/uploads/sliders/hero/{fileName}";
                 }
 
-                // به‌روزرسانی فیلدها
+                // Update hero slide with simplified structure
                 heroSlide.Update(
                     title: request.Dto.Title,
                     description: request.Dto.Description,
-                    imageUrl: newImageUrl ?? request.Dto.ImageUrl,
-                    badge: request.Dto.Badge,
-                    primaryActionLabel: request.Dto.PrimaryActionLabel ?? request.Dto.ButtonText,
-                    primaryActionLink: request.Dto.PrimaryActionLink ?? request.Dto.LinkUrl,
-                    secondaryActionLabel: request.Dto.SecondaryActionLabel,
-                    secondaryActionLink: request.Dto.SecondaryActionLink,
-                    statsJson: request.Dto.Stats != null ? System.Text.Json.JsonSerializer.Serialize(request.Dto.Stats) : null,
+                    imageUrl: newImageUrl,
+                    actionLabel: request.Dto.ActionLabel,
+                    actionLink: request.Dto.ActionLink,
                     order: request.Dto.Order,
-                    isActive: request.Dto.IsActive,
-                    isPermanent: request.Dto.IsPermanent,
-                    expiresAt: request.Dto.IsPermanent == false ? request.Dto.ExpiresAt ?? DateTime.UtcNow.AddHours(24) : null
+                    isActive: request.Dto.IsActive
                 );
 
                 _heroSlideRepository.Update(heroSlide);

@@ -27,38 +27,22 @@ namespace Pardis.Application._Shared
             // تبدیل SeoMetadata به SeoDto
             CreateMap<SeoMetadata, SeoDto>().ReverseMap();
 
-            // Slider Mappings - Enhanced with new features
+            // Slider Mappings - Simplified structure
             CreateMap<HeroSlide, HeroSlideResource>()
-                .ForMember(dest => dest.PrimaryAction, opt => opt.MapFrom(src => CreateSlideAction(src.PrimaryActionLabel, src.PrimaryActionLink)))
-                .ForMember(dest => dest.SecondaryAction, opt => opt.MapFrom(src => CreateSlideAction(src.SecondaryActionLabel, src.SecondaryActionLink)))
-                .ForMember(dest => dest.Stats, opt => opt.MapFrom(src => ParseSlideStats(src.StatsJson)))
-                .ForMember(dest => dest.TimeRemaining, opt => opt.MapFrom(src => src.GetTimeRemaining()))
-                .ForMember(dest => dest.IsExpired, opt => opt.MapFrom(src => src.IsExpired()))
-                .ForMember(dest => dest.LinkUrl, opt => opt.MapFrom(src => src.PrimaryActionLink))
-                .ForMember(dest => dest.ButtonText, opt => opt.MapFrom(src => src.PrimaryActionLabel));
+                .ForMember(dest => dest.ActionLabel, opt => opt.MapFrom(src => src.ActionLabel))
+                .ForMember(dest => dest.ActionLink, opt => opt.MapFrom(src => src.ActionLink));
 
             CreateMap<HeroSlide, HeroSlideListResource>()
-                .ForMember(dest => dest.PrimaryAction, opt => opt.MapFrom(src => CreateSlideAction(src.PrimaryActionLabel, src.PrimaryActionLink)))
-                .ForMember(dest => dest.SecondaryAction, opt => opt.MapFrom(src => CreateSlideAction(src.SecondaryActionLabel, src.SecondaryActionLink)))
-                .ForMember(dest => dest.Stats, opt => opt.MapFrom(src => ParseSlideStats(src.StatsJson)))
-                .ForMember(dest => dest.TimeRemaining, opt => opt.MapFrom(src => src.GetTimeRemaining()))
-                .ForMember(dest => dest.IsExpired, opt => opt.MapFrom(src => src.IsExpired()))
-                .ForMember(dest => dest.LinkUrl, opt => opt.MapFrom(src => src.PrimaryActionLink))
-                .ForMember(dest => dest.ButtonText, opt => opt.MapFrom(src => src.PrimaryActionLabel));
+                .ForMember(dest => dest.ActionLabel, opt => opt.MapFrom(src => src.ActionLabel))
+                .ForMember(dest => dest.ActionLink, opt => opt.MapFrom(src => src.ActionLink));
                 
             CreateMap<SuccessStory, SuccessStoryResource>()
-                .ForMember(dest => dest.Action, opt => opt.MapFrom(src => CreateStoryAction(src.ActionLabel, src.ActionLink)))
-                .ForMember(dest => dest.Stats, opt => opt.MapFrom(src => ParseStoryStats(src.StatsJson)))
-                .ForMember(dest => dest.TimeRemaining, opt => opt.MapFrom(src => src.GetTimeRemaining()))
-                .ForMember(dest => dest.IsExpired, opt => opt.MapFrom(src => src.IsExpired()))
-                .ForMember(dest => dest.LinkUrl, opt => opt.MapFrom(src => src.ActionLink));
+                .ForMember(dest => dest.ActionLabel, opt => opt.MapFrom(src => src.ActionLabel))
+                .ForMember(dest => dest.ActionLink, opt => opt.MapFrom(src => src.ActionLink));
                 
             CreateMap<SuccessStory, SuccessStoryListResource>()
-                .ForMember(dest => dest.Action, opt => opt.MapFrom(src => CreateStoryAction(src.ActionLabel, src.ActionLink)))
-                .ForMember(dest => dest.Stats, opt => opt.MapFrom(src => ParseStoryStats(src.StatsJson)))
-                .ForMember(dest => dest.TimeRemaining, opt => opt.MapFrom(src => src.GetTimeRemaining()))
-                .ForMember(dest => dest.IsExpired, opt => opt.MapFrom(src => src.IsExpired()))
-                .ForMember(dest => dest.LinkUrl, opt => opt.MapFrom(src => src.ActionLink));
+                .ForMember(dest => dest.ActionLabel, opt => opt.MapFrom(src => src.ActionLabel))
+                .ForMember(dest => dest.ActionLink, opt => opt.MapFrom(src => src.ActionLink));
 
             // تبدیل User به UserResource (بدون Courses برای جلوگیری از circular reference)
             CreateMap<User, UserResource>()
@@ -274,61 +258,6 @@ namespace Pardis.Application._Shared
                 Domain.Payments.EnrollmentPaymentMethod.Cheque => "چک",
                 _ => method.ToString()
             };
-        }
-
-        // Helper Methods for Slider Mappings
-        private static SlideActionDto? CreateSlideAction(string? label, string? link)
-        {
-            if (string.IsNullOrEmpty(label) || string.IsNullOrEmpty(link))
-                return null;
-
-            return new SlideActionDto
-            {
-                Label = label,
-                Link = link
-            };
-        }
-
-        private static StoryActionDto? CreateStoryAction(string? label, string? link)
-        {
-            if (string.IsNullOrEmpty(label) || string.IsNullOrEmpty(link))
-                return null;
-
-            return new StoryActionDto
-            {
-                Label = label,
-                Link = link
-            };
-        }
-
-        private static List<SlideStatDto>? ParseSlideStats(string? statsJson)
-        {
-            if (string.IsNullOrEmpty(statsJson))
-                return null;
-
-            try
-            {
-                return System.Text.Json.JsonSerializer.Deserialize<List<SlideStatDto>>(statsJson);
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private static List<StoryStatDto>? ParseStoryStats(string? statsJson)
-        {
-            if (string.IsNullOrEmpty(statsJson))
-                return null;
-
-            try
-            {
-                return System.Text.Json.JsonSerializer.Deserialize<List<StoryStatDto>>(statsJson);
-            }
-            catch
-            {
-                return null;
-            }
         }
     }
 }

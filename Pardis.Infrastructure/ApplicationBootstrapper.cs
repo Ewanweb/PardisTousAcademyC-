@@ -8,6 +8,7 @@ using Pardis.Application._Shared;
 using Pardis.Application._Shared.JWT;
 using Pardis.Application.Categories.Update.Pardis.Application.Categories.Commands;
 using Pardis.Application.FileUtil;
+using Pardis.Application.Sliders._Shared;
 using Pardis.Domain;
 using Pardis.Domain.Courses;
 using Pardis.Domain.Users;
@@ -27,7 +28,12 @@ namespace Pardis.Infrastructure
             // 1. دیتابیس
             service.AddDbContext<AppDbContext>(options =>
             {
-                options.UseSqlServer(config.GetConnectionString("DefaultConnection"));
+                options.UseSqlServer(config.GetConnectionString("DefaultConnection"),
+                    sql => sql.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                        errorNumbersToAdd: null
+                    ));
             });
 
 
@@ -111,6 +117,9 @@ namespace Pardis.Infrastructure
             // Slider Repositories
             service.AddScoped<IHeroSlideRepository, HeroSlideRepository>();
             service.AddScoped<ISuccessStoryRepository, SuccessStoryRepository>();
+            
+            // Slider Services
+            service.AddScoped<ISliderImageService, SliderImageService>();
 
             // ریپازیتوری جنریک
             service.AddScoped(typeof(IRepository<>), typeof(Repository<>));
