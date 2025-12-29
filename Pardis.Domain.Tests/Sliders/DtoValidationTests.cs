@@ -106,7 +106,6 @@ namespace Pardis.Domain.Tests.Sliders
             {
                 Title = title,
                 Description = description,
-                ImageUrl = imageUrl,
                 ActionLabel = actionLabel,
                 ActionLink = actionLink,
                 Order = order,
@@ -276,7 +275,6 @@ namespace Pardis.Domain.Tests.Sliders
             {
                 Title = title,
                 Description = description,
-                ImageUrl = imageUrl,
                 ActionLabel = actionLabel,
                 ActionLink = actionLink,
                 Order = order,

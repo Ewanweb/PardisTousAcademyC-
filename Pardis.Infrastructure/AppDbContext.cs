@@ -9,6 +9,7 @@ using Pardis.Domain.Comments;
 using Pardis.Domain.Attendance;
 using Pardis.Domain.Payments;
 using Pardis.Domain.Sliders;
+using Pardis.Domain.Settings;
 
 namespace Pardis.Infrastructure
 {
@@ -39,6 +40,10 @@ namespace Pardis.Infrastructure
         // ✅ ثبت‌نام و پرداخت
         public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
         public DbSet<InstallmentPayment> InstallmentPayments { get; set; }
+        public DbSet<ManualPaymentRequest> ManualPaymentRequests { get; set; }
+        
+        // ✅ تنظیمات سیستم
+        public DbSet<PaymentSettings> PaymentSettings { get; set; }
         
         // ✅ اسلایدرها و استوری‌ها
         public DbSet<HeroSlide> HeroSlides { get; set; }
@@ -195,6 +200,25 @@ namespace Pardis.Infrastructure
             builder.Entity<InstallmentPayment>()
                 .HasIndex(i => new { i.EnrollmentId, i.InstallmentNumber })
                 .IsUnique();
+
+            // ✅ تنظیمات ManualPaymentRequest
+            builder.Entity<ManualPaymentRequest>()
+                .HasOne(m => m.Course)
+                .WithMany()
+                .HasForeignKey(m => m.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ManualPaymentRequest>()
+                .HasOne(m => m.Student)
+                .WithMany()
+                .HasForeignKey(m => m.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ManualPaymentRequest>()
+                .HasOne(m => m.AdminReviewer)
+                .WithMany()
+                .HasForeignKey(m => m.AdminReviewedBy)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Seed();
         }
