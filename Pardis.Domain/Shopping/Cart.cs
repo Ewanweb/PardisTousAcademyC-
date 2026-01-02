@@ -43,6 +43,10 @@ public class Cart : BaseEntity
         if (existingItem != null)
             throw new InvalidOperationException("این دوره قبلاً به سبد خرید اضافه شده است");
 
+        // اگر سبد هنوز ذخیره نشده، نمی‌توانیم آیتم اضافه کنیم
+        if (Id == Guid.Empty)
+            throw new InvalidOperationException("سبد خرید باید قبل از اضافه کردن آیتم ذخیره شود");
+
         var cartItem = new CartItem(Id, course.Id, course.Price, course.Title);
         Items.Add(cartItem);
         

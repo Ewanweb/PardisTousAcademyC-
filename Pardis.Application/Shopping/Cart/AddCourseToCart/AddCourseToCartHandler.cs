@@ -50,6 +50,7 @@ public class AddCourseToCartHandler : IRequestHandler<AddCourseToCartCommand, Op
             {
                 cart = new Domain.Shopping.Cart(request.UserId);
                 cart = await _cartRepository.CreateAsync(cart, cancellationToken);
+                await _cartRepository.SaveChangesAsync(cancellationToken); // ذخیره سبد جدید قبل از اضافه کردن آیتم
             }
 
             // بررسی اینکه دوره قبلاً در سبد وجود دارد یا نه
