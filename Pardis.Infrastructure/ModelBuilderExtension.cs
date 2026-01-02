@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Pardis.Domain.Categories;
 using Pardis.Domain.Courses;
 using Pardis.Domain.Users;
-using System;
+using Pardis.Domain.Settings;
 
 namespace Pardis.Infrastructure
 {
@@ -197,6 +197,50 @@ namespace Pardis.Infrastructure
                 new { CourseId = courseAspId, MetaTitle = "دوره ASP.NET Core", MetaDescription = "بهترین دوره بک اند", NoIndex = false, NoFollow = false },
                 new { CourseId = courseReactId, MetaTitle = "دوره React", MetaDescription = "آموزش فرانت اند", NoIndex = false, NoFollow = false },
                 new { CourseId = courseFlutterId, MetaTitle = "دوره Flutter", MetaDescription = "برنامه نویسی موبایل", NoIndex = true, NoFollow = false }
+            );
+
+            // --- System Settings ---
+            modelBuilder.Entity<SystemSetting>().HasData(
+                new
+                {
+                    Id = Guid.Parse("d1111111-1111-1111-1111-111111111111"),
+                    Key = SystemSettingKeys.ManualPaymentCardNumber,
+                    Value = "6037-9977-****-****",
+                    Description = "شماره کارت مقصد برای پرداخت دستی",
+                    IsPublic = true,
+                    CreatedAt = fixedDate,
+                    UpdatedAt = fixedDate
+                },
+                new
+                {
+                    Id = Guid.Parse("d2222222-2222-2222-2222-222222222222"),
+                    Key = SystemSettingKeys.ManualPaymentCardHolder,
+                    Value = "آکادمی پردیس توس",
+                    Description = "نام صاحب کارت",
+                    IsPublic = true,
+                    CreatedAt = fixedDate,
+                    UpdatedAt = fixedDate
+                },
+                new
+                {
+                    Id = Guid.Parse("d3333333-3333-3333-3333-333333333333"),
+                    Key = SystemSettingKeys.ManualPaymentBankName,
+                    Value = "بانک پاسارگاد",
+                    Description = "نام بانک",
+                    IsPublic = true,
+                    CreatedAt = fixedDate,
+                    UpdatedAt = fixedDate
+                },
+                new
+                {
+                    Id = Guid.Parse("d4444444-4444-4444-4444-444444444444"),
+                    Key = SystemSettingKeys.ManualPaymentDescription,
+                    Value = "لطفاً پس از واریز، رسید پرداخت را آپلود کنید",
+                    Description = "توضیحات پرداخت دستی",
+                    IsPublic = true,
+                    CreatedAt = fixedDate,
+                    UpdatedAt = fixedDate
+                }
             );
         }
     }

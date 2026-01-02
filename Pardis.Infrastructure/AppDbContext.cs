@@ -10,6 +10,8 @@ using Pardis.Domain.Attendance;
 using Pardis.Domain.Payments;
 using Pardis.Domain.Sliders;
 using Pardis.Domain.Settings;
+using Pardis.Domain.Shopping;
+using Pardis.Domain.Logging;
 
 namespace Pardis.Infrastructure
 {
@@ -44,10 +46,20 @@ namespace Pardis.Infrastructure
         
         // ✅ تنظیمات سیستم
         public DbSet<PaymentSettings> PaymentSettings { get; set; }
+        public DbSet<SystemSetting> SystemSettings { get; set; }
+        
+        // ✅ لاگ‌های سیستم
+        public DbSet<SystemLog> SystemLogs { get; set; }
         
         // ✅ اسلایدرها و استوری‌ها
         public DbSet<HeroSlide> HeroSlides { get; set; }
         public DbSet<SuccessStory> SuccessStories { get; set; }
+        
+        // ✅ سبد خرید و سفارش‌ها
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<PaymentAttempt> PaymentAttempts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -219,6 +231,77 @@ namespace Pardis.Infrastructure
                 .WithMany()
                 .HasForeignKey(m => m.AdminReviewedBy)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // ✅ تنظیمات SystemSetting
+            builder.Entity<SystemSetting>()
+                .HasIndex(s => s.Key)
+                .IsUnique();
+
+            // ✅ تنظیمات SystemLog
+            builder.Entity<SystemLog>()
+                .HasIndex(l => l.Time);
+
+            builder.Entity<SystemLog>()
+                .HasIndex(l => new { l.Level, l.Time });
+
+            builder.Entity<SystemLog>()
+                .HasIndex(l => new { l.Source, l.Time });
+
+            // ✅ تنظیمات Cart
+            builder.Entity<Cart>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Cart>()
+                .HasIndex(c => c.UserId)
+                .IsUnique(); // هر کاربر فقط یک سبد خرید دارد
+
+            // ✅ تنظیمات CartItem
+            builder.Entity<CartItem>()
+                .HasOne(ci => ci.Cart)
+                .WithMany(c => c.Items)
+                .HasForeignKey(ci => ci.CartId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<CartItem>()
+                .HasOne(ci => ci.Course)
+                .WithMany()
+                .HasForeignKey(ci => ci.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CartItem>()
+                .HasIndex(ci => new { ci.CartId, ci.CourseId })
+                .IsUnique(); // هر دوره فقط یک بار در سبد
+
+            // ✅ تنظیمات Order
+            builder.Entity<Order>()
+                .HasOne(o => o.User)
+                .WithMany()
+                .HasForeignKey(o => o.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Order>()
+                .HasIndex(o => o.OrderNumber)
+                .IsUnique();
+
+            // ✅ تنظیمات PaymentAttempt
+            builder.Entity<PaymentAttempt>()
+                .HasOne(pa => pa.Order)
+                .WithMany(o => o.PaymentAttempts)
+                .HasForeignKey(pa => pa.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<PaymentAttempt>()
+                .HasOne(pa => pa.User)
+                .WithMany()
+                .HasForeignKey(pa => pa.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<PaymentAttempt>()
+                .HasIndex(pa => pa.TrackingCode)
+                .IsUnique();
 
             builder.Seed();
         }

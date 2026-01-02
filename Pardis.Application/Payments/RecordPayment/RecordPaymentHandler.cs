@@ -1,9 +1,10 @@
+using AutoMapper;
 using MediatR;
 using Pardis.Domain.Dto.Payments;
 using Pardis.Domain.Payments;
 using Pardis.Domain.Users;
 
-namespace Pardis.Application.Payments;
+namespace Pardis.Application.Payments.RecordPayment;
 
 /// <summary>
 /// Handler برای ثبت پرداخت جدید
@@ -12,13 +13,16 @@ public class RecordPaymentHandler : IRequestHandler<RecordPaymentCommand, Paymen
 {
     private readonly ICourseEnrollmentRepository _enrollmentRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IMapper _mapper;
 
     public RecordPaymentHandler(
         ICourseEnrollmentRepository enrollmentRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        IMapper mapper)
     {
         _enrollmentRepository = enrollmentRepository;
         _userRepository = userRepository;
+        _mapper = mapper;
     }
 
     public async Task<PaymentDto> Handle(RecordPaymentCommand request, CancellationToken cancellationToken)
@@ -40,6 +44,7 @@ public class RecordPaymentHandler : IRequestHandler<RecordPaymentCommand, Paymen
 
         await _enrollmentRepository.SaveChangesAsync(cancellationToken);
 
+        // ایجاد PaymentDto با استفاده از اطلاعات موجود
         return new PaymentDto
         {
             Id = Guid.NewGuid(), // برای سازگاری با DTO

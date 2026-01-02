@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Pardis.Application._Shared;
 using Pardis.Domain.Dto.Payments;
 
-namespace Pardis.Application.Payments.ManualPayment;
+namespace Pardis.Application.Payments.ManualPayment.UploadReceipt;
 
 /// <summary>
 /// Command آپلود رسید پرداخت دستی

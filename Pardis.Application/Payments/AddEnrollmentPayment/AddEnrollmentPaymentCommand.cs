@@ -2,7 +2,7 @@ using MediatR;
 using Pardis.Domain.Dto.Payments;
 using Pardis.Domain.Payments;
 
-namespace Pardis.Application.Payments;
+namespace Pardis.Application.Payments.AddEnrollmentPayment;
 
 public class AddEnrollmentPaymentCommand : IRequest<CourseEnrollmentDto>
 {

@@ -1,7 +1,7 @@
 using MediatR;
 using Pardis.Domain.Dto.Payments;
 
-namespace Pardis.Application.Payments;
+namespace Pardis.Application.Payments.RecordPayment;
 
 /// <summary>
 /// Command برای ثبت پرداخت جدید

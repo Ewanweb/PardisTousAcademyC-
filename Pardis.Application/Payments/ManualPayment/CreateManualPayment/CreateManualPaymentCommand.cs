@@ -2,7 +2,7 @@ using MediatR;
 using Pardis.Application._Shared;
 using Pardis.Domain.Dto.Payments;
 
-namespace Pardis.Application.Payments.ManualPayment;
+namespace Pardis.Application.Payments.ManualPayment.CreateManualPayment;
 
 /// <summary>
 /// Command ایجاد درخواست پرداخت دستی

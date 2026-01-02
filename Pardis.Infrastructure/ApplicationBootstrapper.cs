@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -8,6 +8,8 @@ using Pardis.Application._Shared;
 using Pardis.Application._Shared.JWT;
 using Pardis.Application.Categories.Update.Pardis.Application.Categories.Commands;
 using Pardis.Application.FileUtil;
+using Pardis.Application.Payments.Contracts;
+using Pardis.Application.Shopping.Contracts;
 using Pardis.Application.Sliders._Shared;
 using Pardis.Domain;
 using Pardis.Domain.Courses;
@@ -15,6 +17,7 @@ using Pardis.Domain.Users;
 using Pardis.Domain.Payments;
 using Pardis.Domain.Attendance;
 using Pardis.Domain.Sliders;
+using Pardis.Domain.Settings;
 using Pardis.Infrastructure.Repository;
 using System.Text;
 
@@ -94,7 +97,10 @@ namespace Pardis.Infrastructure
                 };
             });
 
-            service.AddAutoMapper(cfg => {}, typeof(MappingProfile).Assembly);
+            service.AddAutoMapper(cfg => 
+            {
+                cfg.AddProfile<MappingProfile>();
+            });
 
             service.AddMediatR(cfg =>
             {
@@ -104,12 +110,15 @@ namespace Pardis.Infrastructure
 
             // 5. تزریق وابستگی‌های کاستوم
             service.AddScoped<IFileService, FileService>();
-            service.AddScoped<ITokenService, TokenService>(); // فقط یکبار اینجا باشد کافیست
+            service.AddScoped<ITokenService, TokenService>();
             service.AddScoped<IUserRepository, UserRepository>();
             service.AddScoped<ICategoryRepository, CategoryRepository>();
             service.AddScoped<ICourseRepository, CourseRepository>();
+            service.AddScoped<Pardis.Application.Courses.Contracts.ICourseRepository, ApplicationCourseRepository>();
             service.AddScoped<TransactionRepository>();
             service.AddScoped<ICourseEnrollmentRepository, CourseEnrollmentRepository>();
+            service.AddScoped<IManualPaymentRequestRepository, ManualPaymentRequestRepository>();
+            service.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
             service.AddScoped<ICourseSessionRepository, CourseSessionRepository>();
             service.AddScoped<IStudentAttendanceRepository, StudentAttendanceRepository>();
             service.AddScoped<ICourseScheduleRepository, CourseScheduleRepository>();
@@ -120,6 +129,14 @@ namespace Pardis.Infrastructure
             
             // Slider Services
             service.AddScoped<ISliderImageService, SliderImageService>();
+            
+            // Shopping Repositories
+            service.AddScoped<ICartRepository, CartRepository>();
+            service.AddScoped<IOrderRepository, OrderRepository>();
+            service.AddScoped<IPaymentAttemptRepository, PaymentAttemptRepository>();
+            
+            // Payment Repositories (existing)
+            service.AddScoped<IEnrollmentRepository, CourseEnrollmentRepository>();
 
             // ریپازیتوری جنریک
             service.AddScoped(typeof(IRepository<>), typeof(Repository<>));

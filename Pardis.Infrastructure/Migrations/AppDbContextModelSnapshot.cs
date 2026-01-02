@@ -692,6 +692,56 @@ namespace Pardis.Infrastructure.Migrations
                     b.ToTable("UserCourseSchedules");
                 });
 
+            modelBuilder.Entity("Pardis.Domain.Logging.SystemLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EventId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Properties")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequestId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("Time")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Time");
+
+                    b.HasIndex("Level", "Time");
+
+                    b.HasIndex("Source", "Time");
+
+                    b.ToTable("SystemLogs");
+                });
+
             modelBuilder.Entity("Pardis.Domain.Payments.CourseEnrollment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -888,6 +938,281 @@ namespace Pardis.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PaymentSettings");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Settings.SystemSetting", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("SystemSettings");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d1111111-1111-1111-1111-111111111111"),
+                            CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "شماره کارت مقصد برای پرداخت دستی",
+                            IsPublic = true,
+                            Key = "ManualPayment.CardNumber",
+                            UpdatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Value = "6037-9977-****-****"
+                        },
+                        new
+                        {
+                            Id = new Guid("d2222222-2222-2222-2222-222222222222"),
+                            CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "نام صاحب کارت",
+                            IsPublic = true,
+                            Key = "ManualPayment.CardHolder",
+                            UpdatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Value = "آکادمی پردیس توس"
+                        },
+                        new
+                        {
+                            Id = new Guid("d3333333-3333-3333-3333-333333333333"),
+                            CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "نام بانک",
+                            IsPublic = true,
+                            Key = "ManualPayment.BankName",
+                            UpdatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Value = "بانک پاسارگاد"
+                        },
+                        new
+                        {
+                            Id = new Guid("d4444444-4444-4444-4444-444444444444"),
+                            CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "توضیحات پرداخت دستی",
+                            IsPublic = true,
+                            Key = "ManualPayment.Description",
+                            UpdatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Value = "لطفاً پس از واریز، رسید پرداخت را آپلود کنید"
+                        });
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Shopping.Cart", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("TotalAmount")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Carts");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Shopping.CartItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InstructorSnapshot")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ThumbnailSnapshot")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TitleSnapshot")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("UnitPrice")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("CartId", "CourseId")
+                        .IsUnique();
+
+                    b.ToTable("CartItems");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Shopping.Order", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CartSnapshot")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OrderNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<long>("TotalAmount")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderNumber")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Shopping.PaymentAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AdminDecision")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("AdminReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AdminReviewedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("Amount")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FailureReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GatewayResponse")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ProviderReference")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReceiptFileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReceiptImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ReceiptUploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TrackingCode")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("TrackingCode")
+                        .IsUnique()
+                        .HasFilter("[TrackingCode] IS NOT NULL");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PaymentAttempts");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Sliders.HeroSlide", b =>
@@ -1100,7 +1425,7 @@ namespace Pardis.Infrastructure.Migrations
                         {
                             Id = "8e445865-a24d-4543-a6c6-9443d048cdb9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "1f0c18e0-4817-4294-89d7-f29f6e13271c",
+                            ConcurrencyStamp = "59635cdc-3547-4500-8134-0a1a7a1b27fe",
                             CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@pardis.com",
                             EmailConfirmed = true,
@@ -1109,7 +1434,7 @@ namespace Pardis.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@PARDIS.COM",
                             NormalizedUserName = "ADMIN@PARDIS.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHtIJ+Vomz+GYCPNRFs7NDfaOcJJxPXshYKiNCDzNMHxQypMmcTvIvsiOeAOW0bB+A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECJWygS9UzjvcEhOLlR2HHLcXEjlHdZY1crMoc/inC2+ABjVcd4OxlvzuHnZ4VNNyA==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "8e445865-a24d-4543-a6c6-9443d048cdb9",
                             TwoFactorEnabled = false,
@@ -1119,7 +1444,7 @@ namespace Pardis.Infrastructure.Migrations
                         {
                             Id = "2c4e6097-f570-4927-b2f7-5f65d1373555",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "35fc65bf-e9db-49bb-9dd1-dbb832c22900",
+                            ConcurrencyStamp = "03dd9f10-e386-4668-a22b-ceec30da886d",
                             CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "sara@pardis.com",
                             EmailConfirmed = true,
@@ -1128,7 +1453,7 @@ namespace Pardis.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "SARA@PARDIS.COM",
                             NormalizedUserName = "SARA@PARDIS.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAENXic3J135fWo+e6SYYqXEmABrAX0iyyfQebrkXGT2vMlFc/2mJY5H4iA14HsYehbQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEL14yWgDGLs8ynK2EhN/V2W+8GZE3BDcN4oKctYruHk2LDGeGDiIC2ojb25mBl+iPw==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "2c4e6097-f570-4927-b2f7-5f65d1373555",
                             TwoFactorEnabled = false,
@@ -1575,6 +1900,66 @@ namespace Pardis.Infrastructure.Migrations
                     b.Navigation("Student");
                 });
 
+            modelBuilder.Entity("Pardis.Domain.Shopping.Cart", b =>
+                {
+                    b.HasOne("Pardis.Domain.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Shopping.CartItem", b =>
+                {
+                    b.HasOne("Pardis.Domain.Shopping.Cart", "Cart")
+                        .WithMany("Items")
+                        .HasForeignKey("CartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Pardis.Domain.Courses.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cart");
+
+                    b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Shopping.Order", b =>
+                {
+                    b.HasOne("Pardis.Domain.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Shopping.PaymentAttempt", b =>
+                {
+                    b.HasOne("Pardis.Domain.Shopping.Order", "Order")
+                        .WithMany("PaymentAttempts")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Pardis.Domain.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Pardis.Domain.Attendance.CourseSession", b =>
                 {
                     b.Navigation("Attendances");
@@ -1602,6 +1987,16 @@ namespace Pardis.Infrastructure.Migrations
             modelBuilder.Entity("Pardis.Domain.Payments.CourseEnrollment", b =>
                 {
                     b.Navigation("InstallmentPayments");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Shopping.Cart", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Shopping.Order", b =>
+                {
+                    b.Navigation("PaymentAttempts");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Users.User", b =>

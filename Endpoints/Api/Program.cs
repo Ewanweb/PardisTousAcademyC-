@@ -52,7 +52,9 @@ builder.Services.AddSwaggerGen(option =>
             Name = "Pardis Academy",
             Email = "support@pardisacademy.com"
         }
+
     });
+    option.CustomSchemaIds(type => type.FullName); // مهم: جلوگیری از تداخل اسم مدل‌ها
 
     // اضافه کردن XML Documentation
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
@@ -108,10 +110,11 @@ builder.Services.AddCors(options =>
 // تزریق سرویس‌های لایه زیرساخت
 builder.Services.Inject(builder.Configuration);
 
-// ثبت Query handlers
+// ثبت MediatR handlers
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(Pardis.Query.Sliders.HeroSlides.GetHeroSlides.GetHeroSlidesQuery).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(Pardis.Application.Shopping.Cart.AddCourseToCart.AddCourseToCartCommand).Assembly);
 });
 
 var app = builder.Build();

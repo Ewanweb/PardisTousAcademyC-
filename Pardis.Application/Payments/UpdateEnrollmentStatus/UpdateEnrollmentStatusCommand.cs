@@ -2,7 +2,7 @@ using MediatR;
 using Pardis.Domain.Dto.Payments;
 using Pardis.Domain.Payments;
 
-namespace Pardis.Application.Payments;
+namespace Pardis.Application.Payments.UpdateEnrollmentStatus;
 
 public class UpdateEnrollmentStatusCommand : IRequest<CourseEnrollmentDto>
 {
