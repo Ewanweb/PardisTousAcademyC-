@@ -49,8 +49,8 @@ namespace Api.Controllers
                 if (command == null)
                     return ValidationErrorResponse("اطلاعات ثبت‌نام الزامی است");
 
-                if (string.IsNullOrWhiteSpace(command.Email))
-                    return ValidationErrorResponse("ایمیل الزامی است", new { email = "ایمیل نمی‌تواند خالی باشد" });
+                if (string.IsNullOrWhiteSpace(command.Mobile))
+                    return ValidationErrorResponse("شماره تلفن الزامی است", new { mobile = "شماره تلفن نمی‌تواند خالی باشد" });
 
                 if (string.IsNullOrWhiteSpace(command.Password))
                     return ValidationErrorResponse("رمز عبور الزامی است", new { password = "رمز عبور نمی‌تواند خالی باشد" });
@@ -82,11 +82,11 @@ namespace Api.Controllers
         /// <summary>
         /// ورود کاربر به سیستم
         /// </summary>
-        /// <param name="command">اطلاعات ورود شامل ایمیل و رمز عبور</param>
+        /// <param name="command">اطلاعات ورود شامل شماره تلفن و رمز عبور</param>
         /// <returns>اطلاعات کاربر و توکن احراز هویت</returns>
         /// <response code="200">ورود موفقیت‌آمیز</response>
         /// <response code="400">اطلاعات نامعتبر</response>
-        /// <response code="401">ایمیل یا رمز عبور اشتباه</response>
+        /// <response code="401">شماره تلفن یا رمز عبور اشتباه</response>
         /// <response code="500">خطای سرور</response>
         [HttpPost("login")]
         [ProducesResponseType(typeof(object), 200)]
@@ -101,8 +101,8 @@ namespace Api.Controllers
                 if (command == null)
                     return ValidationErrorResponse("اطلاعات ورود الزامی است");
 
-                if (string.IsNullOrWhiteSpace(command.Email))
-                    return ValidationErrorResponse("ایمیل الزامی است", new { email = "ایمیل نمی‌تواند خالی باشد" });
+                if (string.IsNullOrWhiteSpace(command.Mobile))
+                    return ValidationErrorResponse("شماره تلفن الزامی است", new { mobile = "شماره تلفن نمی‌تواند خالی باشد" });
 
                 if (string.IsNullOrWhiteSpace(command.Password))
                     return ValidationErrorResponse("رمز عبور الزامی است", new { password = "رمز عبور نمی‌تواند خالی باشد" });
@@ -117,7 +117,7 @@ namespace Api.Controllers
                 // برای خطاهای احراز هویت، کد 401 برمی‌گردانیم
                 if (result.Status == OperationResultStatus.Error)
                 {
-                    return UnauthorizedResponse(result.Message ?? "ایمیل یا رمز عبور اشتباه است");
+                    return UnauthorizedResponse(result.Message ?? "شماره تلفن یا رمز عبور اشتباه است");
                 }
 
                 return HandleOperationResult(result);

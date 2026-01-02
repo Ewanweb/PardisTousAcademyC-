@@ -2,6 +2,6 @@
 
 public class AuthResultDto
 {
-    public string Token { get; set; }
-    public UserResource User { get; set; }
+    public required string Token { get; set; }
+    public required UserResource User { get; set; }
 }

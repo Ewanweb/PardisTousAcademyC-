@@ -3,19 +3,16 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Pardis.Application._Shared;
 using Pardis.Application._Shared.JWT;
-using Pardis.Domain.Dto;
-using Pardis.Domain.Dto.Users; // اضافه شد
+using Pardis.Domain.Dto.Users;
 using Pardis.Domain.Users;
-using static Pardis.Domain.Dto.Dtos; // برای دسترسی به UserResource
 
 namespace Pardis.Application.Users.Auth
 {
-    // تغییر مهم: خروجی به <AuthResultDto> تغییر کرد
     public class LoginUserHandler : IRequestHandler<LoginUserCommand, OperationResult<AuthResultDto>>
     {
         private readonly UserManager<User> _userManager;
         private readonly ITokenService _tokenService;
-        private readonly IMapper _mapper; // اضافه شد
+        private readonly IMapper _mapper;
 
         public LoginUserHandler(UserManager<User> userManager, ITokenService tokenService, IMapper mapper)
         {
@@ -26,7 +23,8 @@ namespace Pardis.Application.Users.Auth
 
         public async Task<OperationResult<AuthResultDto>> Handle(LoginUserCommand request, CancellationToken token)
         {
-            var user = await _userManager.FindByEmailAsync(request.Email);
+            // جستجو بر اساس شماره تلفن (که به عنوان UserName ذخیره شده)
+            var user = await _userManager.FindByNameAsync(request.Mobile);
 
             if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))
                 return OperationResult<AuthResultDto>.Error("کاربری با این مشخصات یافت نشد");
@@ -39,7 +37,6 @@ namespace Pardis.Application.Users.Auth
 
             // تبدیل اطلاعات کاربر به فرمت مناسب فرانت
             var userResource = _mapper.Map<UserResource>(user);
-            // دستی پر کردن نقش‌ها (چون اتومپر دسترسی به roleManager ندارد)
             userResource.Roles = roles.ToList();
 
             // ساخت آبجکت نهایی

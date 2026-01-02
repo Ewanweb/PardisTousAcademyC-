@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Pardis.Domain.Categories;
 using Pardis.Domain.Courses;
 
@@ -17,16 +12,14 @@ namespace Pardis.Domain.Users
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-
         // Relationships
-        public ICollection<Course> Courses { get; set; } // Courses taught by this user
-        public ICollection<UserCourse> EnrolledCourses { get; set; }
-        public ICollection<Category> CreatedCategories { get; set; }
+        public ICollection<Course> Courses { get; set; } = [];
+        public ICollection<UserCourse> EnrolledCourses { get; set; } = [];
+        public ICollection<Category> CreatedCategories { get; set; } = [];
 
         public User()
         {
             
         }
-
     }
 }

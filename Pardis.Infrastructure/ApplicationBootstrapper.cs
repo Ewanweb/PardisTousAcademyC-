@@ -51,7 +51,7 @@ namespace Pardis.Infrastructure
                 options.Password.RequiredLength = 6;
 
                 // تنظیمات کاربر
-                options.User.RequireUniqueEmail = true;
+                options.User.RequireUniqueEmail = false;
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();

@@ -4,9 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Pardis.Application._Shared;
 using Pardis.Application._Shared.JWT;
 using Pardis.Domain.Users;
-using System.Data;
 using Pardis.Domain.Dto.Users;
-using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Application.Users.Auth;
 
@@ -26,18 +24,20 @@ public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, Operatio
         _userRepository = userRepository;
         _mapper = mapper;
     }
+    
     public async Task<OperationResult<AuthResultDto>> Handle(RegisterUserCommand request, CancellationToken token)
     {
-        if ( await _userRepository.EmailIsExist(request.Email))
-            return OperationResult<AuthResultDto>.Error("این ایمیل قبلا ثبت شده است");
-
         if (await _userRepository.MobileIsExist(request.Mobile))
-            return OperationResult<AuthResultDto>.Error("این موبایل قبلا ثبت شده است");
+            return OperationResult<AuthResultDto>.Error("این شماره تلفن قبلا ثبت شده است");
+
+        var email = string.IsNullOrWhiteSpace(request.Email)
+            ? null
+            : request.Email.Trim();
 
         var user = new User
         {
-            UserName = request.Email,
-            Email = request.Email,
+            UserName = request.Mobile, // ??????? ?? ????? ???? ?? ????? ??? ??????
+            Email = email,
             FullName = request.FullName,
             Mobile = request.Mobile,
             IsActive = true
