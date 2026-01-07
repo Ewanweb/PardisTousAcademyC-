@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.FileProviders;
+﻿using Api.Authorization;
+using Api.Middleware;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 using Pardis.Infrastructure;
-using Api.Middleware;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,50 +34,53 @@ builder.Services.AddControllers(options =>
     {
         // ✅ Handle circular references
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        
+        // ✅ Convert property names to camelCase (paymentMethod -> PaymentMethod)
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        
+        // ✅ Convert enum values from strings (e.g., "Manual", "Online" -> PaymentMethod enum)
+        // Enum names should match exactly: "Manual", "Online", "Wallet", etc.
+        // allowIntegerValues: true allows both string names and integer values (0, 1, 2, ...)
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter(
+            namingPolicy: null, // Use exact enum names (PascalCase)
+            allowIntegerValues: true));
     });
+
 builder.Services.AddEndpointsApiExplorer();
 
-// حذف AddOpenApi (چون از Swashbuckle استفاده می‌کنیم)
-// حذف AddSwaggerGen خالی (تکراری)
+// ✅ Add Authorization with Pardis Policies
+builder.Services.AddAuthorization(options => options.AddPardisPolicies());
 
-// کانفیگ Swagger با JWT
-builder.Services.AddSwaggerGen(option =>
+builder.Services.AddSwaggerGen(options =>
 {
-    option.SwaggerDoc("v1", new OpenApiInfo 
-    { 
-        Title = "Pardis Academy API", 
+    options.CustomSchemaIds(t => t.FullName!.Replace("+", "."));
+
+    options.SwaggerDoc("v1", new OpenApiInfo()
+    {
         Version = "v1",
-        Description = "API سیستم مدیریت آموزشی پردیس - شامل مدیریت دوره‌ها، دانشجویان، پرداخت‌ها و حضور و غیاب",
-        Contact = new OpenApiContact
+        Title = "Pardis Academy API",
+        Description = "API Documentation for Pardis Academy",
+        Contact = new OpenApiContact()
         {
+            Email = "pardistous.ir@gmail.com",
             Name = "Pardis Academy",
-            Email = "support@pardisacademy.com"
+            Url = new Uri("https://pardistous.ir")
         }
-
     });
-    option.CustomSchemaIds(type => type.FullName); // مهم: جلوگیری از تداخل اسم مدل‌ها
 
-    // اضافه کردن XML Documentation
-    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    if (File.Exists(xmlPath))
+    // ✅ تنظیمات صحیح JWT برای Swagger
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        option.IncludeXmlComments(xmlPath);
-    }
-
-    // الف) تعریف امنیت
-    option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Description = "لطفاً توکن معتبر وارد کنید (Bearer {token})",
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
         BearerFormat = "JWT",
-        Scheme = "Bearer"
+        In = ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\""
     });
 
-    // ب) اعمال امنیت
-    option.AddSecurityRequirement(new OpenApiSecurityRequirement
+    // ✅ اعمال Security به تمام APIها
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
             new OpenApiSecurityScheme
@@ -87,13 +91,17 @@ builder.Services.AddSwaggerGen(option =>
                     Id = "Bearer"
                 }
             },
-            new string[] { }
+            new string[] {}
         }
     });
 
-    // تنظیمات اضافی برای بهبود مستندات
-    option.EnableAnnotations();
-    option.OrderActionsBy(apiDesc => $"{apiDesc.ActionDescriptor.RouteValues["controller"]}_{apiDesc.HttpMethod}");
+    // ✅ اضافه کردن XML Comments برای بهتر شدن documentation
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
 });
 
 // کانفیگ CORS
@@ -113,7 +121,7 @@ builder.Services.Inject(builder.Configuration);
 // ثبت MediatR handlers
 builder.Services.AddMediatR(cfg =>
 {
-    cfg.RegisterServicesFromAssembly(typeof(Pardis.Query.Sliders.HeroSlides.GetHeroSlides.GetHeroSlidesQuery).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(Pardis.Query.Categories.GetCategories.GetCategoriesQuery).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(Pardis.Application.Shopping.Cart.AddCourseToCart.AddCourseToCartCommand).Assembly);
 });
 
@@ -135,7 +143,10 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"Error Seeding Data: {ex.Message}");
     }
 }
-
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
 // =========================================================
 // 3. ناحیه تنظیمات پایپ‌لاین (Middleware Pipeline)
 // =========================================================
@@ -143,22 +154,29 @@ using (var scope = app.Services.CreateScope())
 // اضافه کردن میدل‌ویر مدیریت خطاهای سراسری
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
+// ✅ اضافه کردن middleware برای debug authentication (فقط در development)
 if (app.Environment.IsDevelopment())
 {
-
-    // app.MapOpenApi(); // حذف شد چون تداخل ایجاد می‌کرد
+    app.UseAuthenticationDebug();
 }
+
+
+#region Swagger
+
 app.UseSwagger();
-app.UseSwaggerUI(options =>
+app.UseSwaggerUI(options => // UseSwaggerUI is called only in Development.
 {
-    options.EnablePersistAuthorization(); // ذخیره توکن بعد از رفرش
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
-    options.RoutePrefix = ""; // یعنی Swagger UI روی روت اصلی
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    options.RoutePrefix = string.Empty;
 });
+
+
+#endregion
+
 app.UseHttpsRedirection(); // بهتر است اینجا باشد
 app.UseStaticFiles();
 
-var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads");
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "uploads");
 
 if (!Directory.Exists(uploadsPath))
 {

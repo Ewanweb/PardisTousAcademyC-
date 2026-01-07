@@ -16,4 +16,5 @@ public interface IPaymentAttemptRepository
     Task<PaymentAttempt> CreateAsync(PaymentAttempt paymentAttempt, CancellationToken cancellationToken = default);
     Task UpdateAsync(PaymentAttempt paymentAttempt, CancellationToken cancellationToken = default);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task<List<PaymentAttempt>> GetAll(CancellationToken cancellationToken = default);
 }

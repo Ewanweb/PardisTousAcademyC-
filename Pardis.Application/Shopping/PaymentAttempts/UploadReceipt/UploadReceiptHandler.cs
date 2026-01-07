@@ -47,16 +47,24 @@ public class UploadReceiptHandler : IRequestHandler<UploadReceiptCommand, Operat
             if (!paymentAttempt.RequiresReceiptUpload() && paymentAttempt.Status != PaymentAttemptStatus.AwaitingAdminApproval)
                 return OperationResult<UploadReceiptResult>.Error("وضعیت پرداخت برای آپلود رسید مناسب نیست");
 
-            // بررسی انقضا
-            if (paymentAttempt.IsExpired())
-                return OperationResult<UploadReceiptResult>.Error("زمان آپلود رسید منقضی شده است");
+            // اعتبارسنجی فایل
+            if (request.ReceiptFile == null || request.ReceiptFile.Length == 0)
+                return OperationResult<UploadReceiptResult>.Error("فایل رسید ارسال نشده است");
 
-            // آپلود فایل - using SaveFileAndGenerateName method instead
-            var fileName = await _fileService.SaveFileAndGenerateName(request.ReceiptFile, "payment-receipts");
+            if (request.ReceiptFile.Length > 5 * 1024 * 1024)
+                return OperationResult<UploadReceiptResult>.Error("حداکثر حجم فایل رسید ۵ مگابایت است");
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".pdf" };
+            var extension = System.IO.Path.GetExtension(request.ReceiptFile.FileName).ToLower();
+            if (!allowedExtensions.Contains(extension))
+                return OperationResult<UploadReceiptResult>.Error("فرمت فایل نامعتبر است. فقط تصاویر و PDF مجاز هستند");
+
+            // آپلود فایل - save to wwwroot/uploads/payment-receipts
+            var fileName = await _fileService.SaveFileAndGenerateName(request.ReceiptFile, "uploads/payment-receipts");
             if (string.IsNullOrEmpty(fileName))
                 return OperationResult<UploadReceiptResult>.Error("خطا در آپلود فایل");
 
-            var fileUrl = $"/payment-receipts/{fileName}";
+            var fileUrl = $"/uploads/payment-receipts/{fileName}";
 
             // به‌روزرسانی تلاش پرداخت
             paymentAttempt.UploadReceipt(fileUrl, fileName);
@@ -70,6 +78,9 @@ public class UploadReceiptHandler : IRequestHandler<UploadReceiptCommand, Operat
                 TrackingCode = paymentAttempt.TrackingCode ?? string.Empty,
                 ReceiptUrl = fileUrl,
                 ReceiptFileName = fileName,
+                Amount = paymentAttempt.Amount,
+                Status = (int)paymentAttempt.Status,
+                RejectReason = paymentAttempt.FailureReason,
                 UploadedAt = paymentAttempt.ReceiptUploadedAt ?? DateTime.UtcNow,
                 Message = "رسید با موفقیت آپلود شد و در انتظار تایید ادمین است"
             };

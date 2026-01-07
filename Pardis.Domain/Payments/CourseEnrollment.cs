@@ -30,12 +30,13 @@ public class CourseEnrollment : BaseEntity
 
     public CourseEnrollment(Guid courseId, string studentId, long totalAmount, bool isInstallmentAllowed = false, int? installmentCount = null)
     {
-        if (totalAmount <= 0)
+        if (totalAmount < 0)
             throw new ArgumentException("مبلغ دوره باید مثبت باشد", nameof(totalAmount));
 
         if (isInstallmentAllowed && (installmentCount == null || installmentCount <= 1))
             throw new ArgumentException("تعداد اقساط باید بیشتر از 1 باشد", nameof(installmentCount));
 
+        Id = Guid.NewGuid();
         CourseId = courseId;
         StudentId = studentId;
         TotalAmount = totalAmount;
@@ -57,7 +58,7 @@ public class CourseEnrollment : BaseEntity
 
     public void AddPayment(long amount, string paymentReference, EnrollmentPaymentMethod method)
     {
-        if (amount <= 0)
+        if (amount < 0 || (amount == 0 && TotalAmount > 0))
             throw new ArgumentException("مبلغ پرداخت باید مثبت باشد", nameof(amount));
 
         if (PaidAmount + amount > TotalAmount)
@@ -100,12 +101,12 @@ public class CourseEnrollment : BaseEntity
 
     private void UpdatePaymentStatus()
     {
-        if (PaidAmount == 0)
-            PaymentStatus = PaymentStatus.Unpaid;
-        else if (PaidAmount >= TotalAmount)
+        if (PaidAmount >= TotalAmount)
             PaymentStatus = PaymentStatus.Paid;
-        else
+        else if (PaidAmount > 0)
             PaymentStatus = PaymentStatus.Partial;
+        else
+            PaymentStatus = PaymentStatus.Unpaid;
     }
 
     private void CreateInstallments(int count)

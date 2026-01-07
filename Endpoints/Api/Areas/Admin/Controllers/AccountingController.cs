@@ -1,3 +1,4 @@
+using Api.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,14 +17,66 @@ namespace Api.Areas.Admin.Controllers;
 [ApiController]
 [Produces("application/json")]
 [Tags("Accounting Management")]
-[Authorize(Roles = Role.Admin + "," + Role.Manager + "," + "GeneralManager" + "," + "FinancialManager")]
+[Authorize(Policy = Policies.Reports.Access)]
 public class AccountingController : BaseController
 {
     private readonly IMediator _mediator;
 
+    /// <summary>
+    /// سازنده کنترلر حسابداری
+    /// </summary>
     public AccountingController(IMediator mediator, ILogger<AccountingController> logger) : base(logger)
     {
         _mediator = mediator;
+    }
+
+    /// <summary>
+    /// دریافت خلاصه آمار حسابداری (Dashboard)
+    /// </summary>
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetSummary([FromQuery] string period = "month")
+    {
+        return await ExecuteAsync(async () =>
+        {
+            var query = new Pardis.Query.Accounting.GetAccountingSummary.GetAccountingSummaryQuery
+            {
+                Period = period
+            };
+            
+            var result = await _mediator.Send(query);
+            return SuccessResponse(result, "خلاصه آمار حسابداری");
+        }, "خطا در دریافت خلاصه آمار");
+    }
+
+    /// <summary>
+    /// دریافت گزارش فروش دوره‌ها
+    /// </summary>
+    [HttpGet("course-sales")]
+    public async Task<IActionResult> GetCourseSalesReport([FromQuery] Pardis.Query.Accounting.GetCourseSalesReport.GetCourseSalesReportQuery query)
+    {
+        return await ExecuteAsync(async () =>
+        {
+            var result = await _mediator.Send(query);
+            return Ok(new
+            {
+                success = true,
+                message = "گزارش فروش دوره‌ها",
+                data = result.CourseSales,
+                summary = new
+                {
+                    totalRevenue = result.TotalRevenue,
+                    totalSales = result.TotalSales,
+                    totalCount = result.TotalCount
+                },
+                pagination = new
+                {
+                    currentPage = query.Page,
+                    pageSize = query.PageSize,
+                    totalCount = result.TotalCount,
+                    totalPages = (int)Math.Ceiling((double)result.TotalCount / query.PageSize)
+                }
+            });
+        }, "خطا در دریافت گزارش فروش دوره‌ها");
     }
 
     /// <summary>

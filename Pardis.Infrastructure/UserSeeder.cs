@@ -1,11 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using Pardis.Domain.Users;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pardis.Infrastructure
 {
@@ -18,12 +14,12 @@ namespace Pardis.Infrastructure
             // تعریف اطلاعات کاربر ادمین
             var adminEmail = "admin@pardis.com";
 
-            // 1. بررسی وجود کاربر
+            // 1. بررسی وجود کاربر ادمین
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
             if (adminUser == null)
             {
-                // ساخت آبجکت کاربر
+                // ساخت آبجکت کاربر ادمین
                 adminUser = new User
                 {
                     UserName = adminEmail,
@@ -56,6 +52,44 @@ namespace Pardis.Infrastructure
                 if (!await userManager.IsInRoleAsync(adminUser, Role.Admin))
                 {
                     await userManager.AddToRoleAsync(adminUser, Role.Admin);
+                }
+            }
+
+            // تعریف اطلاعات کاربر عادی برای تست
+            var testUserMobile = "09123456789";
+
+            // بررسی وجود کاربر تست
+            var testUser = await userManager.Users.FirstOrDefaultAsync(u => u.Mobile == testUserMobile);
+
+            if (testUser == null)
+            {
+                // ساخت کاربر تست
+                testUser = new User
+                {
+                    UserName = testUserMobile,
+                    Email = "testuser@pardis.com",
+                    FullName = "کاربر تست",
+                    Mobile = testUserMobile,
+                    IsActive = true,
+                    EmailConfirmed = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                // ذخیره کاربر تست با رمز عبور
+                var testResult = await userManager.CreateAsync(testUser, "123456");
+
+                if (testResult.Succeeded)
+                {
+                    // تخصیص نقش User
+                    await userManager.AddToRoleAsync(testUser, Role.User);
+                }
+            }
+            else
+            {
+                // اگر کاربر تست از قبل بود اما نقش نداشت
+                if (!await userManager.IsInRoleAsync(testUser, Role.User))
+                {
+                    await userManager.AddToRoleAsync(testUser, Role.User);
                 }
             }
         }

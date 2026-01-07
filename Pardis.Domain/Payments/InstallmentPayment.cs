@@ -30,6 +30,7 @@ public class InstallmentPayment : BaseEntity
         if (installmentNumber <= 0)
             throw new ArgumentException("شماره قسط باید مثبت باشد", nameof(installmentNumber));
 
+        Id = Guid.NewGuid();
         EnrollmentId = enrollmentId;
         InstallmentNumber = installmentNumber;
         Amount = amount;

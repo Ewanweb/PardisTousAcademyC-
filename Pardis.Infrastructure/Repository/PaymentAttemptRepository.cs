@@ -59,14 +59,20 @@ public class PaymentAttemptRepository : IPaymentAttemptRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<List<PaymentAttempt>> GetAll(CancellationToken cancellationToken = default)
+    {
+        return await _context.PaymentAttempts
+            .Include(pa => pa.Order)
+            .Include(pa => pa.User)
+            .OrderBy(pa => pa.ReceiptUploadedAt)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<List<PaymentAttempt>> GetExpiredAttemptsAsync(CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
-        return await _context.PaymentAttempts
-            .Where(pa => pa.ExpiresAt.HasValue && pa.ExpiresAt.Value < now && 
-                        pa.Status != PaymentAttemptStatus.Paid && 
-                        pa.Status != PaymentAttemptStatus.Expired)
-            .ToListAsync(cancellationToken);
+        // For manual payments, we don't have expiry logic
+        // Return empty list since manual payments don't expire
+        return new List<PaymentAttempt>();
     }
 
     public async Task<PaymentAttempt> CreateAsync(PaymentAttempt paymentAttempt, CancellationToken cancellationToken = default)

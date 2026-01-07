@@ -1,38 +1,39 @@
-using Pardis.Domain.Payments;
+using Pardis.Domain.Shopping;
 
 namespace Pardis.Domain.Dto.Payments;
 
 /// <summary>
-/// DTO درخواست پرداخت دستی
+/// DTO درخواست پرداخت دستی - ساده شده برای PaymentAttempt
 /// </summary>
 public class ManualPaymentRequestDto
 {
     public Guid Id { get; set; }
-    public Guid CourseId { get; set; }
-    public string CourseName { get; set; } = string.Empty;
+    public Guid OrderId { get; set; }
+    public string OrderNumber { get; set; } = string.Empty;
     public string StudentId { get; set; } = string.Empty;
     public string StudentName { get; set; } = string.Empty;
     public long Amount { get; set; }
-    public ManualPaymentStatus Status { get; set; }
+    public PaymentAttemptStatus Status { get; set; }
     public string StatusDisplay { get; set; } = string.Empty;
-    public string? ReceiptFileUrl { get; set; }
+    public string? ReceiptImageUrl { get; set; }
     public string? ReceiptFileName { get; set; }
     public DateTime? ReceiptUploadedAt { get; set; }
     public string? AdminReviewedBy { get; set; }
     public string? AdminReviewerName { get; set; }
     public DateTime? AdminReviewedAt { get; set; }
-    public string? RejectReason { get; set; }
-    public string? Notes { get; set; }
+    public string? AdminDecision { get; set; }
+    public string? FailureReason { get; set; }
+    public string? TrackingCode { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
 
 /// <summary>
-/// DTO ایجاد درخواست پرداخت دستی
+/// DTO ایجاد درخواست پرداخت دستی - ساده شده
 /// </summary>
 public class CreateManualPaymentRequestDto
 {
-    public Guid CourseId { get; set; }
+    public Guid OrderId { get; set; }
     public long Amount { get; set; }
 }
 

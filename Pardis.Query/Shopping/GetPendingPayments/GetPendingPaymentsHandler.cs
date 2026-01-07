@@ -82,24 +82,17 @@ public class GetPendingPaymentsHandler : IRequestHandler<GetPendingPaymentsQuery
 
     private string GetPaymentMethodText(PaymentMethod method) => method switch
     {
-        PaymentMethod.Online => "پرداخت آنلاین",
-        PaymentMethod.Wallet => "کیف پول",
         PaymentMethod.Manual => "کارت به کارت",
-        PaymentMethod.Cash => "نقدی",
-        PaymentMethod.Free => "رایگان",
         _ => "نامشخص"
     };
 
     private string GetPaymentStatusText(PaymentAttemptStatus status) => status switch
     {
         PaymentAttemptStatus.Draft => "پیش‌نویس",
-        PaymentAttemptStatus.PendingPayment => "در انتظار پرداخت",
-        PaymentAttemptStatus.AwaitingReceiptUpload => "در انتظار آپلود رسید",
+        PaymentAttemptStatus.PendingPayment => "در انتظار آپلود رسید",
         PaymentAttemptStatus.AwaitingAdminApproval => "در انتظار تایید ادمین",
         PaymentAttemptStatus.Paid => "پرداخت شده",
         PaymentAttemptStatus.Failed => "ناموفق",
-        PaymentAttemptStatus.Expired => "منقضی شده",
-        PaymentAttemptStatus.Refunded => "بازگشت داده شده",
         _ => "نامشخص"
     };
 }

@@ -1,22 +1,23 @@
-﻿using MediatR;
+﻿using Api.Authorization;
+using Api.Controllers;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pardis.Application._Shared;
 using Pardis.Application.Courses;
 using Pardis.Application.Courses.Create;
+using Pardis.Application.Courses.Enroll;
+using Pardis.Application.Courses.SoftDelete;
 using Pardis.Application.Courses.Update;
 using Pardis.Domain.Dto.Courses;
 using Pardis.Domain.Users;
+using Pardis.Query.Courses;
+using Pardis.Query.Courses.Enroll;
 using Pardis.Query.Courses.GetCourses;
 using Pardis.Query.Courses.GetCoursesByCategory;
 using Pardis.Query.Courses.GetCoursesBySlug;
-using Pardis.Query.Courses;
 using System.Security.Claims;
-using Pardis.Application.Courses.Enroll;
-using Pardis.Query.Courses.Enroll;
 using static Pardis.Application.Courses.SoftDeleteCommandHandler;
-using Api.Controllers;
-using Pardis.Application.Courses.SoftDelete;
 
 namespace Api.Areas.Admin.Controllers
 {
@@ -27,6 +28,7 @@ namespace Api.Areas.Admin.Controllers
     [ApiController]
     [Produces("application/json")]
     [Tags("Courses Management")]
+
     public class CourseController : BaseController
     {
         private readonly IMediator _mediator;
@@ -109,14 +111,7 @@ namespace Api.Areas.Admin.Controllers
                 if (result == null)
                     return NotFoundResponse("دسته‌بندی یافت نشد");
 
-                // Cast کردن result به dynamic برای دسترسی به data
-                dynamic dynamicResult = result;
-                var courses = dynamicResult?.data as IEnumerable<object>;
-
-                if (courses == null || !courses.Any())
-                    return SuccessResponse(new { data = new List<object>(), category_info = dynamicResult?.category_info }, "هیچ دوره‌ای در این دسته‌بندی یافت نشد");
-
-                return SuccessResponse(result, $"{courses.Count()} دوره در این دسته‌بندی یافت شد");
+                return SuccessResponse(result, "دوره‌های دسته‌بندی با موفقیت دریافت شدند");
             }, "خطا در دریافت دوره‌های دسته‌بندی");
         }
 
@@ -126,7 +121,7 @@ namespace Api.Areas.Admin.Controllers
         /// <param name="dto">اطلاعات دوره جدید</param>
         /// <returns>اطلاعات دوره ایجاد شده</returns>
         [HttpPost()]
-        [Authorize(Roles = Role.Admin + "," + Role.Manager)]
+        [Authorize(Policy = Policies.CourseManagement.Create)]
         public async Task<IActionResult> Store([FromForm] CreateCourseDto dto)
         {
             return await ExecuteAsync(async () =>
@@ -175,7 +170,7 @@ namespace Api.Areas.Admin.Controllers
         /// <param name="dto">اطلاعات جدید دوره</param>
         /// <returns>اطلاعات بروزرسانی شده دوره</returns>
         [HttpPut("{id}")]
-        [Authorize(Roles = Role.Admin + "," + Role.Manager + "," + Role.Instructor)]
+        [Authorize(Policy = Policies.CourseManagement.Update)]
         public async Task<IActionResult> Update(Guid id, [FromForm] UpdateCourseDto dto)
         {
             return await ExecuteAsync(async () =>
@@ -215,7 +210,7 @@ namespace Api.Areas.Admin.Controllers
         /// <param name="id">شناسه دوره</param>
         /// <returns>نتیجه حذف</returns>
         [HttpDelete("{id}")]
-        [Authorize(Roles = Role.Admin + "," + Role.Manager + "," + Role.Instructor)]
+        [Authorize(Policy = Policies.CourseManagement.Delete)]
         public async Task<IActionResult> Destroy(Guid id)
         {
             return await ExecuteAsync(async () =>
@@ -242,7 +237,7 @@ namespace Api.Areas.Admin.Controllers
         /// <param name="id">شناسه دوره</param>
         /// <returns>نتیجه بازیابی</returns>
         [HttpPost("{id}/restore")]
-        [Authorize(Roles = Role.Admin + "," + Role.Manager + "," + Role.Instructor)]
+        [Authorize(Policy = Policies.CourseManagement.Delete)]
         public async Task<IActionResult> Restore(Guid id)
         {
             var result = await _mediator.Send(new RestoreCourseCommand { Id = id });
@@ -258,7 +253,7 @@ namespace Api.Areas.Admin.Controllers
         /// <param name="id">شناسه دوره</param>
         /// <returns>نتیجه حذف دائمی</returns>
         [HttpDelete("{id}/force")]
-        [Authorize(Roles = Role.Admin + "," + Role.Manager + "," + Role.Instructor)]
+        [Authorize(Policy = Policies.CourseManagement.Delete)]
         public async Task<IActionResult> ForceDelete(Guid id)
         {
             var result = await _mediator.Send(new ForceDeleteCourseCommand { Id = id });
@@ -334,6 +329,8 @@ namespace Api.Areas.Admin.Controllers
         [ProducesResponseType(typeof(object), 401)]
         [ProducesResponseType(typeof(object), 403)]
         [ProducesResponseType(typeof(object), 500)]
+        [Authorize(Policy = Policies.CourseManagement.ViewStudents)]
+
         public async Task<IActionResult> GetCourseStudents(
             [FromRoute] Guid courseId, 
             [FromQuery] int page = 1, 
@@ -383,6 +380,8 @@ namespace Api.Areas.Admin.Controllers
         [ProducesResponseType(typeof(object), 401)]
         [ProducesResponseType(typeof(object), 403)]
         [ProducesResponseType(typeof(object), 500)]
+        [Authorize(Policy = Policies.CourseManagement.ViewFinancials)]
+
         public async Task<IActionResult> GetCourseFinancialSummary([FromRoute] Guid courseId)
         {
             return await ExecuteAsync(async () =>

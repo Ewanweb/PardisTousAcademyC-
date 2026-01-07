@@ -1,9 +1,10 @@
+using Api.Authorization;
+using Api.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pardis.Domain.Users;
 using Pardis.Query.Students;
-using Api.Controllers;
 
 namespace Endpoints.Api.Areas.Admin.Controllers;
 
@@ -13,7 +14,7 @@ namespace Endpoints.Api.Areas.Admin.Controllers;
 [Area("Admin")]
 [Route("api/admin/[controller]")]
 [ApiController]
-[Authorize(Roles = Role.Admin + "," + Role.Manager)]
+[Authorize(Policy = Policies.StudentManagement.Access)]
 [Produces("application/json")]
 [Tags("Students Management")]
 public class StudentsController : BaseController

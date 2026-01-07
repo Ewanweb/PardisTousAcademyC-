@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFramework>net9.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<NoWarn>$(NoWarn);NU1903;NU1510;NU1608</NoWarn>
@@ -10,19 +10,68 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\00045af8-e312-4760-b0cd-b75d02d30fb30814008796880.png" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\053461f6-4d9a-419a-9c61-4d233fc3e9d10832133861721.jpeg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\0922c1dc-56c2-441b-ae4e-a7f0eb7cf4a80828273106301.jpeg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\1a48200f-abd2-4df3-bfd2-d88e04f3b2a61044258346560.jpg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\24078738-539b-4cb3-b604-edf54fe914892241086170971.jpg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\2c5b5cc9-3846-4d12-b07e-08a1f19662341043383751252.jpg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\38d24409-9fd6-4358-81d5-cd0a18fbf95b0823580924249.jpeg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\5250b2d3-7035-4b95-8837-782f1a2328250815281987406.webp" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\5d35fd9c-dbaa-4cff-8176-7d59941c81270821346499946.jpeg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\5e1b7f26-b7d4-4dd2-96b2-3d47bf342dcb1934293986697.jpg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\7a4aa262-93c4-4097-bfa8-5a80d4edf53e2212462809158.jpeg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\8784407b-0264-4010-a744-178858aaa2721939590403702.jpg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\983c5805-91e1-428b-b8ba-7f79065678c12243319034652.jpg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\a9aa4f27-5779-4597-97fd-d5a452abdb852110443150583.jpg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\b6da5795-6057-4907-a68e-3995f255f6d11934227477580.jpg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\ba0f7ee9-fcee-4afd-beb9-f87ccc2f63fe1946417361135.jpg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\c6554619-5229-4bed-8099-02f1abfcd54a1911219365955.jpg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\cd3faa71-c936-473c-bc07-d64d5dc31b2a1034006733509.jpg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\df838358-da20-4065-a371-d8ceb348d16a0828495545353.jpeg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\f3f2eb1b-994f-4050-940a-417d7f490df22130437574496.jpg" />
+	  <Content Remove="wwwroot\Uploads\Corses\Thumbnail\f5165636-3301-4d26-bbc2-ac9db9fcc0172134149882280.jpg" />
+	  <Content Remove="wwwroot\Uploads\payment-receipts\6fb0bc4d-91ea-4a73-8c5a-5bc044e212b61126465205757.png" />
+	  <Content Remove="wwwroot\Uploads\payment-receipts\7db1c19d-a8d8-46e0-9618-59fe9c80ec1f1826478795842.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\06f7a05d-bcea-429e-b897-78516cd22a8a2304169543403.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\0b155ab3-02c4-4fb8-9b62-c5e19456b6332327440860788.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\0ca49a51-d875-43b9-a16b-172191bc99812306447784412.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\0d189e58-97e0-46a4-980c-3a983249b3d32304329300985.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\1962fd5a-6c1d-4c57-8199-192d911626952323147117947.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\1b420961-6c27-4a76-bea2-2b0a4b9a12332338244407927.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\1dc7e35f-209d-413a-a9bf-ae2d353a9ce92324437402928.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\2d4d5c74-b374-4704-a678-7ba70bec27082251463166474.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\3b394d57-acf5-4e91-8595-fbcfdc0468882306255454014.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\4e1a4e07-5462-40a1-b7ae-8d31bd1f6b742318402734049.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\5c962429-a2ee-456c-8dd0-be1dc1f95e5e2315139337757.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\787ca345-1457-4f62-9818-0a67de19236e2304313086649.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\7cc70508-6622-4288-a177-5ade57ab74ab2324134427378.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\89bb1c59-4e7b-4657-aa35-1a6775a7960b2246319995413.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\96b06692-f214-41c4-9346-68c02c4f143e2310098306168.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\9bc52644-861f-432c-8ca2-66cfa7bd6f192320502478977.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\a0518cde-2d33-48d3-ad6e-0f5cd9ca1c402304535846522.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\a715ef00-763e-4384-92cf-2baf380d57b22332543787168.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\bbdee334-be5a-4f7d-9d54-8961a8617c402311231639832.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\bfc2e3dc-bd31-462f-b5b8-53648e09a30b2302057856110.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\c2256c3e-656d-4774-9c7d-ddd4a5695c6b2250263460951.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\c6d5a753-81b0-4c1e-8592-ef659c9442492322193530438.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\f66b51ff-f0f3-418d-ad79-3e1c346e61862334449499343.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\fd54eec4-44d9-457a-b4b3-71112d046ead2307366508911.png" />
+	  <Content Remove="wwwroot\Uploads\sliders\hero\d674a110-da9e-4fa4-8ab4-587de68d89b3.png" />
+	</ItemGroup>
 
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+	<ItemGroup>
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
+		
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 
-		<PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
-		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-		<PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
-
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-		<PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.6.2" />
+		<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+		<PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -35,6 +84,57 @@
 		<Folder Include="Areas\Admin\Data\" />
 		<Folder Include="Areas\Admin\Models\" />
 		<Folder Include="Areas\Admin\Views\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\00045af8-e312-4760-b0cd-b75d02d30fb30814008796880.png" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\053461f6-4d9a-419a-9c61-4d233fc3e9d10832133861721.jpeg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\0922c1dc-56c2-441b-ae4e-a7f0eb7cf4a80828273106301.jpeg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\1a48200f-abd2-4df3-bfd2-d88e04f3b2a61044258346560.jpg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\24078738-539b-4cb3-b604-edf54fe914892241086170971.jpg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\2c5b5cc9-3846-4d12-b07e-08a1f19662341043383751252.jpg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\38d24409-9fd6-4358-81d5-cd0a18fbf95b0823580924249.jpeg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\5250b2d3-7035-4b95-8837-782f1a2328250815281987406.webp" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\5d35fd9c-dbaa-4cff-8176-7d59941c81270821346499946.jpeg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\5e1b7f26-b7d4-4dd2-96b2-3d47bf342dcb1934293986697.jpg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\7a4aa262-93c4-4097-bfa8-5a80d4edf53e2212462809158.jpeg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\8784407b-0264-4010-a744-178858aaa2721939590403702.jpg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\983c5805-91e1-428b-b8ba-7f79065678c12243319034652.jpg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\a9aa4f27-5779-4597-97fd-d5a452abdb852110443150583.jpg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\b6da5795-6057-4907-a68e-3995f255f6d11934227477580.jpg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\ba0f7ee9-fcee-4afd-beb9-f87ccc2f63fe1946417361135.jpg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\c6554619-5229-4bed-8099-02f1abfcd54a1911219365955.jpg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\cd3faa71-c936-473c-bc07-d64d5dc31b2a1034006733509.jpg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\df838358-da20-4065-a371-d8ceb348d16a0828495545353.jpeg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\f3f2eb1b-994f-4050-940a-417d7f490df22130437574496.jpg" />
+	  <None Include="wwwroot\Uploads\Corses\Thumbnail\f5165636-3301-4d26-bbc2-ac9db9fcc0172134149882280.jpg" />
+	  <None Include="wwwroot\Uploads\payment-receipts\6fb0bc4d-91ea-4a73-8c5a-5bc044e212b61126465205757.png" />
+	  <None Include="wwwroot\Uploads\payment-receipts\7db1c19d-a8d8-46e0-9618-59fe9c80ec1f1826478795842.png" />
+	  <None Include="wwwroot\Uploads\sliders\06f7a05d-bcea-429e-b897-78516cd22a8a2304169543403.png" />
+	  <None Include="wwwroot\Uploads\sliders\0b155ab3-02c4-4fb8-9b62-c5e19456b6332327440860788.png" />
+	  <None Include="wwwroot\Uploads\sliders\0ca49a51-d875-43b9-a16b-172191bc99812306447784412.png" />
+	  <None Include="wwwroot\Uploads\sliders\0d189e58-97e0-46a4-980c-3a983249b3d32304329300985.png" />
+	  <None Include="wwwroot\Uploads\sliders\1962fd5a-6c1d-4c57-8199-192d911626952323147117947.png" />
+	  <None Include="wwwroot\Uploads\sliders\1b420961-6c27-4a76-bea2-2b0a4b9a12332338244407927.png" />
+	  <None Include="wwwroot\Uploads\sliders\1dc7e35f-209d-413a-a9bf-ae2d353a9ce92324437402928.png" />
+	  <None Include="wwwroot\Uploads\sliders\2d4d5c74-b374-4704-a678-7ba70bec27082251463166474.png" />
+	  <None Include="wwwroot\Uploads\sliders\3b394d57-acf5-4e91-8595-fbcfdc0468882306255454014.png" />
+	  <None Include="wwwroot\Uploads\sliders\4e1a4e07-5462-40a1-b7ae-8d31bd1f6b742318402734049.png" />
+	  <None Include="wwwroot\Uploads\sliders\5c962429-a2ee-456c-8dd0-be1dc1f95e5e2315139337757.png" />
+	  <None Include="wwwroot\Uploads\sliders\787ca345-1457-4f62-9818-0a67de19236e2304313086649.png" />
+	  <None Include="wwwroot\Uploads\sliders\7cc70508-6622-4288-a177-5ade57ab74ab2324134427378.png" />
+	  <None Include="wwwroot\Uploads\sliders\89bb1c59-4e7b-4657-aa35-1a6775a7960b2246319995413.png" />
+	  <None Include="wwwroot\Uploads\sliders\96b06692-f214-41c4-9346-68c02c4f143e2310098306168.png" />
+	  <None Include="wwwroot\Uploads\sliders\9bc52644-861f-432c-8ca2-66cfa7bd6f192320502478977.png" />
+	  <None Include="wwwroot\Uploads\sliders\a0518cde-2d33-48d3-ad6e-0f5cd9ca1c402304535846522.png" />
+	  <None Include="wwwroot\Uploads\sliders\a715ef00-763e-4384-92cf-2baf380d57b22332543787168.png" />
+	  <None Include="wwwroot\Uploads\sliders\bbdee334-be5a-4f7d-9d54-8961a8617c402311231639832.png" />
+	  <None Include="wwwroot\Uploads\sliders\bfc2e3dc-bd31-462f-b5b8-53648e09a30b2302057856110.png" />
+	  <None Include="wwwroot\Uploads\sliders\c2256c3e-656d-4774-9c7d-ddd4a5695c6b2250263460951.png" />
+	  <None Include="wwwroot\Uploads\sliders\c6d5a753-81b0-4c1e-8592-ef659c9442492322193530438.png" />
+	  <None Include="wwwroot\Uploads\sliders\f66b51ff-f0f3-418d-ad79-3e1c346e61862334449499343.png" />
+	  <None Include="wwwroot\Uploads\sliders\fd54eec4-44d9-457a-b4b3-71112d046ead2307366508911.png" />
+	  <None Include="wwwroot\Uploads\sliders\hero\d674a110-da9e-4fa4-8ab4-587de68d89b3.png" />
 	</ItemGroup>
 
 </Project>

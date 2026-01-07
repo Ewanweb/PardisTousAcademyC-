@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -20,6 +21,9 @@ using Pardis.Domain.Sliders;
 using Pardis.Domain.Settings;
 using Pardis.Infrastructure.Repository;
 using System.Text;
+using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
+
 
 namespace Pardis.Infrastructure
 {
@@ -70,7 +74,7 @@ namespace Pardis.Infrastructure
             .AddJwtBearer(options =>
             {
                 options.SaveToken = true;
-                options.RequireHttpsMetadata = false;
+                options.RequireHttpsMetadata = false; // برای development
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -80,17 +84,45 @@ namespace Pardis.Infrastructure
                     ValidIssuer = jwtSettings["Issuer"] ?? "PardisAcademy",
                     ValidAudience = jwtSettings["Audience"] ?? "PardisAcademyUsers",
                     IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ClockSkew = TimeSpan.FromSeconds(5) // اجازه 5 ثانیه تفاوت زمانی
+                    ClockSkew = TimeSpan.FromMinutes(5), // اجازه 5 دقیقه تفاوت زمانی
+                    RequireExpirationTime = true,
+                    ValidateTokenReplay = false
                 };
                 
-                // Handle validation errors gracefully
+                // ✅ بهبود Event Handlers برای debugging
                 options.Events = new JwtBearerEvents
                 {
                     OnAuthenticationFailed = context =>
                     {
+                        Console.WriteLine($"JWT Authentication failed: {context.Exception.Message}");
+                        
                         if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
                         {
                             context.Response.Headers["Token-Expired"] = "true";
+                        }
+                        else if (context.Exception.GetType() == typeof(SecurityTokenValidationException))
+                        {
+                            context.Response.Headers["Token-Invalid"] = "true";
+                        }
+                        
+                        return Task.CompletedTask;
+                    },
+                    OnTokenValidated = context =>
+                    {
+                        Console.WriteLine($"JWT Token validated successfully for user: {context.Principal?.Identity?.Name}");
+                        return Task.CompletedTask;
+                    },
+                    OnChallenge = context =>
+                    {
+                        Console.WriteLine($"JWT Challenge: {context.Error} - {context.ErrorDescription}");
+                        return Task.CompletedTask;
+                    },
+                    OnMessageReceived = context =>
+                    {
+                        var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+                        if (!string.IsNullOrEmpty(token))
+                        {
+                            Console.WriteLine($"JWT Token received: {token.Substring(0, Math.Min(20, token.Length))}...");
                         }
                         return Task.CompletedTask;
                     }
@@ -109,7 +141,21 @@ namespace Pardis.Infrastructure
             });
 
             // 5. تزریق وابستگی‌های کاستوم
-            service.AddScoped<IFileService, FileService>();
+            service.AddScoped<IFileService>(provider =>
+            {
+                var configuration = provider.GetRequiredService<IConfiguration>();
+                var webHostEnvironment = provider.GetRequiredService<IWebHostEnvironment>();
+                
+                // Set the root path to wwwroot for file storage
+                var tempConfig = new ConfigurationBuilder()
+                    .AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        ["FileStorage:RootPath"] = webHostEnvironment.WebRootPath
+                    })
+                    .Build();
+                
+                return new FileService(tempConfig);
+            });
             service.AddScoped<ITokenService, TokenService>();
             service.AddScoped<IUserRepository, UserRepository>();
             service.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -117,7 +163,6 @@ namespace Pardis.Infrastructure
             service.AddScoped<Pardis.Application.Courses.Contracts.ICourseRepository, ApplicationCourseRepository>();
             service.AddScoped<TransactionRepository>();
             service.AddScoped<ICourseEnrollmentRepository, CourseEnrollmentRepository>();
-            service.AddScoped<IManualPaymentRequestRepository, ManualPaymentRequestRepository>();
             service.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
             service.AddScoped<ICourseSessionRepository, CourseSessionRepository>();
             service.AddScoped<IStudentAttendanceRepository, StudentAttendanceRepository>();
@@ -140,6 +185,8 @@ namespace Pardis.Infrastructure
 
             // ریپازیتوری جنریک
             service.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+
 
 
             return service;

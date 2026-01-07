@@ -1,3 +1,4 @@
+using Api.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,7 @@ namespace Api.Controllers;
 /// </summary>
 [Route("api/admin/courses")]
 [ApiController]
-[Authorize(Roles = $"{Role.Instructor},{Role.EducationExpert},{Role.CourseSupport}")]
+[Authorize(Policy = Policies.AdminCourses.Access)]
 [Produces("application/json")]
 [Tags("Admin - Courses")]
 public class AdminCoursesController : BaseController

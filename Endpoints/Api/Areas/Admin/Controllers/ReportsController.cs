@@ -1,9 +1,10 @@
+using Api.Authorization;
+using Api.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pardis.Domain.Dto.Accounting;
 using Pardis.Domain.Users;
-using Api.Controllers;
 
 namespace Api.Areas.Admin.Controllers;
 
@@ -11,7 +12,7 @@ namespace Api.Areas.Admin.Controllers;
 /// کنترلر مدیریت گزارش‌های مالی
 /// </summary>
 [Route("api/admin/reports")]
-[Authorize(Roles = Role.Admin + "," + Role.Manager + "," + "GeneralManager" + "," + "FinancialManager")]
+[Authorize(Policies.Reports.Access)]
 public class ReportsController : BaseController
 {
     private readonly IMediator _mediator;

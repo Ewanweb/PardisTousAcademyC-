@@ -4,6 +4,12 @@ using Pardis.Application._Shared;
 using Pardis.Application.Shopping.Contracts;
 using Pardis.Application.Payments.Contracts;
 using Pardis.Domain.Shopping;
+using Pardis.Domain.Courses;
+using Pardis.Domain.Payments;
+using Pardis.Domain;
+using System.Collections.Generic;
+using System.Linq;
+using System;
 
 namespace Pardis.Application.Shopping.PaymentAttempts.AdminReviewPayment;
 
@@ -15,17 +21,23 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
     private readonly IPaymentAttemptRepository _paymentAttemptRepository;
     private readonly IOrderRepository _orderRepository;
     private readonly IEnrollmentRepository _enrollmentRepository;
+    private readonly ICartRepository _cartRepository;
+    private readonly IRepository<UserCourse> _userCourseRepository;
     private readonly IMapper _mapper;
 
     public AdminReviewPaymentHandler(
         IPaymentAttemptRepository paymentAttemptRepository,
         IOrderRepository orderRepository,
         IEnrollmentRepository enrollmentRepository,
+        ICartRepository cartRepository,
+        IRepository<UserCourse> userCourseRepository,
         IMapper mapper)
     {
         _paymentAttemptRepository = paymentAttemptRepository;
         _orderRepository = orderRepository;
         _enrollmentRepository = enrollmentRepository;
+        _cartRepository = cartRepository;
+        _userCourseRepository = userCourseRepository;
         _mapper = mapper;
     }
 
@@ -56,6 +68,15 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
                     
                     // ایجاد ثبت‌نام برای دوره‌ها
                     await CreateEnrollmentsAsync(order, cancellationToken);
+
+                    // پاک کردن سبد خرید کاربر پس از تایید پرداخت
+                    var cart = await _cartRepository.GetByUserIdAsync(order.UserId, cancellationToken);
+                    if (cart != null)
+                    {
+                        cart.Clear();
+                        await _cartRepository.UpdateAsync(cart, cancellationToken);
+                        await _cartRepository.SaveChangesAsync(cancellationToken);
+                    }
                 }
             }
             else
@@ -91,7 +112,7 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
         try
         {
             // Deserialize cart snapshot to get courses
-            var cartItems = System.Text.Json.JsonSerializer.Deserialize<List<dynamic>>(order.CartSnapshot);
+            var cartItems = System.Text.Json.JsonSerializer.Deserialize<List<System.Text.Json.JsonElement>>(order.CartSnapshot);
             if (cartItems == null) return;
 
             foreach (var item in cartItems)
@@ -99,19 +120,39 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
                 var courseId = Guid.Parse(item.GetProperty("CourseId").GetString() ?? string.Empty);
                 var price = item.GetProperty("Price").GetInt64();
 
-                // بررسی اینکه قبلاً ثبت‌نام نشده باشد
-                var existingEnrollment = await _enrollmentRepository.GetByUserAndCourseAsync(order.UserId, courseId, cancellationToken);
+                // بررسی اینکه قبلاً ثبت‌نام نشده باشد و ایجاد دسترسی
+                // استخراج مقادیر به متغیرهای محلی با تایپ مشخص برای جلوگیری از استفاده از dynamic در AnyAsync
+                string currentUserId = order.UserId;
+                Guid currentCourseId = courseId;
+
+                var existingEnrollment = await _enrollmentRepository.GetByUserAndCourseAsync(currentUserId, currentCourseId, cancellationToken);
                 if (existingEnrollment == null)
                 {
                     // ایجاد ثبت‌نام جدید
-                    var enrollment = new Domain.Payments.CourseEnrollment(courseId, order.UserId, price);
-                    enrollment.AddPayment(price, order.OrderNumber, Domain.Payments.EnrollmentPaymentMethod.Transfer);
+                    var enrollment = new CourseEnrollment(currentCourseId, currentUserId, price);
+                    enrollment.AddPayment(price, order.OrderNumber, EnrollmentPaymentMethod.Transfer);
                     
                     await _enrollmentRepository.CreateAsync(enrollment, cancellationToken);
+
+                    // ایجاد دسترسی در بخش LMS (UserCourse)
+                    var alreadyInLms = await _userCourseRepository.AnyAsync(uc => uc.UserId == currentUserId && uc.CourseId == currentCourseId, cancellationToken);
+                    if (!alreadyInLms)
+                    {
+                        var userCourse = new UserCourse
+                        {
+                            UserId = currentUserId,
+                            CourseId = currentCourseId,
+                            EnrolledAt = DateTime.UtcNow,
+                            PurchasePrice = price,
+                            Status = StudentCourseStatus.Active
+                        };
+                        await _userCourseRepository.AddAsync(userCourse);
+                    }
                 }
             }
             
             await _enrollmentRepository.SaveChangesAsync(cancellationToken);
+            await _userCourseRepository.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex)
         {

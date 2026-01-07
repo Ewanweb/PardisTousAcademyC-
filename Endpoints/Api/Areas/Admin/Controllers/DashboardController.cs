@@ -1,13 +1,14 @@
-﻿using MediatR;
+﻿using Api.Authorization;
+using Api.Controllers;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pardis.Application.Dashboard;
-using Api.Controllers;
 
 namespace Api.Areas.Admin.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Policy = Policies.Dashboard.Access)]
     public class DashboardController : BaseController
     {
         private readonly IMediator _mediator;

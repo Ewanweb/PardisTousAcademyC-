@@ -1,8 +1,8 @@
+using Api.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pardis.Application.Settings.UpdateSystemSettings;
-using Pardis.Domain.Users;
 using Pardis.Query.Logging.GetSystemLogs;
 using Pardis.Query.Settings.GetSystemSettings;
 
@@ -13,7 +13,7 @@ namespace Api.Controllers;
 /// </summary>
 [Route("api/admin/system")]
 [ApiController]
-[Authorize(Roles = $"{Role.ITManager},{Role.Admin},{Role.Manager}")]
+[Authorize(Policy = Policies.AdminSystem.Access)]
 [Produces("application/json")]
 [Tags("Admin - System")]
 public class AdminSystemController : BaseController

@@ -23,6 +23,9 @@ public class UploadReceiptResult
     public string TrackingCode { get; set; } = string.Empty;
     public string ReceiptUrl { get; set; } = string.Empty;
     public string ReceiptFileName { get; set; } = string.Empty;
+    public long Amount { get; set; }
+    public int Status { get; set; }
+    public string? RejectReason { get; set; }
     public DateTime UploadedAt { get; set; }
     public string Message { get; set; } = string.Empty;
 }

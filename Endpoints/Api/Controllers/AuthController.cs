@@ -123,7 +123,6 @@ namespace Api.Controllers
                 return HandleOperationResult(result);
             }, "خطا در ورود به سیستم");
         }
-        // ... متدهای Login و Register قبلی سر جای خود بمانند ...
 
         /// <summary>
         /// دریافت اطلاعات کاربر فعلی بر اساس توکن

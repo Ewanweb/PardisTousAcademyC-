@@ -1,9 +1,9 @@
-﻿using MediatR;
+﻿using Api.Authorization;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pardis.Application._Shared;
 using Pardis.Application.Users.UpdateUserRole;
-using Pardis.Domain.Users;
 using Pardis.Query.Users.GetRoles;
 using Pardis.Query.Users.GetUsers;
 using Pardis.Query.Users.GetUsersByRole;
@@ -19,7 +19,7 @@ namespace Pardis.API.Controllers
     /// </summary>
     [Route("api/[controller]s")]
     [ApiController]
-    [Authorize(Roles = Role.Admin + "," + Role.Manager)]
+    [Authorize(Policy = Policies.UserManagement.Access)]
     [Produces("application/json")]
     [Tags("Users Management")]
     public class UserController : BaseController
@@ -257,7 +257,7 @@ namespace Pardis.API.Controllers
         /// <response code="404">کاربر یافت نشد</response>
         /// <response code="500">خطای سرور</response>
         [HttpPut("{id}/roles")]
-        [Authorize(Roles = Role.Admin)]
+        [Authorize(Policy = Policies.UserManagement.UpdateRoles)]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 401)]
@@ -311,7 +311,7 @@ namespace Pardis.API.Controllers
         /// <response code="403">عدم دسترسی</response>
         /// <response code="500">خطای سرور</response>
         [HttpGet("role/{role}")] 
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Policy = Policies.UserManagement.Access)]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 401)]

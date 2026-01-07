@@ -8,6 +8,7 @@ using Pardis.Domain.Comments;
 using Pardis.Domain.Attendance;
 using Pardis.Domain.Payments;
 using Pardis.Domain.Sliders;
+using Pardis.Domain.Shopping;
 using Pardis.Domain.Dto.Categories;
 using Pardis.Domain.Dto.Courses;
 using Pardis.Domain.Dto.Users;
@@ -47,8 +48,24 @@ namespace Pardis.Application._Shared
             // تبدیل User به UserResource (بدون Courses برای جلوگیری از circular reference)
             CreateMap<User, UserResource>()
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
+                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.AvatarUrl))
+                .ForMember(dest => dest.AvatarUpdatedAt, opt => opt.MapFrom(src => src.AvatarUpdatedAt))
                 .ForMember(dest => dest.Roles, opt => opt.Ignore()) // Roles رو جداگانه handle کن
                 .ReverseMap();
+
+            // ✅ User Profile Mappings
+            CreateMap<User, UserProfileDto>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber ?? src.Mobile))
+                .ForMember(dest => dest.Bio, opt => opt.MapFrom(src => src.Bio))
+                .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.BirthDate))
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address))
+                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.AvatarUrl))
+                .ForMember(dest => dest.AvatarUpdatedAt, opt => opt.MapFrom(src => src.AvatarUpdatedAt))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
 
             // تبدیل Category به CategoryResource
             CreateMap<Category, CategoryResource>()
@@ -138,22 +155,6 @@ namespace Pardis.Application._Shared
 
             // ✅ Payments Mappings
             CreateMap<CourseEnrollment, CourseEnrollmentDto>()
-                .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.Course.Title))
-                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student.FullName ?? src.Student.UserName ?? "نامشخص"))
-                .ForMember(dest => dest.RemainingAmount, opt => opt.MapFrom(src => src.GetRemainingAmount()))
-                .ForMember(dest => dest.PaymentStatusDisplay, opt => opt.MapFrom(src => GetPaymentStatusDisplay(src.PaymentStatus)))
-                .ForMember(dest => dest.EnrollmentStatusDisplay, opt => opt.MapFrom(src => GetEnrollmentStatusDisplay(src.EnrollmentStatus)))
-                .ForMember(dest => dest.PaymentPercentage, opt => opt.MapFrom(src => src.GetPaymentPercentage()))
-                .ForMember(dest => dest.Installments, opt => opt.MapFrom(src => src.InstallmentPayments));
-
-            CreateMap<InstallmentPayment, InstallmentPaymentDto>()
-                .ForMember(dest => dest.RemainingAmount, opt => opt.MapFrom(src => src.GetRemainingAmount()))
-                .ForMember(dest => dest.StatusDisplay, opt => opt.MapFrom(src => GetInstallmentStatusDisplay(src.Status)))
-                .ForMember(dest => dest.PaymentMethodDisplay, opt => opt.MapFrom(src => src.PaymentMethod.HasValue ? GetEnrollmentPaymentMethodDisplay(src.PaymentMethod.Value) : null))
-                .ForMember(dest => dest.DaysUntilDue, opt => opt.MapFrom(src => src.GetDaysUntilDue()))
-                .ForMember(dest => dest.DaysOverdue, opt => opt.MapFrom(src => src.GetDaysOverdue()));
-            // CourseEnrollment to CourseEnrollmentDto
-            CreateMap<CourseEnrollment, CourseEnrollmentDto>()
                 .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.Course != null ? src.Course.Title : "نامشخص"))
                 .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student != null ? src.Student.FullName ?? src.Student.UserName : "نامشخص"))
                 .ForMember(dest => dest.RemainingAmount, opt => opt.MapFrom(src => src.GetRemainingAmount()))
@@ -162,20 +163,18 @@ namespace Pardis.Application._Shared
                 .ForMember(dest => dest.EnrollmentStatusDisplay, opt => opt.MapFrom(src => GetEnrollmentStatusDisplay(src.EnrollmentStatus)))
                 .ForMember(dest => dest.Installments, opt => opt.MapFrom(src => src.InstallmentPayments));
 
-            // InstallmentPayment to InstallmentPaymentDto
             CreateMap<InstallmentPayment, InstallmentPaymentDto>()
                 .ForMember(dest => dest.RemainingAmount, opt => opt.MapFrom(src => src.GetRemainingAmount()))
-                .ForMember(dest => dest.DaysUntilDue, opt => opt.MapFrom(src => src.GetDaysUntilDue()))
-                .ForMember(dest => dest.DaysOverdue, opt => opt.MapFrom(src => src.GetDaysOverdue()))
                 .ForMember(dest => dest.StatusDisplay, opt => opt.MapFrom(src => GetInstallmentStatusDisplay(src.Status)))
-                .ForMember(dest => dest.PaymentMethodDisplay, opt => opt.MapFrom(src => src.PaymentMethod.HasValue ? GetEnrollmentPaymentMethodDisplay(src.PaymentMethod.Value) : null));
+                .ForMember(dest => dest.PaymentMethodDisplay, opt => opt.MapFrom(src => src.PaymentMethod.HasValue ? GetEnrollmentPaymentMethodDisplay(src.PaymentMethod.Value) : null))
+                .ForMember(dest => dest.DaysUntilDue, opt => opt.MapFrom(src => src.GetDaysUntilDue()))
+                .ForMember(dest => dest.DaysOverdue, opt => opt.MapFrom(src => src.GetDaysOverdue()));
 
-            // ManualPaymentRequest to ManualPaymentRequestDto
-            CreateMap<ManualPaymentRequest, ManualPaymentRequestDto>()
-                .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.Course != null ? src.Course.Title : "نامشخص"))
-                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student != null ? src.Student.FullName ?? src.Student.UserName ?? src.Student.Email : "نامشخص"))
-                .ForMember(dest => dest.AdminReviewerName, opt => opt.MapFrom(src => src.AdminReviewer != null ? src.AdminReviewer.FullName ?? src.AdminReviewer.UserName : null))
-                .ForMember(dest => dest.StatusDisplay, opt => opt.MapFrom(src => GetManualPaymentStatusDisplay(src.Status)));
+            // PaymentAttempt to ManualPaymentRequestDto (simplified for manual payments only)
+            CreateMap<PaymentAttempt, ManualPaymentRequestDto>()
+                .ForMember(dest => dest.OrderNumber, opt => opt.MapFrom(src => src.Order != null ? src.Order.OrderNumber : "نامشخص"))
+                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName ?? src.User.UserName ?? src.User.Email : "نامشخص"))
+                .ForMember(dest => dest.StatusDisplay, opt => opt.MapFrom(src => GetPaymentAttemptStatusDisplay(src.Status)));
         }
 
         private static string GetPaymentStatusDisplay(PaymentStatus status)
@@ -189,16 +188,15 @@ namespace Pardis.Application._Shared
             };
         }
 
-
-
-        private static string GetManualPaymentStatusDisplay(ManualPaymentStatus status)
+        private static string GetPaymentAttemptStatusDisplay(PaymentAttemptStatus status)
         {
             return status switch
             {
-                ManualPaymentStatus.PendingReceipt => "در انتظار آپلود رسید",
-                ManualPaymentStatus.PendingApproval => "در انتظار تایید ادمین",
-                ManualPaymentStatus.Approved => "تایید شده",
-                ManualPaymentStatus.Rejected => "رد شده",
+                PaymentAttemptStatus.Draft => "پیش‌نویس",
+                PaymentAttemptStatus.PendingPayment => "در انتظار آپلود رسید",
+                PaymentAttemptStatus.AwaitingAdminApproval => "در انتظار تایید ادمین",
+                PaymentAttemptStatus.Paid => "تایید شده",
+                PaymentAttemptStatus.Failed => "رد شده",
                 _ => status.ToString()
             };
         }

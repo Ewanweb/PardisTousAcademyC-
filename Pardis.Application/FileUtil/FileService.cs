@@ -1,27 +1,36 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 
 namespace Pardis.Application.FileUtil;
 
  public class FileService : IFileService
     {
+        private readonly string _rootPath;
+
+        public FileService(IConfiguration configuration)
+        {
+            // Get the root path from configuration, fallback to current directory
+            _rootPath = configuration["FileStorage:RootPath"] ?? Directory.GetCurrentDirectory();
+        }
         public void DeleteDirectory(string directoryPath)
         {
-            if (Directory.Exists(directoryPath))
-                Directory.Delete(directoryPath, true);
+            var fullPath = Path.Combine(_rootPath, directoryPath);
+            if (Directory.Exists(fullPath))
+                Directory.Delete(fullPath, true);
         }
 
         public void DeleteFile(string path, string fileName)
         {
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), path,
-                  fileName);
+            var filePath = Path.Combine(_rootPath, path, fileName);
             if (File.Exists(filePath))
                 File.Delete(filePath);
         }
 
         public void DeleteFile(string filePath)
         {
-            if (File.Exists(filePath))
-                File.Delete(filePath);
+            var fullPath = Path.Combine(_rootPath, filePath);
+            if (File.Exists(fullPath))
+                File.Delete(fullPath);
         }
 
         public async Task SaveFile(IFormFile file, string directoryPath)
@@ -31,7 +40,7 @@ namespace Pardis.Application.FileUtil;
 
             var fileName = file.FileName;
 
-            var folderName = Path.Combine(Directory.GetCurrentDirectory(), directoryPath.Replace("/", "\\"));
+            var folderName = Path.Combine(_rootPath, directoryPath.Replace("/", "\\"));
             if (!Directory.Exists(folderName))
                 Directory.CreateDirectory(folderName);
 
@@ -52,7 +61,7 @@ namespace Pardis.Application.FileUtil;
                                           .Replace(":", "")
                                           .Replace(".", "") + Path.GetExtension(fileName);
 
-            var folderName = Path.Combine(Directory.GetCurrentDirectory(), directoryPath.Replace("/", "\\"));
+            var folderName = Path.Combine(_rootPath, directoryPath.Replace("/", "\\"));
             if (!Directory.Exists(folderName))
                 Directory.CreateDirectory(folderName);
 

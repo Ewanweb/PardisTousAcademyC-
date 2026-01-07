@@ -29,5 +29,8 @@ namespace Pardis.Domain.Users
         public const string EducationExpert = "EducationExpert";   // کارشناس آموزش
         public Role() : base() { }
         public Role(string roleName) : base(roleName) { }
+
+        public const string AccountingRoles =
+            Manager + "," + GeneralManager + "," + FinancialManager;
     }
 }

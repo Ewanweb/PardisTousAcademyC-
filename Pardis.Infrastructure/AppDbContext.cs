@@ -42,7 +42,6 @@ namespace Pardis.Infrastructure
         // ✅ ثبت‌نام و پرداخت
         public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
         public DbSet<InstallmentPayment> InstallmentPayments { get; set; }
-        public DbSet<ManualPaymentRequest> ManualPaymentRequests { get; set; }
         
         // ✅ تنظیمات سیستم
         public DbSet<PaymentSettings> PaymentSettings { get; set; }
@@ -213,25 +212,6 @@ namespace Pardis.Infrastructure
                 .HasIndex(i => new { i.EnrollmentId, i.InstallmentNumber })
                 .IsUnique();
 
-            // ✅ تنظیمات ManualPaymentRequest
-            builder.Entity<ManualPaymentRequest>()
-                .HasOne(m => m.Course)
-                .WithMany()
-                .HasForeignKey(m => m.CourseId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<ManualPaymentRequest>()
-                .HasOne(m => m.Student)
-                .WithMany()
-                .HasForeignKey(m => m.StudentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<ManualPaymentRequest>()
-                .HasOne(m => m.AdminReviewer)
-                .WithMany()
-                .HasForeignKey(m => m.AdminReviewedBy)
-                .OnDelete(DeleteBehavior.Restrict);
-
             // ✅ تنظیمات SystemSetting
             builder.Entity<SystemSetting>()
                 .HasIndex(s => s.Key)
@@ -285,6 +265,18 @@ namespace Pardis.Infrastructure
             builder.Entity<Order>()
                 .HasIndex(o => o.OrderNumber)
                 .IsUnique();
+
+            // ✅ CartId is required (NOT NULL)
+            builder.Entity<Order>()
+                .Property(o => o.CartId)
+                .IsRequired();
+
+            // ✅ Unique constraint for active orders (re-enabled after migration)
+            builder.Entity<Order>()
+                .HasIndex(o => new { o.UserId, o.CartId })
+                .HasFilter("[Status] IN (0, 1)") // Draft=0, PendingPayment=1
+                .IsUnique()
+                .HasDatabaseName("IX_Orders_UserId_CartId_Active");
 
             // ✅ تنظیمات PaymentAttempt
             builder.Entity<PaymentAttempt>()

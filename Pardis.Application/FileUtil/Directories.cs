@@ -2,7 +2,7 @@ namespace Pardis.Application.FileUtil;
 
 public class Directories
 {
-    public const string Course = "Uploads/Corses/Thumbnail";
-    public const string Slider = "Uploads/Sliders";
-    public const string Payment = "Uploads/Payments";
+    public const string Course = "wwwroot/uploads/courses/thumbnails";
+    public const string Slider = "wwwroot/uploads/sliders";
+    public const string Payment = "wwwroot/uploads/payments";
 }

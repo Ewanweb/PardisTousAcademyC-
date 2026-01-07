@@ -17,7 +17,7 @@ namespace Pardis.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "10.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -848,63 +848,6 @@ namespace Pardis.Infrastructure.Migrations
                     b.ToTable("InstallmentPayments");
                 });
 
-            modelBuilder.Entity("Pardis.Domain.Payments.ManualPaymentRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("AdminReviewedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("AdminReviewedBy")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<long>("Amount")
-                        .HasColumnType("bigint");
-
-                    b.Property<Guid>("CourseId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReceiptFileName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReceiptFileUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("ReceiptUploadedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("RejectReason")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("StudentId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AdminReviewedBy");
-
-                    b.HasIndex("CourseId");
-
-                    b.HasIndex("StudentId");
-
-                    b.ToTable("ManualPaymentRequests");
-                });
-
             modelBuilder.Entity("Pardis.Domain.Settings.PaymentSettings", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1097,6 +1040,9 @@ namespace Pardis.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("CartId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("CartSnapshot")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1109,6 +1055,9 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.Property<string>("Currency")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IdempotencyKey")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Notes")
@@ -1136,7 +1085,10 @@ namespace Pardis.Infrastructure.Migrations
                     b.HasIndex("OrderNumber")
                         .IsUnique();
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "CartId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Orders_UserId_CartId_Active")
+                        .HasFilter("[Status] IN (0, 1)");
 
                     b.ToTable("Orders");
                 });
@@ -1162,13 +1114,7 @@ namespace Pardis.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("FailureReason")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("GatewayResponse")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Method")
@@ -1176,9 +1122,6 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ProviderReference")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ReceiptFileName")
                         .HasColumnType("nvarchar(max)");
@@ -1349,8 +1292,26 @@ namespace Pardis.Infrastructure.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Avatar")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AvatarFileId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("AvatarUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Bio")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("BirthDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -1366,11 +1327,20 @@ namespace Pardis.Infrastructure.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("FullName")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("Gender")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -1425,7 +1395,7 @@ namespace Pardis.Infrastructure.Migrations
                         {
                             Id = "8e445865-a24d-4543-a6c6-9443d048cdb9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "59635cdc-3547-4500-8134-0a1a7a1b27fe",
+                            ConcurrencyStamp = "0fa82087-afb7-4568-91f6-89ea471dfe9a",
                             CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@pardis.com",
                             EmailConfirmed = true,
@@ -1434,7 +1404,7 @@ namespace Pardis.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@PARDIS.COM",
                             NormalizedUserName = "ADMIN@PARDIS.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAECJWygS9UzjvcEhOLlR2HHLcXEjlHdZY1crMoc/inC2+ABjVcd4OxlvzuHnZ4VNNyA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECsj6zfx1ZjTqZmnnRlbtl6TdmH3sozSi0jHYuCyo0eBw1ggFHJ6YIoPzbUiAJEzhw==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "8e445865-a24d-4543-a6c6-9443d048cdb9",
                             TwoFactorEnabled = false,
@@ -1444,7 +1414,7 @@ namespace Pardis.Infrastructure.Migrations
                         {
                             Id = "2c4e6097-f570-4927-b2f7-5f65d1373555",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "03dd9f10-e386-4668-a22b-ceec30da886d",
+                            ConcurrencyStamp = "06c30cf5-749b-4433-98ed-5a27daab5a66",
                             CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "sara@pardis.com",
                             EmailConfirmed = true,
@@ -1453,7 +1423,7 @@ namespace Pardis.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "SARA@PARDIS.COM",
                             NormalizedUserName = "SARA@PARDIS.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEL14yWgDGLs8ynK2EhN/V2W+8GZE3BDcN4oKctYruHk2LDGeGDiIC2ojb25mBl+iPw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJkQC2BKeuYkE5/WfbGYaLOkpWjFwXYDUn1Ur/6gn62z3QbImIEc7Q8H3ElwBKoAiw==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "2c4e6097-f570-4927-b2f7-5f65d1373555",
                             TwoFactorEnabled = false,
@@ -1872,32 +1842,6 @@ namespace Pardis.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Enrollment");
-                });
-
-            modelBuilder.Entity("Pardis.Domain.Payments.ManualPaymentRequest", b =>
-                {
-                    b.HasOne("Pardis.Domain.Users.User", "AdminReviewer")
-                        .WithMany()
-                        .HasForeignKey("AdminReviewedBy")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Pardis.Domain.Courses.Course", "Course")
-                        .WithMany()
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Pardis.Domain.Users.User", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("AdminReviewer");
-
-                    b.Navigation("Course");
-
-                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Shopping.Cart", b =>

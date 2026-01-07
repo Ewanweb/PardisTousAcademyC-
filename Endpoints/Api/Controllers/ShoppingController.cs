@@ -1,3 +1,4 @@
+using Api.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MediatR;
@@ -7,6 +8,9 @@ using Pardis.Application.Shopping.Cart.ClearCart;
 using Pardis.Application.Shopping.Checkout.CreateCheckout;
 using Pardis.Query.Shopping.GetMyCart;
 using Pardis.Query.Shopping.GetMyOrders;
+using Pardis.Query.Shopping.GetPaymentAttempt;
+using Pardis.Application.Shopping.PaymentAttempts.UploadReceipt;
+using Pardis.Domain.Shopping;
 
 namespace Api.Controllers;
 
@@ -14,7 +18,7 @@ namespace Api.Controllers;
 /// کنترلر سبد خرید و سفارش‌ها
 /// </summary>
 [Route("api/me")]
-[Authorize]
+[Authorize(Policy = Policies.Shopping.Access)]
 public class ShoppingController : BaseController
 {
     private readonly IMediator _mediator;
@@ -132,11 +136,14 @@ public class ShoppingController : BaseController
             if (string.IsNullOrEmpty(userId))
                 return UnauthorizedResponse();
 
+            var idempotencyKey = Request.Headers["X-Idempotency-Key"].ToString();
+
             var command = new CreateCheckoutCommand
             {
                 UserId = userId,
                 PaymentMethod = request.PaymentMethod,
-                Notes = request.Notes
+                Notes = request.Notes,
+                IdempotencyKey = string.IsNullOrEmpty(idempotencyKey) ? null : idempotencyKey
             };
 
             var result = await _mediator.Send(command);
@@ -171,7 +178,93 @@ public class ShoppingController : BaseController
             return SuccessResponse(result, "سفارش‌های شما");
         }, "خطا در دریافت سفارش‌ها");
     }
+
+    /// <summary>
+    /// دریافت جزئیات یک تلاش پرداخت
+    /// </summary>
+    [HttpGet("payments/{paymentId}")]
+    public async Task<IActionResult> GetPaymentAttempt(Guid paymentId)
+    {
+        return await ExecuteAsync(async () =>
+        {
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId))
+                return UnauthorizedResponse();
+
+            var query = new GetPaymentAttemptQuery
+            {
+                PaymentAttemptId = paymentId,
+                UserId = userId
+            };
+            var result = await _mediator.Send(query);
+
+            if (result == null)
+                return NotFoundResponse("تلاش پرداخت یافت نشد");
+
+            return SuccessResponse(result, "جزئیات پرداخت");
+        }, "خطا در دریافت جزئیات پرداخت");
+    }
+
+    /// <summary>
+    /// آپلود رسید پرداخت دستی
+    /// </summary>
+    [HttpPost("payments/{paymentId}/receipt")]
+    public async Task<IActionResult> UploadReceipt(Guid paymentId, [FromForm] UploadReceiptRequest request)
+    {
+        return await ExecuteAsync(async () =>
+        {
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId))
+                return UnauthorizedResponse();
+
+            var command = new UploadReceiptCommand
+            {
+                PaymentAttemptId = paymentId,
+                UserId = userId,
+                ReceiptFile = request.ReceiptFile
+            };
+
+            var result = await _mediator.Send(command);
+
+            if (result.Status != Pardis.Application._Shared.OperationResultStatus.Success)
+                return ErrorResponse(result.Message);
+
+            return SuccessResponse(result.Data, result.Message);
+        }, "خطا در آپلود رسید");
+    }
+
+    /// <summary>
+    /// دریافت رسید پرداخت
+    /// </summary>
+    [HttpGet("payments/{paymentId}/receipt")]
+    public async Task<IActionResult> GetReceipt(Guid paymentId)
+    {
+        return await ExecuteAsync(async () =>
+        {
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId))
+                return UnauthorizedResponse();
+
+            var query = new GetPaymentAttemptQuery
+            {
+                PaymentAttemptId = paymentId,
+                UserId = userId
+            };
+            var result = await _mediator.Send(query);
+
+            if (result == null)
+                return NotFoundResponse("تلاش پرداخت یافت نشد");
+
+            if (string.IsNullOrEmpty(result.ReceiptUrl))
+                return NotFoundResponse("رسید برای این پرداخت یافت نشد");
+
+            // برگرداندن URL رسید
+            return SuccessResponse(new { receiptUrl = result.ReceiptUrl }, "رسید پرداخت");
+        }, "خطا در دریافت رسید");
+    }
 }
+
+
 
 /// <summary>
 /// درخواست اضافه کردن دوره به سبد خرید
@@ -192,10 +285,16 @@ public class CreateCheckoutRequest
     /// <summary>
     /// روش پرداخت
     /// </summary>
-    public Pardis.Domain.Shopping.PaymentMethod PaymentMethod { get; set; }
+    [System.ComponentModel.DataAnnotations.Required]
+    public PaymentMethod PaymentMethod { get; set; }
     
     /// <summary>
     /// یادداشت‌ها
     /// </summary>
     public string? Notes { get; set; }
+
+    /// <summary>
+    /// کلید جلوگیری از تکرار (اختیاری در بدنه، ترجیحاً در هدر X-Idempotency-Key)
+    /// </summary>
+    public string? IdempotencyKey { get; set; }
 }

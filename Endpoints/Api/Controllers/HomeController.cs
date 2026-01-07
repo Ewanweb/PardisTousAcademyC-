@@ -50,7 +50,8 @@ namespace Api.Controllers
                 };
 
                 var result = await _mediator.Send(query);
-                return SuccessResponse(result, "لیست مدرسین با موفقیت دریافت شد");
+                // ✅ بهینه‌سازی: caching برای 24 ساعت (مدرسین تغییر نمی‌کنند)
+                return SuccessResponseCached(result, maxAgeSeconds: 86400, "لیست مدرسین با موفقیت دریافت شد");
             }, "خطا در دریافت لیست مدرسین");
         }
 
@@ -68,7 +69,8 @@ namespace Api.Controllers
             return await ExecuteAsync(async () =>
             {
                 var result = await _mediator.Send(new GetCategoriesQuery());
-                return SuccessResponse(result, "لیست دسته‌بندی‌ها با موفقیت دریافت شد");
+                // ✅ بهینه‌سازی: caching برای 24 ساعت (دسته‌بندی‌ها تغییر نمی‌کنند)
+                return SuccessResponseCached(result, maxAgeSeconds: 86400, "لیست دسته‌بندی‌ها با موفقیت دریافت شد");
             }, "خطا در دریافت لیست دسته‌بندی‌ها");
         }
 

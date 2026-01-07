@@ -1,4 +1,6 @@
-﻿using MediatR;
+﻿using Api.Authorization;
+using Api.Controllers;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pardis.Application._Shared;
@@ -10,7 +12,6 @@ using Pardis.Query.Categories.GetCategories;
 using Pardis.Query.Categories.GetCategoryById;
 using Pardis.Query.Categories.GetCategoryChildren;
 using System.Security.Claims;
-using Api.Controllers;
 
 namespace Api.Areas.Admin.Controllers
 {
@@ -20,7 +21,7 @@ namespace Api.Areas.Admin.Controllers
     [Route("api/categories")]
     [ApiController]
     [Authorize]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Policy = Policies.CategoryManagement.Access)]
     [Produces("application/json")]
     [Tags("Categories Management")]
     public class CategoryController : BaseController
@@ -171,7 +172,6 @@ namespace Api.Areas.Admin.Controllers
         /// <response code="409">تضاد - دسته‌بندی دارای محتوا است</response>
         /// <response code="500">خطای سرور</response>
         [HttpDelete("{id}")]
-        [Authorize(Roles = Role.Admin)]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 409)]

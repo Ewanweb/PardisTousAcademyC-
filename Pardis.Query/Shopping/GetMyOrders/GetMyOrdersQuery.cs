@@ -54,6 +54,9 @@ public class PaymentAttemptSummaryDto
     public long Amount { get; set; }
     public PaymentAttemptStatus Status { get; set; }
     public string StatusText { get; set; } = string.Empty;
+    public string? ReceiptUrl { get; set; }
+    public string? RejectReason { get; set; }
+    public string? AdminDecision { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool RequiresAction { get; set; }
 }

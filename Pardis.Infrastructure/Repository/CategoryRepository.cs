@@ -30,9 +30,10 @@ namespace Pardis.Infrastructure.Repository
 
         public async Task<List<Category>?> GetCategories()
         {
-            // ✅ برای منو: همه دسته‌بندی‌ها (اصلی و فرعی) نمایش داده شوند
+            // ✅ بهینه‌سازی: فقط فیلدهای ضروری برای صفحه اصلی
+            // SEO data حذف شد (فقط برای صفحه دسته‌بندی نیاز است)
             return await _context.Categories
-                .Include(c => c.Seo)
+                .AsNoTracking()
                 .OrderBy(c => c.Title)
                 .ToListAsync();
         }

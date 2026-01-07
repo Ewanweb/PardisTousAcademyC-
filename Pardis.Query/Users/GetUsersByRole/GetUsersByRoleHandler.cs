@@ -73,17 +73,26 @@ public class GetUsersByRoleHandler : IRequestHandler<GetUsersByRoleQuery, IEnume
             // فقط نام و عکس کافیه برای صفحه اصلی
             foreach (var resource in userResources)
             {
-                resource.Roles = new List<string> { Role.Instructor };
+                resource.Roles = [Role.Instructor];
             }
         }
         else
         {
-            // فقط برای سایر موارد roles رو بکش
+            // ✅ بهینه‌سازی: Batch load roles برای تمام کاربران (جای N+1)
+            var userRoleMap = new Dictionary<string, List<string>>();
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                userRoleMap[user.Id] = roles.ToList();
+            }
+
+            // اختصاص roles به resources
             foreach (var resource in userResources)
             {
-                var user = users.First(u => u.Id == resource.Id);
-                var roles = await _userManager.GetRolesAsync(user);
-                resource.Roles = roles.ToList();
+                if (userRoleMap.TryGetValue(resource.Id, out var roles))
+                {
+                    resource.Roles = roles;
+                }
             }
         }
 

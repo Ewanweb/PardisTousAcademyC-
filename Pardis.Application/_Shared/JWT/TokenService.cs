@@ -25,6 +25,8 @@ namespace Pardis.Application._Shared.JWT
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Email, user.Email ?? ""),
                 new Claim(ClaimTypes.Name, user.FullName ?? user.Email ?? "User"),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Unique token ID
+                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
             };
 
             // افزودن نقش‌ها به کلیم‌ها
@@ -37,10 +39,16 @@ namespace Pardis.Application._Shared.JWT
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+            // ✅ استفاده از تنظیمات ExpiryInHours از appsettings
+            var expiryHours = _config.GetValue<int>("JwtSettings:ExpiryInHours", 24);
+            var expiry = DateTime.UtcNow.AddHours(expiryHours);
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddDays(7), // مدت اعتبار
+                Expires = expiry,
+                NotBefore = DateTime.UtcNow, // Token valid from now
+                IssuedAt = DateTime.UtcNow,  // Token issued at
                 SigningCredentials = creds,
                 Issuer = _config["JwtSettings:Issuer"] ?? "PardisAcademy",
                 Audience = _config["JwtSettings:Audience"] ?? "PardisAcademyUsers"
@@ -49,7 +57,13 @@ namespace Pardis.Application._Shared.JWT
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
-            return tokenHandler.WriteToken(token);
+            var tokenString = tokenHandler.WriteToken(token);
+            
+            // ✅ Debug log برای بررسی token
+            Console.WriteLine($"Generated JWT Token for user {user.Email}: {tokenString.Substring(0, Math.Min(50, tokenString.Length))}...");
+            Console.WriteLine($"Token expires at: {expiry:yyyy-MM-dd HH:mm:ss} UTC");
+
+            return tokenString;
         }
     }
 }

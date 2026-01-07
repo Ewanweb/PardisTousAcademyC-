@@ -50,6 +50,8 @@ namespace Pardis.Application.Sliders.HeroSlides.Create
                             Directory.CreateDirectory(Directories.Slider);
                         
                         imageUrl = await _imageService.SaveFileAndGenerateName(request.Dto.ImageFile, Directories.Slider);
+                        // ساخت URL کامل برای دسترسی از طریق وب
+                        imageUrl = $"/uploads/sliders/{imageUrl}";
                         _logger.LogInformation("فایل تصویر با موفقیت آپلود شد: {ImageUrl}", imageUrl);
                     }
                     catch (Exception ex)

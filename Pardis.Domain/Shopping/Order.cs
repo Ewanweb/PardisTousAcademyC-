@@ -14,7 +14,9 @@ public class Order : BaseEntity
     public OrderStatus Status { get; private set; }
     public string CartSnapshot { get; private set; } = string.Empty; // JSON snapshot of cart items
     public DateTime? CompletedAt { get; private set; }
-    public string? Notes { get; private set; }
+    public string? IdempotencyKey { get; private set; } // کلید جلوگیری از تکرار
+    public Guid CartId { get; private set; } // شناسه سبد خرید مرتبط
+    public string? Notes { get; private set; } // یادداشت‌ها
 
     // Navigation Properties
     public User User { get; private set; } = null!;
@@ -23,7 +25,7 @@ public class Order : BaseEntity
     // Private constructor for EF Core
     private Order() { }
 
-    public Order(string userId, Cart cart)
+    public Order(string userId, Cart cart, string? idempotencyKey = null)
     {
         if (string.IsNullOrEmpty(userId))
             throw new ArgumentException("شناسه کاربر نمی‌تواند خالی باشد", nameof(userId));
@@ -34,7 +36,14 @@ public class Order : BaseEntity
         if (cart.IsEmpty())
             throw new InvalidOperationException("سبد خرید خالی است");
 
+        // CRITICAL: Ensure CartId is never Guid.Empty or null
+        if (cart.Id == Guid.Empty)
+            throw new InvalidOperationException("شناسه سبد خرید نمی‌تواند خالی باشد");
+
+        Id = Guid.NewGuid();
         UserId = userId;
+        CartId = cart.Id;
+        IdempotencyKey = idempotencyKey;
         OrderNumber = GenerateOrderNumber();
         TotalAmount = cart.TotalAmount;
         Currency = cart.Currency;
@@ -44,7 +53,7 @@ public class Order : BaseEntity
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public PaymentAttempt CreatePaymentAttempt(PaymentMethod method, long amount)
+    public PaymentAttempt CreatePaymentAttempt(long amount)
     {
         if (Status == OrderStatus.Completed)
             throw new InvalidOperationException("سفارش قبلاً تکمیل شده است");
@@ -52,7 +61,7 @@ public class Order : BaseEntity
         if (amount <= 0)
             throw new ArgumentException("مبلغ پرداخت باید مثبت باشد", nameof(amount));
 
-        var attempt = new PaymentAttempt(Id, UserId, method, amount);
+        var attempt = new PaymentAttempt(Id, UserId, amount);
         PaymentAttempts.Add(attempt);
         
         if (Status == OrderStatus.Draft)
@@ -129,14 +138,4 @@ public enum OrderStatus
     Cancelled = 3       // لغو شده
 }
 
-/// <summary>
-/// روش پرداخت برای سفارش
-/// </summary>
-public enum PaymentMethod
-{
-    Online = 0,     // آنلاین (درگاه)
-    Wallet = 1,     // کیف پول
-    Manual = 2,     // دستی (کارت به کارت)
-    Cash = 3,       // نقدی
-    Free = 4        // رایگان
-}
+// PaymentMethod enum moved to separate file for better organization

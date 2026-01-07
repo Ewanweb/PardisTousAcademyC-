@@ -12,6 +12,7 @@ public class CreateCheckoutCommand : IRequest<OperationResult<CreateCheckoutResu
     public string UserId { get; set; } = string.Empty;
     public PaymentMethod PaymentMethod { get; set; }
     public string? Notes { get; set; }
+    public string? IdempotencyKey { get; set; }
 }
 
 /// <summary>

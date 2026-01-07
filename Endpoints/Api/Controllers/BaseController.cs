@@ -163,6 +163,22 @@ public abstract class BaseController : ControllerBase
     }
 
     /// <summary>
+    /// بازگشت پاسخ موفق با داده و caching headers
+    /// </summary>
+    protected IActionResult SuccessResponseCached<T>(T data, int maxAgeSeconds = 3600, string? message = null)
+    {
+        Response.Headers.CacheControl = $"public, max-age={maxAgeSeconds}";
+        Response.Headers.ETag = $"\"{data?.GetHashCode()}\"";
+        return Ok(new
+        {
+            success = true,
+            message = message ?? "عملیات با موفقیت انجام شد",
+            data,
+            timestamp = DateTime.UtcNow
+        });
+    }
+
+    /// <summary>
     /// بازگشت پاسخ موفق بدون داده
     /// </summary>
     protected IActionResult SuccessResponse(string? message = null)

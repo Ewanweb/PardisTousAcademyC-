@@ -33,7 +33,9 @@ public class GlobalExceptionMiddleware
                 context.Request.Method,
                 context.Request.QueryString,
                 ex.Message,
-                ex.StackTrace);
+                ex.StackTrace,
+                ex.ToString()
+                );
             
             await HandleExceptionAsync(context, ex);
         }
@@ -118,4 +120,24 @@ public class GlobalExceptionMiddleware
             _ => (int)HttpStatusCode.InternalServerError
         };
     }
+    private static object[] GetInnerExceptions(Exception ex)
+    {
+        var list = new List<object>();
+        var cur = ex.InnerException;
+
+        while (cur != null)
+        {
+            list.Add(new
+            {
+                type = cur.GetType().FullName,
+                message = cur.Message,
+                stackTrace = cur.StackTrace
+            });
+
+            cur = cur.InnerException;
+        }
+
+        return list.ToArray();
+    }
+
 }

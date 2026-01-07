@@ -1,9 +1,12 @@
+using Api.Authorization;
+using Api.Controllers;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MediatR;
 using Pardis.Application.Shopping.PaymentAttempts.AdminReviewPayment;
+using Pardis.Query.Payments.GetAllPayments;
+using Pardis.Query.Payments.GetAllPendingPayments;
 using Pardis.Query.Shopping.GetPendingPayments;
-using Api.Controllers;
 
 namespace Api.Areas.Admin.Controllers;
 
@@ -12,7 +15,7 @@ namespace Api.Areas.Admin.Controllers;
 /// </summary>
 [Area("Admin")]
 [Route("api/admin/payments")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = Policies.PaymentManagement.Access)]
 public class PaymentManagementController : BaseController
 {
     private readonly IMediator _mediator;
@@ -102,6 +105,19 @@ public class PaymentManagementController : BaseController
 
             return SuccessResponse(result.Data, result.Message);
         }, "خطا در رد پرداخت");
+    }
+    /// <summary>
+    /// پرداخت ها
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GeGetAllPayments()
+    {
+        return await ExecuteAsync(async () =>
+        {
+            var query = new GetAllPaymentsQuery();
+            var result = await _mediator.Send(query);
+            return SuccessResponse(result, "روش‌های پرداخت");
+        }, "خطا در دریافت روش‌های پرداخت");
     }
 }
 

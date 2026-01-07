@@ -62,7 +62,7 @@ namespace Pardis.Application.Courses.Update
                     _fileService.DeleteFile(Directories.Course, course.Thumbnail);
 
                 string image = await _fileService.SaveFileAndGenerateName(request.Dto.Image, Directories.Course);
-                course.Thumbnail = $"/uploads/Corses/Thumbnail/{image}";
+                course.Thumbnail = $"/uploads/courses/thumbnails/{image}";
             }
 
             if (request.Dto.CategoryId.HasValue && request.Dto.CategoryId.Value != oldCategoryId)

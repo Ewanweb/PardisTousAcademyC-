@@ -2,6 +2,7 @@ using MediatR;
 using AutoMapper;
 using Pardis.Application.Shopping.Contracts;
 using Pardis.Domain.Shopping;
+using Pardis.Infrastructure.Extensions;
 using System.Text.Json;
 
 namespace Pardis.Query.Shopping.GetMyOrders;
@@ -23,13 +24,13 @@ public class GetMyOrdersHandler : IRequestHandler<GetMyOrdersQuery, List<GetMyOr
     public async Task<List<GetMyOrdersResult>> Handle(GetMyOrdersQuery request, CancellationToken cancellationToken)
     {
         var orders = await _orderRepository.GetByUserIdAsync(request.UserId, cancellationToken);
-        
+
         var results = new List<GetMyOrdersResult>();
 
         foreach (var order in orders.OrderByDescending(o => o.CreatedAt))
         {
             var courses = DeserializeCartSnapshot(order.CartSnapshot);
-            
+
             var result = new GetMyOrdersResult
             {
                 OrderId = order.Id,
@@ -42,7 +43,7 @@ public class GetMyOrdersHandler : IRequestHandler<GetMyOrdersQuery, List<GetMyOr
                 CompletedAt = order.CompletedAt,
                 CourseCount = courses.Count,
                 Courses = courses,
-                PaymentAttempts = order.PaymentAttempts.Select(pa => new PaymentAttemptSummaryDto
+                PaymentAttempts = order.GetPaymentAttempts().Select(pa => new PaymentAttemptSummaryDto
                 {
                     PaymentAttemptId = pa.Id,
                     TrackingCode = pa.TrackingCode ?? string.Empty,
@@ -50,7 +51,9 @@ public class GetMyOrdersHandler : IRequestHandler<GetMyOrdersQuery, List<GetMyOr
                     MethodText = GetPaymentMethodText(pa.Method),
                     Amount = pa.Amount,
                     Status = pa.Status,
-                    StatusText = GetPaymentStatusText(pa.Status),
+                    StatusText = GetPaymentStatusText(pa.Status, pa.AdminDecision),
+                    ReceiptUrl = pa.ReceiptImageUrl,
+                    RejectReason = pa.FailureReason,
                     CreatedAt = pa.CreatedAt,
                     RequiresAction = pa.RequiresReceiptUpload() || pa.RequiresAdminApproval()
                 }).OrderByDescending(pa => pa.CreatedAt).ToList()
@@ -66,7 +69,7 @@ public class GetMyOrdersHandler : IRequestHandler<GetMyOrdersQuery, List<GetMyOr
     {
         try
         {
-            var items = JsonSerializer.Deserialize<List<dynamic>>(cartSnapshot);
+            var items = JsonSerializer.Deserialize<List<JsonElement>>(cartSnapshot);
             return items?.Select(item => new OrderCourseDto
             {
                 CourseId = Guid.Parse(item.GetProperty("CourseId").GetString() ?? string.Empty),
@@ -92,24 +95,23 @@ public class GetMyOrdersHandler : IRequestHandler<GetMyOrdersQuery, List<GetMyOr
 
     private string GetPaymentMethodText(PaymentMethod method) => method switch
     {
-        PaymentMethod.Online => "پرداخت آنلاین",
-        PaymentMethod.Wallet => "کیف پول",
         PaymentMethod.Manual => "کارت به کارت",
-        PaymentMethod.Cash => "نقدی",
-        PaymentMethod.Free => "رایگان",
         _ => "نامشخص"
     };
 
-    private string GetPaymentStatusText(PaymentAttemptStatus status) => status switch
+    private string GetPaymentStatusText(PaymentAttemptStatus status, string? adminDecision = null)
     {
-        PaymentAttemptStatus.Draft => "پیش‌نویس",
-        PaymentAttemptStatus.PendingPayment => "در انتظار پرداخت",
-        PaymentAttemptStatus.AwaitingReceiptUpload => "در انتظار آپلود رسید",
-        PaymentAttemptStatus.AwaitingAdminApproval => "در انتظار تایید ادمین",
-        PaymentAttemptStatus.Paid => "پرداخت شده",
-        PaymentAttemptStatus.Failed => "ناموفق",
-        PaymentAttemptStatus.Expired => "منقضی شده",
-        PaymentAttemptStatus.Refunded => "بازگشت داده شده",
-        _ => "نامشخص"
-    };
+        if (status == PaymentAttemptStatus.Failed && adminDecision == "Rejected")
+            return "رد شده (نیاز به اصلاح)";
+
+        return status switch
+        {
+            PaymentAttemptStatus.Draft => "پیش‌نویس",
+            PaymentAttemptStatus.PendingPayment => "در انتظار آپلود رسید",
+            PaymentAttemptStatus.AwaitingAdminApproval => "در انتظار تایید ادمین",
+            PaymentAttemptStatus.Paid => "پرداخت شده",
+            PaymentAttemptStatus.Failed => "ناموفق",
+            _ => "نامشخص"
+        };
+    }
 }

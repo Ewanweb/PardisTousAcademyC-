@@ -7,14 +7,17 @@ using Pardis.Query.Shopping.GetMyOrders;
 namespace Api.Controllers;
 
 /// <summary>
-/// کنترلر تلاش‌های پرداخت
+/// کنترلر تلاش‌های پرداخت - ساده شده برای پرداخت دستی فقط
 /// </summary>
-[Route("api/me/payments")]
+[Route("api/me/payment-attempts")]
 [Authorize]
 public class PaymentAttemptsController : BaseController
 {
     private readonly IMediator _mediator;
 
+    /// <summary>
+    /// سازنده کنترلر تلاش‌های پرداخت
+    /// </summary>
     public PaymentAttemptsController(ILogger<PaymentAttemptsController> logger, IMediator mediator) 
         : base(logger)
     {
@@ -47,6 +50,32 @@ public class PaymentAttemptsController : BaseController
 
             return SuccessResponse(result.Data, result.Message);
         }, "خطا در آپلود رسید");
+    }
+
+    /// <summary>
+    /// دریافت رسید پرداخت
+    /// </summary>
+    [HttpGet("{paymentAttemptId}/receipt")]
+    public async Task<IActionResult> GetReceipt(Guid paymentAttemptId)
+    {
+        return await ExecuteAsync(async () =>
+        {
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId))
+                return UnauthorizedResponse();
+
+            var query = new Pardis.Query.Shopping.GetPaymentReceipt.GetPaymentReceiptQuery
+            {
+                PaymentAttemptId = paymentAttemptId,
+                UserId = userId
+            };
+
+            var result = await _mediator.Send(query);
+            if (result == null)
+                return NotFoundResponse("رسید پرداخت یافت نشد");
+
+            return SuccessResponse(result, "رسید پرداخت");
+        }, "خطا در دریافت رسید");
     }
 
     /// <summary>

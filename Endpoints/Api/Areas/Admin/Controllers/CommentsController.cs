@@ -1,13 +1,14 @@
+using Api.Authorization;
+using Api.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Pardis.Application._Shared;
 using Pardis.Application.Comments;
 using Pardis.Domain.Comments;
 using Pardis.Domain.Dto.Comments;
 using Pardis.Domain.Users;
 using Pardis.Query.Comments;
-using Api.Controllers;
-using Pardis.Application._Shared;
 
 namespace Api.Areas.Admin.Controllers;
 
@@ -15,7 +16,7 @@ namespace Api.Areas.Admin.Controllers;
 /// کنترلر مدیریت کامنت‌های دوره‌ها
 /// </summary>
 [Route("api/admin/comments")]
-[Authorize(Roles = Role.Admin + "," + Role.Manager + "," + Role.Instructor)]
+[Authorize(Policy = Policies.CommentManagement.Access)]
 public class CommentsController : BaseController
 {
     private readonly IMediator _mediator;

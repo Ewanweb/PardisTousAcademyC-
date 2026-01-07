@@ -1,11 +1,12 @@
+using Api.Authorization;
+using Api.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Pardis.Domain.Users;
-using Pardis.Domain.Attendance;
-using Pardis.Query.Attendance;
 using Pardis.Application.Attendance;
-using Api.Controllers;
+using Pardis.Domain.Attendance;
+using Pardis.Domain.Users;
+using Pardis.Query.Attendance;
 using System.ComponentModel.DataAnnotations;
 
 namespace Endpoints.Api.Areas.Admin.Controllers;
@@ -16,7 +17,7 @@ namespace Endpoints.Api.Areas.Admin.Controllers;
 [Area("Admin")]
 [Route("api/admin/[controller]")]
 [ApiController]
-[Authorize(Roles = Role.Admin + "," + Role.Instructor)]
+[Authorize(Policy = Policies.CommentManagement.Access)]
 [Produces("application/json")]
 [Tags("Attendance Management")]
 public class AttendanceController : BaseController
