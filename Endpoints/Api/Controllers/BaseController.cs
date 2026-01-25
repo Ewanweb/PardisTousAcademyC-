@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using Pardis.Application._Shared;
+using Pardis.Application._Shared.Pagination;
 using System.Security.Claims;
 
 namespace Api.Controllers;
@@ -246,6 +247,18 @@ public abstract class BaseController : ControllerBase
             errorCode = "VALIDATION_ERROR",
             errorDetails = validationErrors,
             timestamp = DateTime.UtcNow
+        });
+    }
+
+    /// <summary>
+    /// Normalize pagination input from query parameters
+    /// </summary>
+    protected PaginationRequest GetPaginationRequest(int page = 1, int pageSize = 20)
+    {
+        return PaginationHelper.Normalize(new PaginationRequest
+        {
+            Page = page,
+            PageSize = pageSize
         });
     }
 

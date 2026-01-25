@@ -5,13 +5,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pardis.Application.Shopping.PaymentAttempts.AdminReviewPayment;
 using Pardis.Query.Payments.GetAllPayments;
-using Pardis.Query.Payments.GetAllPendingPayments;
 using Pardis.Query.Shopping.GetPendingPayments;
 
 namespace Api.Areas.Admin.Controllers;
 
 /// <summary>
-/// کنترلر مدیریت پرداخت‌ها برای ادمین
+/// کنترلر مدیریت پرداخت‌ها در پنل ادمین
 /// </summary>
 [Area("Admin")]
 [Route("api/admin/payments")]
@@ -21,37 +20,48 @@ public class PaymentManagementController : BaseController
     private readonly IMediator _mediator;
 
     /// <summary>
-    /// Constructor for payment management controller
+    /// سازنده کنترلر مدیریت پرداخت‌ها
     /// </summary>
-    /// <param name="mediator">MediatR instance</param>
-    /// <param name="logger">Logger instance</param>
-    public PaymentManagementController(IMediator mediator, ILogger<PaymentManagementController> logger) 
-        : base(mediator, logger)
+    /// <param name="mediator">واسط MediatR</param>
+    /// <param name="logger">لاگر</param>
+    public PaymentManagementController(
+        IMediator mediator,
+        ILogger<PaymentManagementController> logger
+    ) : base(mediator, logger)
     {
         _mediator = mediator;
     }
 
     /// <summary>
-    /// دریافت پرداخت‌های در انتظار تایید ادمین
+    /// دریافت لیست پرداخت‌های در انتظار بررسی
     /// </summary>
     [HttpGet("pending-receipts")]
-    public async Task<IActionResult> GetPendingReceipts([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> GetPendingReceipts(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20
+    )
     {
         return await ExecuteAsync(async () =>
         {
-            var query = new GetPendingPaymentsQuery 
-            { 
-                Page = page,
-                PageSize = pageSize
+            var pagination = GetPaginationRequest(page, pageSize);
+            var query = new GetPendingPaymentsQuery
+            {
+                Page = pagination.Page,
+                PageSize = pagination.PageSize
             };
+
             var result = await _mediator.Send(query);
 
-            return SuccessResponse(result, "پرداخت‌های در انتظار تایید");
-        }, "خطا در دریافت پرداخت‌های در انتظار تایید");
+            return SuccessResponse(
+                result,
+                "لیست پرداخت‌های در انتظار بررسی با موفقیت دریافت شد"
+            );
+        },
+        "خطا در دریافت لیست پرداخت‌های در انتظار بررسی");
     }
 
     /// <summary>
-    /// تایید پرداخت توسط ادمین
+    /// تأیید پرداخت توسط مدیر
     /// </summary>
     [HttpPost("{paymentAttemptId}/approve")]
     public async Task<IActionResult> ApprovePayment(Guid paymentAttemptId)
@@ -70,19 +80,23 @@ public class PaymentManagementController : BaseController
             };
 
             var result = await _mediator.Send(command);
-            
+
             if (result.Status != Pardis.Application._Shared.OperationResultStatus.Success)
                 return ErrorResponse(result.Message);
 
             return SuccessResponse(result.Data, result.Message);
-        }, "خطا در تایید پرداخت");
+        },
+        "خطا در تأیید پرداخت");
     }
 
     /// <summary>
-    /// رد پرداخت توسط ادمین
+    /// رد کردن پرداخت توسط مدیر به همراه دلیل
     /// </summary>
     [HttpPost("{paymentAttemptId}/reject")]
-    public async Task<IActionResult> RejectPayment(Guid paymentAttemptId, [FromBody] RejectPaymentRequest request)
+    public async Task<IActionResult> RejectPayment(
+        Guid paymentAttemptId,
+        [FromBody] RejectPaymentRequest request
+    )
     {
         return await ExecuteAsync(async () =>
         {
@@ -99,35 +113,54 @@ public class PaymentManagementController : BaseController
             };
 
             var result = await _mediator.Send(command);
-            
+
             if (result.Status != Pardis.Application._Shared.OperationResultStatus.Success)
                 return ErrorResponse(result.Message);
 
             return SuccessResponse(result.Data, result.Message);
-        }, "خطا در رد پرداخت");
+        },
+        "خطا در رد کردن پرداخت");
     }
+
     /// <summary>
-    /// پرداخت ها
+    /// دریافت لیست تمامی پرداخت‌ها با امکان فیلتر
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GeGetAllPayments()
+    public async Task<IActionResult> GetAllPayments(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
+        [FromQuery] int? status = null
+    )
     {
         return await ExecuteAsync(async () =>
         {
-            var query = new GetAllPaymentsQuery();
+            var pagination = GetPaginationRequest(page, pageSize);
+            var query = new GetAllPaymentsQuery
+            {
+                Pagination = pagination,
+                Search = search,
+                Status = status
+            };
+
             var result = await _mediator.Send(query);
-            return SuccessResponse(result, "روش‌های پرداخت");
-        }, "خطا در دریافت روش‌های پرداخت");
+
+            return SuccessResponse(
+                result,
+                "لیست پرداخت‌ها با موفقیت دریافت شد"
+            );
+        },
+        "خطا در دریافت لیست پرداخت‌ها");
     }
 }
 
 /// <summary>
-/// درخواست رد پرداخت
+/// درخواست رد کردن پرداخت
 /// </summary>
 public class RejectPaymentRequest
 {
     /// <summary>
-    /// دلیل رد
+    /// دلیل رد شدن پرداخت
     /// </summary>
     public string Reason { get; set; } = string.Empty;
 }

@@ -17,4 +17,9 @@ public interface IPaymentAttemptRepository
     Task UpdateAsync(PaymentAttempt paymentAttempt, CancellationToken cancellationToken = default);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
     Task<List<PaymentAttempt>> GetAll(CancellationToken cancellationToken = default);
+    Task<Pardis.Application._Shared.Pagination.PagedResult<PaymentAttempt>> GetAllPagedAsync(
+        Pardis.Application._Shared.Pagination.PaginationRequest pagination,
+        string? searchTerm,
+        int? status,
+        CancellationToken cancellationToken = default);
 }

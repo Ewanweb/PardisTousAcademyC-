@@ -1,11 +1,10 @@
-﻿using MediatR;
-using Pardis.Application._Shared;
+using Pardis.Application._Shared.Pagination;
 using Pardis.Domain.Dto.Payments;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Pardis.Query.Payments.GetAllPayments
+namespace Pardis.Query.Payments.GetAllPayments;
+
+public class GetAllPaymentsQuery : PagedQuery<ManualPaymentRequestDto>
 {
-    public record GetAllPaymentsQuery : IRequest<OperationResult<List<ManualPaymentRequestDto>>>;
+    public string? Search { get; set; }
+    public int? Status { get; set; }
 }

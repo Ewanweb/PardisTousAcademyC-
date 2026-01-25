@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Pardis.Application.Shopping.Contracts;
+using Pardis.Application._Shared.Pagination;
 using Pardis.Domain.Shopping;
 
 namespace Pardis.Infrastructure.Repository;
@@ -66,6 +67,56 @@ public class PaymentAttemptRepository : IPaymentAttemptRepository
             .Include(pa => pa.User)
             .OrderBy(pa => pa.ReceiptUploadedAt)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<PagedResult<PaymentAttempt>> GetAllPagedAsync(PaginationRequest pagination, string? searchTerm, int? status, CancellationToken cancellationToken = default)
+    {
+        var normalized = PaginationHelper.Normalize(pagination);
+
+        var query = _context.PaymentAttempts
+            .Include(pa => pa.Order)
+            .Include(pa => pa.User)
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var normalized = searchTerm.Trim().ToLower();
+            query = query.Where(pa =>
+                (pa.User.FullName != null && pa.User.FullName.ToLower().Contains(normalized)) ||
+                (pa.Order.OrderNumber != null && pa.Order.OrderNumber.ToLower().Contains(normalized)) ||
+                (pa.TrackingCode != null && pa.TrackingCode.ToLower().Contains(normalized)));
+        }
+
+        if (status.HasValue)
+        {
+            query = query.Where(pa => (int)pa.Status == status.Value);
+        }
+
+        var statusCounts = await query
+            .GroupBy(pa => pa.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        var total = statusCounts.Sum(item => item.Count);
+        normalized = PaginationHelper.ClampPage(normalized, total);
+
+        var items = await query
+            .OrderByDescending(pa => pa.ReceiptUploadedAt ?? pa.CreatedAt)
+            .ThenByDescending(pa => pa.Id)
+            .Skip((normalized.Page - 1) * normalized.PageSize)
+            .Take(normalized.PageSize)
+            .ToListAsync(cancellationToken);
+
+        var stats = new Dictionary<string, int>
+        {
+            ["total"] = total,
+            ["pending"] = statusCounts.FirstOrDefault(s => s.Status == PaymentAttemptStatus.AwaitingAdminApproval)?.Count ?? 0,
+            ["approved"] = statusCounts.FirstOrDefault(s => s.Status == PaymentAttemptStatus.Paid)?.Count ?? 0,
+            ["rejected"] = statusCounts.FirstOrDefault(s => s.Status == PaymentAttemptStatus.Failed)?.Count ?? 0
+        };
+
+        return PaginationHelper.Create(items, normalized, total, stats);
     }
 
     public async Task<List<PaymentAttempt>> GetExpiredAttemptsAsync(CancellationToken cancellationToken = default)
