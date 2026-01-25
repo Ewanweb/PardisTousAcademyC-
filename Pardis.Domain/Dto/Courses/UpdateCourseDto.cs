@@ -17,7 +17,7 @@ public class UpdateCourseDto
     public string? StartFrom { get; set; }
     public string Schedule { get; set; }
     public IFormFile? Image { get; set; }
-    public Dtos.SeoDto? Seo { get; set; }
+    public SeoDto? Seo { get; set; }
     public List<CourseSectionDto> Sections { get; set; }
     public bool IsCompleted { get; set; }
     public bool IsStarted { get; set; }

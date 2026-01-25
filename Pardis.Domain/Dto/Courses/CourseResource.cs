@@ -27,7 +27,7 @@ public class CourseResource
     // ✅ زمان‌های برگذاری دوره
     public List<CourseScheduleDto> Schedules { get; set; } = [];
 
-    public required Dtos.SeoDto Seo { get; set; }
+    public required SeoDto Seo { get; set; }
     public required DateTime CreatedAt { get; set; }
     public required DateTime UpdatedAt { get; set; }
 

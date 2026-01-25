@@ -8,5 +8,5 @@ public class CreateCategoryDto
     public Guid? ParentId { get; set; }
     public bool IsActive { get; set; } = true;
     public IFormFile? Image { get; set; }
-    public Dtos.SeoDto? Seo { get; set; }
+    public SeoDto? Seo { get; set; }
 }

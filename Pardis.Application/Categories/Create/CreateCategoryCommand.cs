@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Pardis.Domain.Dto;
 using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Application.Categories.Create

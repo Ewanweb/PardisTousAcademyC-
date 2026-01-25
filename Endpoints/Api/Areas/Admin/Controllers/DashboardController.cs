@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pardis.Application.Dashboard;
+using System.Diagnostics;
 
 namespace Api.Areas.Admin.Controllers
 {
@@ -12,10 +13,13 @@ namespace Api.Areas.Admin.Controllers
     public class DashboardController : BaseController
     {
         private readonly IMediator _mediator;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public DashboardController(IMediator mediator, ILogger<DashboardController> logger) : base(logger)
+
+        public DashboardController(ILogger<DashboardController> logger, IMediator mediator, IHttpContextAccessor httpContextAccessor) : base(logger)
         {
             _mediator = mediator;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpGet]
@@ -23,6 +27,7 @@ namespace Api.Areas.Admin.Controllers
         {
             return await ExecuteAsync(async () =>
             {
+
                 var result = await _mediator.Send(new DashboardStatsCommand());
 
                 return Ok(new

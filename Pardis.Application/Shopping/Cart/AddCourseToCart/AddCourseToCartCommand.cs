@@ -11,15 +11,3 @@ public class AddCourseToCartCommand : IRequest<OperationResult<AddCourseToCartRe
     public string UserId { get; set; } = string.Empty;
     public Guid CourseId { get; set; }
 }
-
-/// <summary>
-/// نتیجه اضافه کردن دوره به سبد خرید
-/// </summary>
-public class AddCourseToCartResult
-{
-    public Guid CartId { get; set; }
-    public Guid CartItemId { get; set; }
-    public int TotalItems { get; set; }
-    public long TotalAmount { get; set; }
-    public string Message { get; set; } = string.Empty;
-}

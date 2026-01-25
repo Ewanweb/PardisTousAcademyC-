@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Pardis.Domain;
 using Pardis.Domain.Courses;
+using Pardis.Domain.Dto;
 using Pardis.Domain.Dto.Categories;
 using Pardis.Domain.Dto.Courses;
 using Pardis.Domain.Dto.Users;

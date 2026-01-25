@@ -6,6 +6,8 @@ using Pardis.Domain.Users;
 using Pardis.Domain.Accounting;
 using Pardis.Domain.Comments;
 using Pardis.Domain.Attendance;
+using Pardis.Domain.Blog;
+using Pardis.Domain.Dto;
 using Pardis.Domain.Payments;
 using Pardis.Domain.Sliders;
 using Pardis.Domain.Shopping;
@@ -15,6 +17,7 @@ using Pardis.Domain.Dto.Users;
 using Pardis.Domain.Dto.Accounting;
 using Pardis.Domain.Dto.Comments;
 using Pardis.Domain.Dto.Attendance;
+using Pardis.Domain.Dto.Blog;
 using Pardis.Domain.Dto.Payments;
 using Pardis.Domain.Dto.Sliders;
 using static Pardis.Domain.Dto.Dtos;
@@ -83,6 +86,12 @@ namespace Pardis.Application._Shared
 
             // تبدیل Course به CourseResource
             CreateMap<CourseSection, CourseSectionDto>().ReverseMap();
+
+            CreateMap<AuthLog, AuthLogDTO>()
+                .ForMember(dest => dest.Ip, opt => opt.MapFrom(src => src.Ip))
+                .ForMember(dest => dest.Client, opt => opt.MapFrom(src => src.Client))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ReverseMap();
 
             // تبدیل CourseSchedule به CourseScheduleDto
             CreateMap<CourseSchedule, CourseScheduleDto>()
@@ -175,7 +184,9 @@ namespace Pardis.Application._Shared
                 .ForMember(dest => dest.OrderNumber, opt => opt.MapFrom(src => src.Order != null ? src.Order.OrderNumber : "نامشخص"))
                 .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName ?? src.User.UserName ?? src.User.Email : "نامشخص"))
                 .ForMember(dest => dest.StatusDisplay, opt => opt.MapFrom(src => GetPaymentAttemptStatusDisplay(src.Status)));
+
         }
+
 
         private static string GetPaymentStatusDisplay(PaymentStatus status)
         {
@@ -297,5 +308,7 @@ namespace Pardis.Application._Shared
                 _ => method.ToString()
             };
         }
+
+
     }
 }

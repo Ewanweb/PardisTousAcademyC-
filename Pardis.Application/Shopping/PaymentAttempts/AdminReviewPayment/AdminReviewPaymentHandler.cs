@@ -96,6 +96,7 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
                 IsApproved = request.IsApproved,
                 AdminDecision = paymentAttempt.AdminDecision ?? string.Empty,
                 ReviewedAt = paymentAttempt.AdminReviewedAt ?? DateTime.UtcNow,
+                
                 Message = request.IsApproved ? "پرداخت تایید شد" : "پرداخت رد شد"
             };
 

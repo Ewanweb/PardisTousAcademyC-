@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Identity;
+using Pardis.Domain.Blog;
 using Pardis.Domain.Categories;
 using Pardis.Domain.Courses;
 
@@ -25,8 +27,13 @@ namespace Pardis.Domain.Users
 
         // Relationships
         public ICollection<Course> Courses { get; set; } = [];
+
+        [InverseProperty(nameof(AuthLog.User))]
+        public ICollection<AuthLog> AuthLogs { get; set; } = [];
         public ICollection<UserCourse> EnrolledCourses { get; set; } = [];
         public ICollection<Category> CreatedCategories { get; set; } = [];
+        public ICollection<Post> Posts { get; set; } = [];
+        public ICollection<BlogCategory> BlogCategories { get; set; } = [];
 
         public User()
         {

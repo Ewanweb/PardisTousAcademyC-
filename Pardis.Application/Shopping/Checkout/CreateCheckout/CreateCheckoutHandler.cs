@@ -60,7 +60,7 @@ public class CreateCheckoutHandler : IRequestHandler<CreateCheckoutCommand, Oper
                     return OperationResult<CreateCheckoutResult>.Error("سبد خرید خالی است");
 
                 if (cart.IsExpired())
-                    return OperationResult<CreateCheckoutResult>.Error("سبد خرید منقضی شده است");
+                    cart.ExtendExpiry();
 
                 // CRITICAL: Validate CartId is not empty before creating order
                 if (cart.Id == Guid.Empty)

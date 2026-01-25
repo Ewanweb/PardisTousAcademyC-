@@ -7,6 +7,7 @@ using Pardis.Domain.Categories;
 using Pardis.Domain.Courses;
 using Pardis.Domain.Dto.Courses;
 using System.Linq;
+using Pardis.Domain.Dto;
 using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Query.Courses.GetCoursesByCategory

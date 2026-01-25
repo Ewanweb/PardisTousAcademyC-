@@ -1,10 +1,13 @@
-﻿using MediatR;
+﻿using System.Diagnostics;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pardis.Application._Shared;
 using Pardis.Application.Users.Auth;
 using Pardis.Query.Users.GetUserById;
 using System.Security.Claims;
+using Pardis.Domain.Users;
+using Pardis.Query.Users.GetUserAuthLogs;
 
 namespace Api.Controllers
 {
@@ -18,15 +21,19 @@ namespace Api.Controllers
     public class AuthController : BaseController
     {
         private readonly IMediator _mediator;
+        private readonly IAuthLogRepository _authLogRepository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         /// <summary>
         /// سازنده کنترلر احراز هویت
         /// </summary>
         /// <param name="mediator">واسط MediatR</param>
         /// <param name="logger">لاگر</param>
-        public AuthController(IMediator mediator, ILogger<AuthController> logger) : base(logger)
+        public AuthController(IMediator mediator, ILogger<AuthController> logger, IHttpContextAccessor httpContextAccessor, IAuthLogRepository repository) : base(logger)
         {
             _mediator = mediator;
+            _httpContextAccessor = httpContextAccessor;
+            _authLogRepository = repository;
         }
 
         /// <summary>
@@ -110,9 +117,8 @@ namespace Api.Controllers
                 var result = await _mediator.Send(command);
 
                 if (result.Status == OperationResultStatus.Success)
-                {
                     return SuccessResponse(result.Data, "ورود موفقیت‌آمیز بود. خوش آمدید!");
-                }
+                
 
                 // برای خطاهای احراز هویت، کد 401 برمی‌گردانیم
                 if (result.Status == OperationResultStatus.Error)
@@ -150,6 +156,27 @@ namespace Api.Controllers
                 var result = await _mediator.Send(new GetUserByIdQuery { Id = userId });
 
                 if (result == null)
+                    return NotFoundResponse("کاربر یافت نشد. ممکن است حساب کاربری حذف شده باشد");
+
+                return SuccessResponse(result, "اطلاعات کاربر با موفقیت دریافت شد");
+            }, "خطا در دریافت اطلاعات کاربر");
+        }
+        [HttpGet("authLog")]
+        [Authorize]
+        public async Task<IActionResult> GetUserAuthLog()
+        {
+            return await ExecuteAsync(async () =>
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (string.IsNullOrEmpty(userId))
+                    return UnauthorizedResponse("توکن احراز هویت نامعتبر یا منقضی شده است");
+
+                var query = new GetUserAuthLogsQuery(userId);
+
+                var result = await _mediator.Send(query);
+
+                if (result.Count == 0 || !result.Any())
                     return NotFoundResponse("کاربر یافت نشد. ممکن است حساب کاربری حذف شده باشد");
 
                 return SuccessResponse(result, "اطلاعات کاربر با موفقیت دریافت شد");

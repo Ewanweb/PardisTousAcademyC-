@@ -1,8 +1,13 @@
 ﻿using Api.Authorization;
 using Api.Middleware;
+using Api.Service;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
+using Pardis.Domain.Service;
+using Pardis.Domain.Users;
 using Pardis.Infrastructure;
+using Pardis.Infrastructure.Repository;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,10 +22,10 @@ Log.Logger = new LoggerConfiguration()
         retainedFileCountLimit: 30,
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
-
 // Use Serilog
 builder.Host.UseSerilog();
-
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IRequestContext, RequestContext>();
 // =========================================================
 // 1. ناحیه تعریف سرویس‌ها (DI Container)
 // =========================================================

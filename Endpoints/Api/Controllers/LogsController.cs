@@ -235,5 +235,11 @@ namespace Api.Controllers
 
             return DateTime.MinValue;
         }
+
+        [HttpGet("AuthLog")]
+        public async Task<IActionResult> GetAuthLog()
+        {
+            return null;
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Pardis.Application._Shared;
+using Pardis.Domain.Dto;
 using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Application.Categories.Update

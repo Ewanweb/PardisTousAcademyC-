@@ -283,6 +283,123 @@ namespace Pardis.Infrastructure.Migrations
                     b.ToTable("StudentAttendances");
                 });
 
+            modelBuilder.Entity("Pardis.Domain.Blog.BlogCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Thumbnail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserId1")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
+
+                    b.ToTable("BlogCategories");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Blog.Post", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Author")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("BlogCategoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BlogCategoryId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SummaryDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Thumbnail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserId1")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<long>("Views")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlogCategoryId");
+
+                    b.HasIndex("BlogCategoryId1");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
+
+                    b.ToTable("Posts");
+                });
+
             modelBuilder.Entity("Pardis.Domain.Categories.Category", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1254,6 +1371,37 @@ namespace Pardis.Infrastructure.Migrations
                     b.ToTable("SuccessStories");
                 });
 
+            modelBuilder.Entity("Pardis.Domain.Users.AuthLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Client")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Ip")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AuthLogs");
+                });
+
             modelBuilder.Entity("Pardis.Domain.Users.Role", b =>
                 {
                     b.Property<string>("Id")
@@ -1395,7 +1543,7 @@ namespace Pardis.Infrastructure.Migrations
                         {
                             Id = "8e445865-a24d-4543-a6c6-9443d048cdb9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0fa82087-afb7-4568-91f6-89ea471dfe9a",
+                            ConcurrencyStamp = "3aea6584-9ed6-4ad2-b3a6-3f774f1f7e40",
                             CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@pardis.com",
                             EmailConfirmed = true,
@@ -1404,17 +1552,17 @@ namespace Pardis.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@PARDIS.COM",
                             NormalizedUserName = "ADMIN@PARDIS.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAECsj6zfx1ZjTqZmnnRlbtl6TdmH3sozSi0jHYuCyo0eBw1ggFHJ6YIoPzbUiAJEzhw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOKMSsvTIDwXHuR6Yo6VfMtJjUgoWRRsDVqbEuloQKDqPIfxx4NpwH0TwkuM3brCPg==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "8e445865-a24d-4543-a6c6-9443d048cdb9",
                             TwoFactorEnabled = false,
-                            UserName = "admin@pardis.com"
+                            UserName = "09152003530"
                         },
                         new
                         {
                             Id = "2c4e6097-f570-4927-b2f7-5f65d1373555",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "06c30cf5-749b-4433-98ed-5a27daab5a66",
+                            ConcurrencyStamp = "4cc3ea46-c871-4e7b-9d9f-d688f4404b0c",
                             CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "sara@pardis.com",
                             EmailConfirmed = true,
@@ -1423,7 +1571,7 @@ namespace Pardis.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "SARA@PARDIS.COM",
                             NormalizedUserName = "SARA@PARDIS.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJkQC2BKeuYkE5/WfbGYaLOkpWjFwXYDUn1Ur/6gn62z3QbImIEc7Q8H3ElwBKoAiw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEE8oQmcRLG7MdkZT0q3p/eaX4vEhWPh2CY3JuUrUaiRsuahEvKnaituuaCIghCHU7A==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "2c4e6097-f570-4927-b2f7-5f65d1373555",
                             TwoFactorEnabled = false,
@@ -1543,6 +1691,113 @@ namespace Pardis.Infrastructure.Migrations
                     b.Navigation("Session");
 
                     b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Blog.BlogCategory", b =>
+                {
+                    b.HasOne("Pardis.Domain.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_BlogCategory_User");
+
+                    b.HasOne("Pardis.Domain.Users.User", null)
+                        .WithMany("BlogCategories")
+                        .HasForeignKey("UserId1");
+
+                    b.OwnsOne("Pardis.Domain.Seo.SeoMetadata", "SeoMetadata", b1 =>
+                        {
+                            b1.Property<Guid>("BlogCategoryId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("CanonicalUrl")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("MetaDescription")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("MetaTitle")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<bool>("NoFollow")
+                                .HasColumnType("bit");
+
+                            b1.Property<bool>("NoIndex")
+                                .HasColumnType("bit");
+
+                            b1.HasKey("BlogCategoryId");
+
+                            b1.ToTable("BlogCategories");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BlogCategoryId");
+                        });
+
+                    b.Navigation("SeoMetadata")
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Blog.Post", b =>
+                {
+                    b.HasOne("Pardis.Domain.Blog.BlogCategory", "BlogCategory")
+                        .WithMany()
+                        .HasForeignKey("BlogCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Post_BlogCategory");
+
+                    b.HasOne("Pardis.Domain.Blog.BlogCategory", null)
+                        .WithMany("Posts")
+                        .HasForeignKey("BlogCategoryId1");
+
+                    b.HasOne("Pardis.Domain.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Post_User");
+
+                    b.HasOne("Pardis.Domain.Users.User", null)
+                        .WithMany("Posts")
+                        .HasForeignKey("UserId1");
+
+                    b.OwnsOne("Pardis.Domain.Seo.SeoMetadata", "SeoMetadata", b1 =>
+                        {
+                            b1.Property<Guid>("PostId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("CanonicalUrl")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("MetaDescription")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("MetaTitle")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<bool>("NoFollow")
+                                .HasColumnType("bit");
+
+                            b1.Property<bool>("NoIndex")
+                                .HasColumnType("bit");
+
+                            b1.HasKey("PostId");
+
+                            b1.ToTable("Posts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PostId");
+                        });
+
+                    b.Navigation("BlogCategory");
+
+                    b.Navigation("SeoMetadata")
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Categories.Category", b =>
@@ -1904,9 +2159,26 @@ namespace Pardis.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Pardis.Domain.Users.AuthLog", b =>
+                {
+                    b.HasOne("Pardis.Domain.Users.User", "User")
+                        .WithMany("AuthLogs")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_AuthLog_User");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Pardis.Domain.Attendance.CourseSession", b =>
                 {
                     b.Navigation("Attendances");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Blog.BlogCategory", b =>
+                {
+                    b.Navigation("Posts");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Categories.Category", b =>
@@ -1945,11 +2217,17 @@ namespace Pardis.Infrastructure.Migrations
 
             modelBuilder.Entity("Pardis.Domain.Users.User", b =>
                 {
+                    b.Navigation("AuthLogs");
+
+                    b.Navigation("BlogCategories");
+
                     b.Navigation("Courses");
 
                     b.Navigation("CreatedCategories");
 
                     b.Navigation("EnrolledCourses");
+
+                    b.Navigation("Posts");
                 });
 #pragma warning restore 612, 618
         }

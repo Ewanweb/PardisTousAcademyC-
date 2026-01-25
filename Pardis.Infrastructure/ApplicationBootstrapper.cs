@@ -21,8 +21,11 @@ using Pardis.Domain.Sliders;
 using Pardis.Domain.Settings;
 using Pardis.Infrastructure.Repository;
 using System.Text;
+using Microsoft.AspNetCore.Http;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
+using Pardis.Application.Shopping.Validation;
+using Pardis.Domain.Blog;
 
 
 namespace Pardis.Infrastructure
@@ -167,7 +170,10 @@ namespace Pardis.Infrastructure
             service.AddScoped<ICourseSessionRepository, CourseSessionRepository>();
             service.AddScoped<IStudentAttendanceRepository, StudentAttendanceRepository>();
             service.AddScoped<ICourseScheduleRepository, CourseScheduleRepository>();
-            
+            service.AddScoped<ICartValidationService, CartValidationService>();
+            service.AddScoped<IAuthLogRepository, AuthLogRepository>();
+            service.AddScoped<IPostRepository, PostRepository>();
+
             // Slider Repositories
             service.AddScoped<IHeroSlideRepository, HeroSlideRepository>();
             service.AddScoped<ISuccessStoryRepository, SuccessStoryRepository>();

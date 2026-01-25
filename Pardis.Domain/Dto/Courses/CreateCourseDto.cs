@@ -30,7 +30,7 @@ public class CreateCourseDto
     
     public string? InstructorId { get; set; } // اختیاری برای ادمین
     public IFormFile? Image { get; set; } // فایل آپلود
-    public Dtos.SeoDto? Seo { get; set; }
+    public SeoDto? Seo { get; set; }
     
     [Required(ErrorMessage = "حداقل یک بخش برای دوره الزامی است")]
     public List<CourseSectionDto> Sections { get; set; } = new();

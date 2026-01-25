@@ -28,9 +28,9 @@ public class Cart : BaseEntity
         UserId = userId;
         TotalAmount = 0;
         Currency = "IRR";
-        ExpiresAt = DateTime.UtcNow.AddDays(7); // سبد خرید 7 روز معتبر است
-        CreatedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        ExpiresAt = DateTime.Now.AddDays(7); // سبد خرید 7 روز معتبر است
+        CreatedAt = DateTime.Now;
+        UpdatedAt = DateTime.Now;
     }
 
     public void AddCourse(Course course)
@@ -47,11 +47,19 @@ public class Cart : BaseEntity
         if (Id == Guid.Empty)
             throw new InvalidOperationException("سبد خرید باید قبل از اضافه کردن آیتم ذخیره شود");
 
-        var cartItem = new CartItem(Id, course.Id, course.Price, course.Title);
+        // ایجاد CartItem با اطلاعات کامل دوره
+        var thumbnailSnapshot = !string.IsNullOrEmpty(course.Thumbnail) 
+            ? course.Thumbnail 
+            : "/images/default-course-thumbnail.jpg"; // Default thumbnail fallback
+            
+        var instructorSnapshot = course.Instructor?.FullName ?? "نامشخص";
+
+        var cartItem = new CartItem(Id, course.Id, course.Price, course.Title, 
+                                   thumbnailSnapshot, instructorSnapshot);
         Items.Add(cartItem);
         
         RecalculateTotal();
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.Now;
     }
 
     public void RemoveCourse(Guid courseId)
@@ -62,24 +70,24 @@ public class Cart : BaseEntity
 
         Items.Remove(item);
         RecalculateTotal();
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.Now;
     }
 
     public void Clear()
     {
         Items.Clear();
         TotalAmount = 0;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.Now;
     }
 
     public bool IsEmpty() => !Items.Any();
 
-    public bool IsExpired() => ExpiresAt.HasValue && DateTime.UtcNow > ExpiresAt.Value;
+    public bool IsExpired() => ExpiresAt.HasValue && DateTime.Now > ExpiresAt.Value;
 
     public void ExtendExpiry(int days = 7)
     {
-        ExpiresAt = DateTime.UtcNow.AddDays(days);
-        UpdatedAt = DateTime.UtcNow;
+        ExpiresAt = DateTime.Now.AddDays(days);
+        UpdatedAt = DateTime.Now;
     }
 
     public int GetItemCount() => Items.Count;

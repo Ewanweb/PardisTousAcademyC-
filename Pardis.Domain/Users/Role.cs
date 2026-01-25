@@ -27,6 +27,7 @@ namespace Pardis.Domain.Users
         public const string Marketer = "Marketer";                 // بازاریاب
         public const string InternalManager = "InternalManager";   // مدیر داخلی
         public const string EducationExpert = "EducationExpert";   // کارشناس آموزش
+        public const string Author = "Author";                     // نویسنده
         public Role() : base() { }
         public Role(string roleName) : base(roleName) { }
 

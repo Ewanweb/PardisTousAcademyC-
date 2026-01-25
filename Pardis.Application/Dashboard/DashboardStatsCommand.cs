@@ -6,6 +6,7 @@ using Pardis.Domain.Users;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Pardis.Domain.Dto;
 using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Application.Dashboard
