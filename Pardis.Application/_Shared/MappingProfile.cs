@@ -107,6 +107,28 @@ namespace Pardis.Application._Shared
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
                 .ForMember(dest => dest.Mobile, opt => opt.MapFrom(src => src.Mobile));
 
+            CreateMap<UserCourse, CourseDetailDto>()
+                // الف) ابتدا تمام اطلاعات را از "Course" بردار (Title, Price, Image, ...)
+                .IncludeMembers(s => s.Course)
+                
+                // ب) سپس فیلدهای اختصاصی را از "UserCourse" بازنویسی کن
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.CourseId))
+                .ForMember(dest => dest.IsPurchased, opt => opt.MapFrom(src => true)) // چون UserCourse است، پس خریده
+                .ForMember(dest => dest.IsInCart, opt => opt.MapFrom(src => false)) // چون خریده، دیگر در سبد نیست
+                .ForMember(dest => dest.Access, opt => opt.MapFrom(src => new CourseAccessDto
+                {
+                    ClassLocation = GetClassLocationForCourseType(src.Course.Type, src.Course.Location),
+                    LiveUrl = GetLiveUrlForCourseType(src.Course.Type, src.ExclusiveLiveLink),
+                    IsAccessBlocked = src.IsAccessBlocked,
+                    SeatNumber = src.SeatNumber,
+                    EnrolledAt = src.EnrolledAt,
+                    IsCompleted = src.IsCompleted,
+                    CompletedAt = src.CompletedAt,
+                    FinalGrade = src.FinalGrade,
+                    CertificateCode = src.CertificateCode
+                }))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.Course.CreatedAt));
+
             CreateMap<UserCourse, CourseResource>()
                 // الف) ابتدا تمام اطلاعات را از "Course" بردار (Title, Price, Image, ...)
                 // این کار باعث می‌شود از کانفیگ "Course -> CourseResource" استفاده کند
@@ -118,6 +140,17 @@ namespace Pardis.Application._Shared
                 .ForMember(dest => dest.IsStarted, opt => opt.MapFrom(src => true)) // چون ثبت‌نام کرده، یعنی شروع کرده
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.Course.CreatedAt)); // تاریخ ایجاد دوره (نه تاریخ ثبت‌نام)
             // اگر خواستید تاریخ ثبت‌نام را برگردانید، باید یک فیلد EnrolledAt به CourseResource اضافه کنید
+
+            // تبدیل Course به CourseDetailDto (برای کاربران غیرخریدار)
+            CreateMap<Course, CourseDetailDto>()
+                .ForMember(dest => dest.Sections, opt => opt.MapFrom(src => src.Sections))
+                .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => src.Schedules))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()))
+                .ForMember(dest => dest.Instructor, opt => opt.MapFrom(src => src.Instructor))
+                .ForMember(dest => dest.IsPurchased, opt => opt.MapFrom(src => false))
+                .ForMember(dest => dest.IsInCart, opt => opt.MapFrom(src => false)) // باید از جای دیگر محاسبه شود
+                .ForMember(dest => dest.Access, opt => opt.MapFrom(src => (CourseAccessDto)null));
 
             // تبدیل Course به CourseResource
             CreateMap<Course, CourseResource>()
@@ -309,6 +342,28 @@ namespace Pardis.Application._Shared
             };
         }
 
+        // متدهای کمکی برای تعیین دسترسی بر اساس CourseType
+        private static string? GetClassLocationForCourseType(CourseType courseType, string location)
+        {
+            return courseType switch
+            {
+                CourseType.InPerson => location,
+                CourseType.Hybrid => location,
+                CourseType.Online => null,
+                _ => null
+            };
+        }
+
+        private static string? GetLiveUrlForCourseType(CourseType courseType, string? exclusiveLiveLink)
+        {
+            return courseType switch
+            {
+                CourseType.Online => exclusiveLiveLink,
+                CourseType.Hybrid => exclusiveLiveLink,
+                CourseType.InPerson => null,
+                _ => null
+            };
+        }
 
     }
 }

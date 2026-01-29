@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pardis.Query.Courses.Enroll;
+using Pardis.Query.Courses.GetCourseDetail;
 using System.Security.Claims;
 
 namespace Api.Controllers
@@ -87,6 +88,41 @@ namespace Api.Controllers
 
                 return SuccessResponse(result, "وضعیت ثبت‌نام با موفقیت دریافت شد");
             }, "خطا در بررسی وضعیت ثبت‌نام");
+        }
+
+        /// <summary>
+        /// دریافت جزئیات کامل دوره با اطلاعات دسترسی
+        /// </summary>
+        /// <param name="slug">Slug دوره</param>
+        /// <returns>جزئیات کامل دوره</returns>
+        /// <response code="200">جزئیات دوره با موفقیت دریافت شد</response>
+        /// <response code="404">دوره یافت نشد</response>
+        /// <response code="500">خطای سرور</response>
+        [HttpGet("detail/{slug}")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
+        public async Task<IActionResult> GetCourseDetail(string slug)
+        {
+            return await ExecuteAsync(async () =>
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var isAuthenticated = !string.IsNullOrEmpty(userId);
+
+                var query = new GetCourseDetailQuery 
+                { 
+                    Slug = slug,
+                    UserId = userId,
+                    IsAuthenticated = isAuthenticated
+                };
+                
+                var result = await _mediator.Send(query);
+
+                if (result == null)
+                    return NotFoundResponse("دوره مورد نظر یافت نشد");
+
+                return SuccessResponse(result, "جزئیات دوره با موفقیت دریافت شد");
+            }, "خطا در دریافت جزئیات دوره");
         }
     }
 }
