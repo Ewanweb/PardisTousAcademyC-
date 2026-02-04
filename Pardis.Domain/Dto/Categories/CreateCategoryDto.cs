@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+using Pardis.Domain.Dto.Seo;
+using Microsoft.AspNetCore.Http;
 
 namespace Pardis.Domain.Dto.Categories;
 
@@ -10,3 +11,4 @@ public class CreateCategoryDto
     public IFormFile? Image { get; set; }
     public SeoDto? Seo { get; set; }
 }
+

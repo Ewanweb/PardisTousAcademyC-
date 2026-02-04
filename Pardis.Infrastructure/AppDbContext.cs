@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 using Pardis.Domain.Categories;
 using Pardis.Domain.Courses;
 using Pardis.Domain.Users;
@@ -13,6 +15,7 @@ using Pardis.Domain.Sliders;
 using Pardis.Domain.Settings;
 using Pardis.Domain.Shopping;
 using Pardis.Domain.Logging;
+using Pardis.Domain.Audit;
 
 namespace Pardis.Infrastructure
 {
@@ -20,6 +23,7 @@ namespace Pardis.Infrastructure
     {
         
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+        public AppDbContext() : base(new DbContextOptions<AppDbContext>()) { }
 
         public DbSet<Category> Categories { get; set; }
         public DbSet<Course> Courses { get; set; }
@@ -61,6 +65,7 @@ namespace Pardis.Infrastructure
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<PaymentAttempt> PaymentAttempts { get; set; }
+        public DbSet<PaymentAuditLog> PaymentAuditLogs { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<BlogCategory> BlogCategories { get; set; }
 
@@ -77,6 +82,22 @@ namespace Pardis.Infrastructure
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
+
+            if (!optionsBuilder.IsConfigured)
+            {
+                var configuration = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+                    .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: false)
+                    .AddEnvironmentVariables()
+                    .Build();
+
+                var connectionString = configuration.GetConnectionString("DefaultConnection");
+                if (!string.IsNullOrWhiteSpace(connectionString))
+                {
+                    optionsBuilder.UseSqlServer(connectionString);
+                }
+            }
 
             // نادیده گرفتن خطای تغییرات مدل (Pending Model Changes)
             optionsBuilder.ConfigureWarnings(warnings =>

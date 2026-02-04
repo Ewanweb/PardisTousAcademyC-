@@ -397,10 +397,10 @@ namespace Pardis.Infrastructure
 
             // --- Seo Categories ---
             modelBuilder.Entity<Category>().OwnsOne(c => c.Seo).HasData(
-                new { CategoryId = catProgrammingId, MetaTitle = "آموزش برنامه نویسی", MetaDescription = "جامع ترین دوره ها", NoIndex = false, NoFollow = false },
-                new { CategoryId = catWebId, MetaTitle = "آموزش طراحی سایت", MetaDescription = "ASP.NET و React", NoIndex = false, NoFollow = false },
-                new { CategoryId = catMobileId, MetaTitle = "آموزش موبایل", MetaDescription = "فلاتر و کاتلین", NoIndex = false, NoFollow = false },
-                new { CategoryId = catArtId, MetaTitle = "آموزش هنر", MetaDescription = "نقاشی و طراحی", NoIndex = false, NoFollow = false }
+                new { CategoryId = catProgrammingId, MetaTitle = "آموزش برنامه نویسی", MetaDescription = "جامع ترین دوره ها", NoIndex = false, NoFollow = false, OpenGraphType = "website", TwitterCardType = "summary_large_image" },
+                new { CategoryId = catWebId, MetaTitle = "آموزش طراحی سایت", MetaDescription = "ASP.NET و React", NoIndex = false, NoFollow = false, OpenGraphType = "website", TwitterCardType = "summary_large_image" },
+                new { CategoryId = catMobileId, MetaTitle = "آموزش موبایل", MetaDescription = "فلاتر و کاتلین", NoIndex = false, NoFollow = false, OpenGraphType = "website", TwitterCardType = "summary_large_image" },
+                new { CategoryId = catArtId, MetaTitle = "آموزش هنر", MetaDescription = "نقاشی و طراحی", NoIndex = false, NoFollow = false, OpenGraphType = "website", TwitterCardType = "summary_large_image" }
             );
 
 
@@ -470,9 +470,9 @@ namespace Pardis.Infrastructure
 
             // --- Seo Courses ---
             modelBuilder.Entity<Course>().OwnsOne(c => c.Seo).HasData(
-                new { CourseId = courseAspId, MetaTitle = "دوره ASP.NET Core", MetaDescription = "بهترین دوره بک اند", NoIndex = false, NoFollow = false },
-                new { CourseId = courseReactId, MetaTitle = "دوره React", MetaDescription = "آموزش فرانت اند", NoIndex = false, NoFollow = false },
-                new { CourseId = courseFlutterId, MetaTitle = "دوره Flutter", MetaDescription = "برنامه نویسی موبایل", NoIndex = true, NoFollow = false }
+                new { CourseId = courseAspId, MetaTitle = "دوره ASP.NET Core", MetaDescription = "بهترین دوره بک اند", NoIndex = false, NoFollow = false, OpenGraphType = "website", TwitterCardType = "summary_large_image" },
+                new { CourseId = courseReactId, MetaTitle = "دوره React", MetaDescription = "آموزش فرانت اند", NoIndex = false, NoFollow = false, OpenGraphType = "website", TwitterCardType = "summary_large_image" },
+                new { CourseId = courseFlutterId, MetaTitle = "دوره Flutter", MetaDescription = "برنامه نویسی موبایل", NoIndex = true, NoFollow = false, OpenGraphType = "website", TwitterCardType = "summary_large_image" }
             );
 
             // --- System Settings ---

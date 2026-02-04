@@ -12,7 +12,9 @@ public interface IRepository<T> where T : class
     Task AddAsync(T entity);
     Task AddRangeAsync(IEnumerable<T> entities);
     void Update(T entity);
+    Task UpdateAsync(T entity);
     void Remove(T entity);
+    Task DeleteAsync(T entity);
     void RemoveRange(IEnumerable<T> entities);
     Task<int> SaveChangesAsync(CancellationToken cancellation);
     Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken token = default);

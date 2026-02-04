@@ -1,4 +1,5 @@
-﻿using Pardis.Domain.Seo;
+using Pardis.Domain.Dto.Seo;
+using Pardis.Domain.Seo;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -19,3 +20,5 @@ namespace Pardis.Domain.Dto.Blog
         public SeoDto SeoMetadata { get; set; } = new SeoDto();
     }
 }
+
+

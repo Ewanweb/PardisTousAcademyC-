@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Pardis.Application._Shared;
 using Pardis.Application._Shared.JWT;
-using Pardis.Application.Categories.Update.Pardis.Application.Categories.Commands;
 using Pardis.Application.FileUtil;
 using Pardis.Application.Payments.Contracts;
 using Pardis.Application.Shopping.Contracts;
@@ -26,6 +25,9 @@ using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
 using Pardis.Application.Shopping.Validation;
 using Pardis.Domain.Blog;
+using Microsoft.Extensions.Logging;
+using Pardis.Application.Categories.Update;
+using Pardis.Domain.Audit;
 
 
 namespace Pardis.Infrastructure
@@ -45,6 +47,7 @@ namespace Pardis.Infrastructure
                         errorNumbersToAdd: null
                     ));
             });
+            service.AddScoped<DbContext, AppDbContext>();
 
 
             // 2. تنظیمات Identity
@@ -157,7 +160,7 @@ namespace Pardis.Infrastructure
                     })
                     .Build();
                 
-                return new FileService(tempConfig);
+                return new FileService(tempConfig, provider.GetRequiredService<ILogger<FileService>>());
             });
             service.AddScoped<ITokenService, TokenService>();
             service.AddScoped<IUserRepository, UserRepository>();
@@ -185,12 +188,15 @@ namespace Pardis.Infrastructure
             service.AddScoped<ICartRepository, CartRepository>();
             service.AddScoped<IOrderRepository, OrderRepository>();
             service.AddScoped<IPaymentAttemptRepository, PaymentAttemptRepository>();
+            service.AddScoped<IPaymentAuditLogRepository, PaymentAuditLogRepository>();
             
             // Payment Repositories (existing)
             service.AddScoped<IEnrollmentRepository, CourseEnrollmentRepository>();
 
             // ریپازیتوری جنریک
             service.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+            service.AddSeoServices();
 
 
 
@@ -199,3 +205,4 @@ namespace Pardis.Infrastructure
         }
     }
 }
+

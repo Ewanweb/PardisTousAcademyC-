@@ -251,6 +251,19 @@ public abstract class BaseController : ControllerBase
     }
 
     /// <summary>
+    /// Return a BadRequest response with a message
+    /// </summary>
+    protected IActionResult BadRequestResponse(string? message = null)
+    {
+        return BadRequest(new
+        {
+            success = false,
+            message = message ?? "درخواست نامعتبر است",
+            timestamp = DateTime.UtcNow
+        });
+    }
+
+    /// <summary>
     /// Normalize pagination input from query parameters
     /// </summary>
     protected PaginationRequest GetPaginationRequest(int page = 1, int pageSize = 20)

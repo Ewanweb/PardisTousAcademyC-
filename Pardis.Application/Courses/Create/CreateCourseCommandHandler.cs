@@ -69,16 +69,21 @@ public  class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, 
                 type: request.Dto.Type,
                 schedule: request.Dto.Schedule,
                 isCompleted: request.Dto.IsCompleted,
-                isStarted: request.Dto.IsStarted,
-                seo: new SeoMetadata
-                {
-                    MetaTitle = request.Dto.Seo?.MetaTitle,
-                    MetaDescription = request.Dto.Seo?.MetaDescription,
-                    CanonicalUrl = request.Dto.Seo?.CanonicalUrl,
-                    NoIndex = request.Dto.Seo?.NoIndex ?? false,
-                    NoFollow = request.Dto.Seo?.NoFollow ?? false
-                }
+                isStarted: request.Dto.IsStarted
             );
+
+            // Add SEO if provided
+            if (request.Dto.Seo != null)
+            {
+                var seoMetadata = new SeoMetadata(
+                    metaTitle: request.Dto.Seo.MetaTitle,
+                    metaDescription: request.Dto.Seo.MetaDescription,
+                    canonicalUrl: request.Dto.Seo.CanonicalUrl,
+                    noIndex: request.Dto.Seo.NoIndex,
+                    noFollow: request.Dto.Seo.NoFollow
+                );
+                course.UpdateSeo(seoMetadata);
+            }
 
             if (request.Dto.Sections != null && request.Dto.Sections.Any())
             {

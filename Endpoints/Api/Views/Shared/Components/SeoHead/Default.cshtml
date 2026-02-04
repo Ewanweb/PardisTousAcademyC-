@@ -1,0 +1,87 @@
+@model Pardis.Domain.Dto.Seo.SeoDto
+@using System.Text.Json
+@{
+    var jsonLdSchemas = Model.JsonLdSchemas ?? new List<object>();
+    var breadcrumbs = Model.Breadcrumbs ?? new List<Pardis.Domain.Dto.Seo.BreadcrumbItem>();
+}
+
+<!-- Basic Meta Tags -->
+<title>@Html.Raw(Html.Encode(Model.MetaTitle))</title>
+<meta name="description" content="@Html.Raw(Html.Encode(Model.MetaDescription))" />
+@if (!string.IsNullOrEmpty(Model.Keywords))
+{
+    <meta name="keywords" content="@Html.Raw(Html.Encode(Model.Keywords))" />
+}
+<link rel="canonical" href="@Model.CanonicalUrl" />
+<meta name="robots" content="@Model.RobotsContent" />
+
+<!-- Language and Locale -->
+<html lang="fa" dir="@Model.Direction" />
+<meta http-equiv="content-language" content="fa" />
+
+<!-- Open Graph -->
+<meta property="og:title" content="@Html.Raw(Html.Encode(Model.OgTitle))" />
+<meta property="og:description" content="@Html.Raw(Html.Encode(Model.OgDescription))" />
+<meta property="og:url" content="@Model.CurrentUrl" />
+<meta property="og:type" content="@Model.OgType" />
+<meta property="og:site_name" content="@Model.OgSiteName" />
+<meta property="og:locale" content="@Model.OgLocale" />
+@if (!string.IsNullOrEmpty(Model.OgImage))
+{
+    <meta property="og:image" content="@Model.OgImage" />
+    <meta property="og:image:alt" content="@Html.Raw(Html.Encode(Model.OgTitle))" />
+}
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="@Model.TwitterCard" />
+<meta name="twitter:title" content="@Html.Raw(Html.Encode(Model.TwitterTitle))" />
+<meta name="twitter:description" content="@Html.Raw(Html.Encode(Model.TwitterDescription))" />
+@if (!string.IsNullOrEmpty(Model.TwitterImage))
+{
+    <meta name="twitter:image" content="@Model.TwitterImage" />
+}
+
+<!-- Additional Meta -->
+@if (!string.IsNullOrEmpty(Model.Author))
+{
+    <meta name="author" content="@Html.Raw(Html.Encode(Model.Author))" />
+}
+
+<!-- Pagination Links -->
+@if (!string.IsNullOrEmpty(Model.PrevUrl))
+{
+    <link rel="prev" href="@Model.PrevUrl" />
+}
+@if (!string.IsNullOrEmpty(Model.NextUrl))
+{
+    <link rel="next" href="@Model.NextUrl" />
+}
+
+<!-- JSON-LD Structured Data -->
+@foreach (var schema in jsonLdSchemas)
+{
+    <script type="application/ld+json">
+        @Html.Raw(JsonSerializer.Serialize(schema, new JsonSerializerOptions { WriteIndented = false }))
+    </script>
+}
+
+<!-- Breadcrumb Schema -->
+@if (breadcrumbs.Count > 1)
+{
+    var breadcrumbSchema = new
+    {
+        context = "https://schema.org",
+        type = "BreadcrumbList",
+        itemListElement = breadcrumbs.Select((crumb, index) => new
+        {
+            type = "ListItem",
+            position = crumb.Position,
+            name = crumb.Name,
+            item = crumb.Url.StartsWith("http") ? crumb.Url : $"{Context.Request.Scheme}://{Context.Request.Host}{crumb.Url}"
+        }).ToArray()
+    };
+    
+    <script type="application/ld+json">
+        @Html.Raw(JsonSerializer.Serialize(breadcrumbSchema, new JsonSerializerOptions { WriteIndented = false }))
+    </script>
+}

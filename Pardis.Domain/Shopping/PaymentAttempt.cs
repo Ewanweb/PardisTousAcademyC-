@@ -20,6 +20,8 @@ public class PaymentAttempt : BaseEntity
     public DateTime? AdminReviewedAt { get; private set; } // تاریخ بررسی ادمین
     public string? AdminDecision { get; private set; } // تصمیم ادمین (Approved/Rejected)
     public string? FailureReason { get; private set; } // دلیل شکست
+    public byte[] RowVersion { get; private set; } = null!; // Optimistic locking
+    public string? IdempotencyKey { get; private set; } // Idempotency for admin actions
 
     // Navigation Properties
     public Order Order { get; private set; } = null!;
@@ -73,7 +75,7 @@ public class PaymentAttempt : BaseEntity
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void ApproveByAdmin(string adminUserId)
+    public void ApproveByAdmin(string adminUserId, string? idempotencyKey = null)
     {
         if (Status != PaymentAttemptStatus.AwaitingAdminApproval)
             throw new InvalidOperationException("فقط پرداخت‌های در انتظار تایید قابل تایید هستند");
@@ -82,10 +84,11 @@ public class PaymentAttempt : BaseEntity
         AdminReviewedBy = adminUserId;
         AdminReviewedAt = DateTime.UtcNow;
         AdminDecision = "Approved";
+        IdempotencyKey = idempotencyKey;
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void RejectByAdmin(string adminUserId, string reason)
+    public void RejectByAdmin(string adminUserId, string reason, string? idempotencyKey = null)
     {
         if (Status != PaymentAttemptStatus.AwaitingAdminApproval)
             throw new InvalidOperationException("فقط پرداخت‌های در انتظار تایید قابل رد هستند");
@@ -95,6 +98,7 @@ public class PaymentAttempt : BaseEntity
         AdminReviewedAt = DateTime.UtcNow;
         AdminDecision = "Rejected";
         FailureReason = reason;
+        IdempotencyKey = idempotencyKey;
         UpdatedAt = DateTime.UtcNow;
     }
 

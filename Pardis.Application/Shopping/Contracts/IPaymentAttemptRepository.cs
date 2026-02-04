@@ -1,4 +1,8 @@
 using Pardis.Domain.Shopping;
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Pardis.Application.Shopping.Contracts;
 
@@ -7,6 +11,7 @@ namespace Pardis.Application.Shopping.Contracts;
 /// </summary>
 public interface IPaymentAttemptRepository
 {
+    IQueryable<PaymentAttempt> Table { get; }
     Task<PaymentAttempt?> GetByIdAsync(Guid paymentAttemptId, CancellationToken cancellationToken = default);
     Task<PaymentAttempt?> GetByTrackingCodeAsync(string trackingCode, CancellationToken cancellationToken = default);
     Task<List<PaymentAttempt>> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default);
@@ -21,5 +26,13 @@ public interface IPaymentAttemptRepository
         Pardis.Application._Shared.Pagination.PaginationRequest pagination,
         string? searchTerm,
         int? status,
+        CancellationToken cancellationToken = default);
+
+    Task ExecuteInTransactionAsync(
+        Func<CancellationToken, Task> operation,
+        CancellationToken cancellationToken = default);
+
+    Task<TResult> ExecuteInTransactionAsync<TResult>(
+        Func<CancellationToken, Task<TResult>> operation,
         CancellationToken cancellationToken = default);
 }

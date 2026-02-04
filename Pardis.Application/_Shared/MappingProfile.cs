@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+using Pardis.Domain.Dto.Seo;
+using AutoMapper;
 using Pardis.Domain.Categories;
 using Pardis.Domain.Courses;
 using Pardis.Domain.Seo;
@@ -28,7 +29,7 @@ namespace Pardis.Application._Shared
     {
         public MappingProfile()
         {
-            // تبدیل SeoMetadata به SeoDto
+            // ????? SeoMetadata ?? SeoDto
             CreateMap<SeoMetadata, SeoDto>().ReverseMap();
 
             // Slider Mappings - Simplified structure
@@ -48,15 +49,15 @@ namespace Pardis.Application._Shared
                 .ForMember(dest => dest.ActionLabel, opt => opt.MapFrom(src => src.ActionLabel))
                 .ForMember(dest => dest.ActionLink, opt => opt.MapFrom(src => src.ActionLink));
 
-            // تبدیل User به UserResource (بدون Courses برای جلوگیری از circular reference)
+            // ????? User ?? UserResource (???? Courses ???? ??????? ?? circular reference)
             CreateMap<User, UserResource>()
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
                 .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.AvatarUrl))
                 .ForMember(dest => dest.AvatarUpdatedAt, opt => opt.MapFrom(src => src.AvatarUpdatedAt))
-                .ForMember(dest => dest.Roles, opt => opt.Ignore()) // Roles رو جداگانه handle کن
+                .ForMember(dest => dest.Roles, opt => opt.Ignore()) // Roles ?? ??????? handle ??
                 .ReverseMap();
 
-            // ✅ User Profile Mappings
+            // ? User Profile Mappings
             CreateMap<User, UserProfileDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
@@ -70,7 +71,7 @@ namespace Pardis.Application._Shared
                 .ForMember(dest => dest.AvatarUpdatedAt, opt => opt.MapFrom(src => src.AvatarUpdatedAt))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
 
-            // تبدیل Category به CategoryResource
+            // ????? Category ?? CategoryResource
             CreateMap<Category, CategoryResource>()
                 .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
@@ -82,9 +83,9 @@ namespace Pardis.Application._Shared
                 .ForMember(dest => dest.CoursesCount, opt => opt.MapFrom(src => src.CoursesCount))
                 .ForMember(dest => dest.Slug, opt => opt.MapFrom(src => src.Category.Slug))
                 .ForMember(dest => dest.Seo, opt => opt.MapFrom(src => src.Category.Seo)).ReverseMap();
-            // Ignore کردن Children چون در این DTO لود نشده‌اند
+            // Ignore ???? Children ??? ?? ??? DTO ??? ????????
 
-            // تبدیل Course به CourseResource
+            // ????? Course ?? CourseResource
             CreateMap<CourseSection, CourseSectionDto>().ReverseMap();
 
             CreateMap<AuthLog, AuthLogDTO>()
@@ -93,7 +94,7 @@ namespace Pardis.Application._Shared
                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
                 .ReverseMap();
 
-            // تبدیل CourseSchedule به CourseScheduleDto
+            // ????? CourseSchedule ?? CourseScheduleDto
             CreateMap<CourseSchedule, CourseScheduleDto>()
                 .ForMember(dest => dest.DayName, opt => opt.MapFrom(src => src.GetDayName()))
                 .ForMember(dest => dest.TimeRange, opt => opt.MapFrom(src => $"{src.StartTime:HH:mm}-{src.EndTime:HH:mm}"))
@@ -101,20 +102,20 @@ namespace Pardis.Application._Shared
                 .ForMember(dest => dest.RemainingCapacity, opt => opt.MapFrom(src => src.RemainingCapacity))
                 .ForMember(dest => dest.HasCapacity, opt => opt.MapFrom(src => src.HasCapacity));
 
-            // تبدیل User به InstructorBasicDto (بدون Courses)
+            // ????? User ?? InstructorBasicDto (???? Courses)
             CreateMap<User, InstructorBasicDto>()
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
                 .ForMember(dest => dest.Mobile, opt => opt.MapFrom(src => src.Mobile));
 
             CreateMap<UserCourse, CourseDetailDto>()
-                // الف) ابتدا تمام اطلاعات را از "Course" بردار (Title, Price, Image, ...)
+                // ???) ????? ???? ??????? ?? ?? "Course" ????? (Title, Price, Image, ...)
                 .IncludeMembers(s => s.Course)
                 
-                // ب) سپس فیلدهای اختصاصی را از "UserCourse" بازنویسی کن
+                // ?) ??? ??????? ??????? ?? ?? "UserCourse" ???????? ??
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.CourseId))
-                .ForMember(dest => dest.IsPurchased, opt => opt.MapFrom(src => true)) // چون UserCourse است، پس خریده
-                .ForMember(dest => dest.IsInCart, opt => opt.MapFrom(src => false)) // چون خریده، دیگر در سبد نیست
+                .ForMember(dest => dest.IsPurchased, opt => opt.MapFrom(src => true)) // ??? UserCourse ???? ?? ?????
+                .ForMember(dest => dest.IsInCart, opt => opt.MapFrom(src => false)) // ??? ?????? ???? ?? ??? ????
                 .ForMember(dest => dest.Access, opt => opt.MapFrom(src => new CourseAccessDto
                 {
                     ClassLocation = GetClassLocationForCourseType(src.Course.Type, src.Course.Location),
@@ -130,18 +131,18 @@ namespace Pardis.Application._Shared
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.Course.CreatedAt));
 
             CreateMap<UserCourse, CourseResource>()
-                // الف) ابتدا تمام اطلاعات را از "Course" بردار (Title, Price, Image, ...)
-                // این کار باعث می‌شود از کانفیگ "Course -> CourseResource" استفاده کند
+                // ???) ????? ???? ??????? ?? ?? "Course" ????? (Title, Price, Image, ...)
+                // ??? ??? ???? ?????? ?? ?????? "Course -> CourseResource" ??????? ???
                 .IncludeMembers(s => s.Course)
 
-                // ب) سپس فیلدهای اختصاصی را از "UserCourse" بازنویسی کن
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.CourseId)) // آی‌دی دوره را بگذار نه آی‌دی جدول واسط
-                .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => src.IsCompleted)) // وضعیت تکمیل دانشجو
-                .ForMember(dest => dest.IsStarted, opt => opt.MapFrom(src => true)) // چون ثبت‌نام کرده، یعنی شروع کرده
-                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.Course.CreatedAt)); // تاریخ ایجاد دوره (نه تاریخ ثبت‌نام)
-            // اگر خواستید تاریخ ثبت‌نام را برگردانید، باید یک فیلد EnrolledAt به CourseResource اضافه کنید
+                // ?) ??? ??????? ??????? ?? ?? "UserCourse" ???????? ??
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.CourseId)) // ????? ???? ?? ????? ?? ????? ???? ????
+                .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => src.IsCompleted)) // ????? ????? ??????
+                .ForMember(dest => dest.IsStarted, opt => opt.MapFrom(src => true)) // ??? ??????? ????? ???? ???? ????
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.Course.CreatedAt)); // ????? ????? ???? (?? ????? ???????)
+            // ??? ??????? ????? ??????? ?? ?????????? ???? ?? ???? EnrolledAt ?? CourseResource ????? ????
 
-            // تبدیل Course به CourseDetailDto (برای کاربران غیرخریدار)
+            // ????? Course ?? CourseDetailDto (???? ??????? ?????????)
             CreateMap<Course, CourseDetailDto>()
                 .ForMember(dest => dest.Sections, opt => opt.MapFrom(src => src.Sections))
                 .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => src.Schedules))
@@ -149,10 +150,10 @@ namespace Pardis.Application._Shared
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()))
                 .ForMember(dest => dest.Instructor, opt => opt.MapFrom(src => src.Instructor))
                 .ForMember(dest => dest.IsPurchased, opt => opt.MapFrom(src => false))
-                .ForMember(dest => dest.IsInCart, opt => opt.MapFrom(src => false)) // باید از جای دیگر محاسبه شود
+                .ForMember(dest => dest.IsInCart, opt => opt.MapFrom(src => false)) // ???? ?? ??? ???? ?????? ???
                 .ForMember(dest => dest.Access, opt => opt.MapFrom(src => (CourseAccessDto)null));
 
-            // تبدیل Course به CourseResource
+            // ????? Course ?? CourseResource
             CreateMap<Course, CourseResource>()
                 .ForMember(dest => dest.Sections, opt => opt.MapFrom(src => src.Sections))
                 .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => src.Schedules))
@@ -161,9 +162,9 @@ namespace Pardis.Application._Shared
                 .ForMember(dest => dest.Instructor, opt => opt.MapFrom(src => src.Instructor))
                 .ReverseMap();
 
-            // تبدیل Transaction به TransactionDto
+            // ????? Transaction ?? TransactionDto
             CreateMap<Transaction, TransactionDto>()
-                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.User.FullName ?? src.User.UserName ?? "نامشخص"))
+                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.User.FullName ?? src.User.UserName ?? "??????"))
                 .ForMember(dest => dest.StudentEmail, opt => opt.MapFrom(src => src.User.Email ?? ""))
                 .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.Course.Title))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
@@ -171,14 +172,14 @@ namespace Pardis.Application._Shared
                 .ForMember(dest => dest.Method, opt => opt.MapFrom(src => src.Method.ToString()))
                 .ForMember(dest => dest.MethodDisplay, opt => opt.MapFrom(src => GetPaymentMethodDisplay(src.Method)));
 
-            // ✅ Comments Mappings
+            // ? Comments Mappings
             CreateMap<CourseComment, CourseCommentDto>()
                 .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.Course.Title))
-                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.User.FullName ?? src.User.UserName ?? "نامشخص"))
+                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.User.FullName ?? src.User.UserName ?? "??????"))
                 .ForMember(dest => dest.StatusDisplay, opt => opt.MapFrom(src => GetCommentStatusDisplay(src.Status)))
                 .ForMember(dest => dest.ReviewedByUserName, opt => opt.MapFrom(src => src.ReviewedByUser != null ? src.ReviewedByUser.FullName ?? src.ReviewedByUser.UserName : null));
 
-            // ✅ Attendance Mappings
+            // ? Attendance Mappings
             CreateMap<CourseSession, CourseSessionDto>()
                 .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.Course.Title))
                 .ForMember(dest => dest.StatusDisplay, opt => opt.MapFrom(src => GetSessionStatusDisplay(src.Status)))
@@ -190,15 +191,15 @@ namespace Pardis.Application._Shared
             CreateMap<StudentAttendance, StudentAttendanceDto>()
                 .ForMember(dest => dest.SessionTitle, opt => opt.MapFrom(src => src.Session.Title))
                 .ForMember(dest => dest.SessionDate, opt => opt.MapFrom(src => src.Session.SessionDate))
-                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student.FullName ?? src.Student.UserName ?? "نامشخص"))
+                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student.FullName ?? src.Student.UserName ?? "??????"))
                 .ForMember(dest => dest.StatusDisplay, opt => opt.MapFrom(src => GetAttendanceStatusDisplay(src.Status)))
                 .ForMember(dest => dest.AttendanceDuration, opt => opt.MapFrom(src => src.GetAttendanceDuration()))
                 .ForMember(dest => dest.RecordedByUserName, opt => opt.MapFrom(src => src.RecordedByUser != null ? src.RecordedByUser.FullName ?? src.RecordedByUser.UserName : null));
 
-            // ✅ Payments Mappings
+            // ? Payments Mappings
             CreateMap<CourseEnrollment, CourseEnrollmentDto>()
-                .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.Course != null ? src.Course.Title : "نامشخص"))
-                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student != null ? src.Student.FullName ?? src.Student.UserName : "نامشخص"))
+                .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.Course != null ? src.Course.Title : "??????"))
+                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student != null ? src.Student.FullName ?? src.Student.UserName : "??????"))
                 .ForMember(dest => dest.RemainingAmount, opt => opt.MapFrom(src => src.GetRemainingAmount()))
                 .ForMember(dest => dest.PaymentPercentage, opt => opt.MapFrom(src => src.GetPaymentPercentage()))
                 .ForMember(dest => dest.PaymentStatusDisplay, opt => opt.MapFrom(src => GetPaymentStatusDisplay(src.PaymentStatus)))
@@ -214,8 +215,8 @@ namespace Pardis.Application._Shared
 
             // PaymentAttempt to ManualPaymentRequestDto (simplified for manual payments only)
             CreateMap<PaymentAttempt, ManualPaymentRequestDto>()
-                .ForMember(dest => dest.OrderNumber, opt => opt.MapFrom(src => src.Order != null ? src.Order.OrderNumber : "نامشخص"))
-                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName ?? src.User.UserName ?? src.User.Email : "نامشخص"))
+                .ForMember(dest => dest.OrderNumber, opt => opt.MapFrom(src => src.Order != null ? src.Order.OrderNumber : "??????"))
+                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName ?? src.User.UserName ?? src.User.Email : "??????"))
                 .ForMember(dest => dest.StatusDisplay, opt => opt.MapFrom(src => GetPaymentAttemptStatusDisplay(src.Status)));
 
         }
@@ -225,9 +226,9 @@ namespace Pardis.Application._Shared
         {
             return status switch
             {
-                PaymentStatus.Unpaid => "پرداخت نشده",
-                PaymentStatus.Partial => "پرداخت جزئی",
-                PaymentStatus.Paid => "پرداخت کامل",
+                PaymentStatus.Unpaid => "?????? ????",
+                PaymentStatus.Partial => "?????? ????",
+                PaymentStatus.Paid => "?????? ????",
                 _ => status.ToString()
             };
         }
@@ -236,11 +237,11 @@ namespace Pardis.Application._Shared
         {
             return status switch
             {
-                PaymentAttemptStatus.Draft => "پیش‌نویس",
-                PaymentAttemptStatus.PendingPayment => "در انتظار آپلود رسید",
-                PaymentAttemptStatus.AwaitingAdminApproval => "در انتظار تایید ادمین",
-                PaymentAttemptStatus.Paid => "تایید شده",
-                PaymentAttemptStatus.Failed => "رد شده",
+                PaymentAttemptStatus.Draft => "????????",
+                PaymentAttemptStatus.PendingPayment => "?? ?????? ????? ????",
+                PaymentAttemptStatus.AwaitingAdminApproval => "?? ?????? ????? ?????",
+                PaymentAttemptStatus.Paid => "????? ???",
+                PaymentAttemptStatus.Failed => "?? ???",
                 _ => status.ToString()
             };
         }
@@ -250,11 +251,11 @@ namespace Pardis.Application._Shared
         {
             return status switch
             {
-                TransactionStatus.Pending => "در انتظار",
-                TransactionStatus.Completed => "تکمیل شده",
-                TransactionStatus.Failed => "ناموفق",
-                TransactionStatus.Refunded => "بازگشت وجه",
-                TransactionStatus.Cancelled => "لغو شده",
+                TransactionStatus.Pending => "?? ??????",
+                TransactionStatus.Completed => "????? ???",
+                TransactionStatus.Failed => "??????",
+                TransactionStatus.Refunded => "?????? ???",
+                TransactionStatus.Cancelled => "??? ???",
                 _ => status.ToString()
             };
         }
@@ -263,10 +264,10 @@ namespace Pardis.Application._Shared
         {
             return method switch
             {
-                Domain.Accounting.PaymentMethod.Online => "آنلاین",
-                Domain.Accounting.PaymentMethod.Wallet => "کیف پول",
-                Domain.Accounting.PaymentMethod.Cash => "نقدی",
-                Domain.Accounting.PaymentMethod.Transfer => "انتقال بانکی",
+                Domain.Accounting.PaymentMethod.Online => "??????",
+                Domain.Accounting.PaymentMethod.Wallet => "??? ???",
+                Domain.Accounting.PaymentMethod.Cash => "????",
+                Domain.Accounting.PaymentMethod.Transfer => "?????? ?????",
                 _ => method.ToString()
             };
         }
@@ -275,9 +276,9 @@ namespace Pardis.Application._Shared
         {
             return status switch
             {
-                CommentStatus.Pending => "در انتظار تأیید",
-                CommentStatus.Approved => "تأیید شده",
-                CommentStatus.Rejected => "رد شده",
+                CommentStatus.Pending => "?? ?????? ?????",
+                CommentStatus.Approved => "????? ???",
+                CommentStatus.Rejected => "?? ???",
                 _ => status.ToString()
             };
         }
@@ -286,10 +287,10 @@ namespace Pardis.Application._Shared
         {
             return status switch
             {
-                SessionStatus.Scheduled => "زمان‌بندی شده",
-                SessionStatus.InProgress => "در حال برگزاری",
-                SessionStatus.Completed => "تکمیل شده",
-                SessionStatus.Cancelled => "لغو شده",
+                SessionStatus.Scheduled => "????????? ???",
+                SessionStatus.InProgress => "?? ??? ???????",
+                SessionStatus.Completed => "????? ???",
+                SessionStatus.Cancelled => "??? ???",
                 _ => status.ToString()
             };
         }
@@ -298,9 +299,9 @@ namespace Pardis.Application._Shared
         {
             return status switch
             {
-                AttendanceStatus.Present => "حاضر",
-                AttendanceStatus.Absent => "غایب",
-                AttendanceStatus.Late => "تأخیر",
+                AttendanceStatus.Present => "????",
+                AttendanceStatus.Absent => "????",
+                AttendanceStatus.Late => "?????",
                 _ => status.ToString()
             };
         }
@@ -310,10 +311,10 @@ namespace Pardis.Application._Shared
         {
             return status switch
             {
-                EnrollmentStatus.Active => "فعال",
-                EnrollmentStatus.Completed => "تکمیل شده",
-                EnrollmentStatus.Cancelled => "لغو شده",
-                EnrollmentStatus.Suspended => "تعلیق شده",
+                EnrollmentStatus.Active => "????",
+                EnrollmentStatus.Completed => "????? ???",
+                EnrollmentStatus.Cancelled => "??? ???",
+                EnrollmentStatus.Suspended => "????? ???",
                 _ => status.ToString()
             };
         }
@@ -322,10 +323,10 @@ namespace Pardis.Application._Shared
         {
             return status switch
             {
-                InstallmentStatus.Unpaid => "پرداخت نشده",
-                InstallmentStatus.Partial => "پرداخت جزئی",
-                InstallmentStatus.Paid => "پرداخت شده",
-                InstallmentStatus.Overdue => "معوق",
+                InstallmentStatus.Unpaid => "?????? ????",
+                InstallmentStatus.Partial => "?????? ????",
+                InstallmentStatus.Paid => "?????? ???",
+                InstallmentStatus.Overdue => "????",
                 _ => status.ToString()
             };
         }
@@ -334,15 +335,15 @@ namespace Pardis.Application._Shared
         {
             return method switch
             {
-                Domain.Payments.EnrollmentPaymentMethod.Online => "آنلاین",
-                Domain.Payments.EnrollmentPaymentMethod.Cash => "نقدی",
-                Domain.Payments.EnrollmentPaymentMethod.Transfer => "انتقال بانکی",
-                Domain.Payments.EnrollmentPaymentMethod.Cheque => "چک",
+                Domain.Payments.EnrollmentPaymentMethod.Online => "??????",
+                Domain.Payments.EnrollmentPaymentMethod.Cash => "????",
+                Domain.Payments.EnrollmentPaymentMethod.Transfer => "?????? ?????",
+                Domain.Payments.EnrollmentPaymentMethod.Cheque => "??",
                 _ => method.ToString()
             };
         }
 
-        // متدهای کمکی برای تعیین دسترسی بر اساس CourseType
+        // ?????? ???? ???? ????? ?????? ?? ???? CourseType
         private static string? GetClassLocationForCourseType(CourseType courseType, string location)
         {
             return courseType switch

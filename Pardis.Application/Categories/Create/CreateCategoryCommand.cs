@@ -2,13 +2,8 @@
 using Pardis.Application._Shared;
 using Pardis.Domain;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using Pardis.Domain.Dto;
-using static Pardis.Domain.Dto.Dtos;
+using Pardis.Domain.Dto.Seo;
 
 namespace Pardis.Application.Categories.Create
 {
@@ -17,8 +12,9 @@ namespace Pardis.Application.Categories.Create
         public string Title { get; set; }
         public Guid? ParentId { get; set; }
         public bool IsActive { get; set; } = true;
+        public string? Description { get; set; }
         [JsonIgnore]
         public string? CurrentUserId { get; set; } // آی‌دی کاربر سازنده
-        public SeoDto Seo { get; set; }
+        public SeoDto? Seo { get; set; }
     }
 }

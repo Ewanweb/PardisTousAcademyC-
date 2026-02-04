@@ -5,7 +5,7 @@ using Pardis.Domain.Shopping;
 
 namespace Pardis.Query.Shopping.GetPaymentAttempt;
 
-public class GetPaymentAttemptHandler : IRequestHandler<GetPaymentAttemptQuery, GetPaymentAttemptResult>
+public class GetPaymentAttemptHandler : IRequestHandler<GetPaymentAttemptQuery, GetPaymentAttemptResult?>
 {
     private readonly AppDbContext _context;
 
@@ -14,7 +14,7 @@ public class GetPaymentAttemptHandler : IRequestHandler<GetPaymentAttemptQuery, 
         _context = context;
     }
 
-    public async Task<GetPaymentAttemptResult> Handle(GetPaymentAttemptQuery request, CancellationToken cancellationToken)
+    public async Task<GetPaymentAttemptResult?> Handle(GetPaymentAttemptQuery request, CancellationToken cancellationToken)
     {
         var attempt = await _context.PaymentAttempts
             .Include(p => p.Order)

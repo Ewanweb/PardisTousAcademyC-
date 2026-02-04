@@ -1,0 +1,145 @@
+@model Pardis.Domain.Dto.Categories.CategoryViewModel
+@{
+    ViewData["Title"] = "Category";
+}
+
+@await Component.InvokeAsync("SeoHead", new { 
+    entityType = Pardis.Domain.Seo.SeoEntityType.Category, 
+    slug = Model.Slug,
+    language = "fa"
+})
+
+<div class="category-page">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Breadcrumb Navigation -->
+        <nav class="breadcrumb mb-6" aria-label="Breadcrumb">
+            <ol class="flex items-center space-x-2 text-sm text-gray-600">
+                <li><a href="/" class="hover:text-blue-600">????</a></li>
+                @if (!string.IsNullOrEmpty(Model.ParentTitle))
+                {
+                    <li class="before:content-['/'] before:mx-2">
+                        <span class="text-gray-700">@Model.ParentTitle</span>
+                    </li>
+                }
+                <li class="before:content-['/'] before:mx-2 text-gray-900 font-medium">
+                    @Model.Title
+                </li>
+            </ol>
+        </nav>
+
+        <!-- Category Header -->
+        <div class="category-header mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">
+                ???????? @Model.Title
+            </h1>
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <p class="text-lg text-gray-600 leading-relaxed">
+                    @Model.Description
+                </p>
+            }
+        </div>
+
+        <!-- Filters -->
+        <div class="filters mb-6">
+            <form method="get" class="flex flex-wrap gap-4">
+                <select name="level" class="px-4 py-2 border border-gray-300 rounded-lg">
+                    <option value="">??? ????</option>
+                    <option value="beginner" selected="@(ViewContext.HttpContext.Request.Query["level"] == "beginner")">???????</option>
+                    <option value="intermediate" selected="@(ViewContext.HttpContext.Request.Query["level"] == "intermediate")">?????</option>
+                    <option value="advanced" selected="@(ViewContext.HttpContext.Request.Query["level"] == "advanced")">???????</option>
+                </select>
+                
+                <select name="price" class="px-4 py-2 border border-gray-300 rounded-lg">
+                    <option value="">??? ???????</option>
+                    <option value="free" selected="@(ViewContext.HttpContext.Request.Query["price"] == "free")">??????</option>
+                    <option value="paid" selected="@(ViewContext.HttpContext.Request.Query["price"] == "paid")">????</option>
+                </select>
+                
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    ????? ?????
+                </button>
+            </form>
+        </div>
+
+        <!-- Courses Grid -->
+        <div class="courses-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach (var course in Model.Courses)
+            {
+                <div class="course-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                    @if (!string.IsNullOrEmpty(course.Thumbnail))
+                    {
+                        <img src="@course.Thumbnail" alt="@course.Title" class="w-full h-48 object-cover" loading="lazy" />
+                    }
+                    
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                            <a href="/course/@course.Slug" class="hover:text-blue-600">
+                                @course.Title
+                            </a>
+                        </h3>
+                        
+                        @if (!string.IsNullOrEmpty(course.Description))
+                        {
+                            <p class="text-gray-600 mb-4 line-clamp-3">
+                                @course.Description
+                            </p>
+                        }
+                        
+                        <div class="course-meta flex items-center justify-between text-sm text-gray-500">
+                            @if (course.Price > 0)
+                            {
+                                <span class="font-semibold text-green-600">
+                                    @course.Price.ToString("N0") ?????
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.TotalPages > 1)
+        {
+            <div class="pagination mt-8 flex justify-center">
+                <nav class="flex items-center space-x-2" aria-label="Pagination">
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <a href="@Url.Action("Index", new { slug = Model.Slug, page = Model.CurrentPage - 1 })" 
+                           class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                           rel="prev">
+                            ????
+                        </a>
+                    }
+                    
+                    @for (int i = Math.Max(1, Model.CurrentPage - 2); i <= System.Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                    {
+                        @if (i == Model.CurrentPage)
+                        {
+                            <span class="px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md">
+                                @i
+                            </span>
+                        }
+                        else
+                        {
+                            <a href="@Url.Action("Index", new { slug = Model.Slug, page = i })" 
+                               class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                                @i
+                            </a>
+                        }
+                    }
+                    
+                    @if (Model.CurrentPage < Model.TotalPages)
+                    {
+                        <a href="@Url.Action("Index", new { slug = Model.Slug, page = Model.CurrentPage + 1 })" 
+                           class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                           rel="next">
+                            ????
+                        </a>
+                    }
+                </nav>
+            </div>
+        }
+    </div>
+</div>

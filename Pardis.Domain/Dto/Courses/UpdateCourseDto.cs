@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+using Pardis.Domain.Dto.Seo;
+using Microsoft.AspNetCore.Http;
 using Pardis.Domain.Courses;
 
 namespace Pardis.Domain.Dto.Courses;
@@ -22,3 +23,4 @@ public class UpdateCourseDto
     public bool IsCompleted { get; set; }
     public bool IsStarted { get; set; }
 }
+

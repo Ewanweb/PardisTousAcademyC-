@@ -1,8 +1,7 @@
-﻿using Pardis.Domain.Blog;
+using Pardis.Domain.Blog;
 using Pardis.Domain.Dto.Blog;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Pardis.Domain.Dto.Seo;
+using Pardis.Domain.Seo;
 
 namespace Pardis.Application._Shared.ExtensionMappers
 {
@@ -10,22 +9,28 @@ namespace Pardis.Application._Shared.ExtensionMappers
     {
         public static Post ToEntity(this PostDTO dto)
         {
-            return new Post()
+            var post = new Post()
             {
                 Title = dto.Title,
                 BlogCategoryId = dto.BlogCategoryId,
                 Description = dto.Description,
                 SummaryDescription = dto.SummaryDescription,
-                Slug = dto.Slug,
-                SeoMetadata =
-                {
-                    CanonicalUrl = dto.SeoMetadata.CanonicalUrl,
-                    MetaDescription = dto.SeoMetadata.MetaDescription,
-                    MetaTitle = dto.SeoMetadata.MetaTitle,
-                    NoFollow = dto.SeoMetadata.NoFollow,
-                    NoIndex = dto.SeoMetadata.NoIndex
-                }
+                Slug = dto.Slug
             };
+
+            if (dto.SeoMetadata != null)
+            {
+                var seoMetadata = new SeoMetadata(
+                    metaTitle: dto.SeoMetadata.MetaTitle,
+                    metaDescription: dto.SeoMetadata.MetaDescription,
+                    canonicalUrl: dto.SeoMetadata.CanonicalUrl,
+                    noIndex: dto.SeoMetadata.NoIndex,
+                    noFollow: dto.SeoMetadata.NoFollow
+                );
+                post.SeoMetadata = seoMetadata;
+            }
+
+            return post;
         }
 
         public static PostResource ToResource(this Post entity)
@@ -41,36 +46,40 @@ namespace Pardis.Application._Shared.ExtensionMappers
                 SummaryDescription = entity.SummaryDescription,
                 ThumbnailUrl = entity.ThumbnailUrl,
                 Slug = entity.Slug,
-                SeoMetadata =
+                SeoMetadata = entity.SeoMetadata != null ? new SeoDto
                 {
                     CanonicalUrl = entity.SeoMetadata.CanonicalUrl,
                     MetaDescription = entity.SeoMetadata.MetaDescription,
                     MetaTitle = entity.SeoMetadata.MetaTitle,
                     NoFollow = entity.SeoMetadata.NoFollow,
                     NoIndex = entity.SeoMetadata.NoIndex
-                },
+                } : new SeoDto(),
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt,
-                
             };
         }
 
         public static BlogCategory ToEntity(this BlogCategoriesDTO dto)
         {
-            return new BlogCategory()
+            var blogCategory = new BlogCategory()
             {
                 Title = dto.Title,
-                Slug = dto.Slug,
-                SeoMetadata =
-                {
-                    CanonicalUrl = dto.SeoMetadata.CanonicalUrl,
-                    MetaDescription = dto.SeoMetadata.MetaDescription,
-                    MetaTitle = dto.SeoMetadata.MetaTitle,
-                    NoFollow = dto.SeoMetadata.NoFollow,
-                    NoIndex = dto.SeoMetadata.NoIndex
-                },
-
+                Slug = dto.Slug
             };
+
+            if (dto.SeoMetadata != null)
+            {
+                var seoMetadata = new SeoMetadata(
+                    metaTitle: dto.SeoMetadata.MetaTitle,
+                    metaDescription: dto.SeoMetadata.MetaDescription,
+                    canonicalUrl: dto.SeoMetadata.CanonicalUrl,
+                    noIndex: dto.SeoMetadata.NoIndex,
+                    noFollow: dto.SeoMetadata.NoFollow
+                );
+                blogCategory.SeoMetadata = seoMetadata;
+            }
+
+            return blogCategory;
         }
 
         public static BlogCategoriesResource ToResource(this BlogCategory entity)
@@ -84,7 +93,7 @@ namespace Pardis.Application._Shared.ExtensionMappers
                 Thumbnail = entity.Thumbnail,
                 ThumbnailUrl = entity.ThumbnailUrl,
                 Slug = entity.Slug,
-                SeoMetadata =
+                SeoMetadata = new SeoDto
                 {
                     CanonicalUrl = entity.SeoMetadata.CanonicalUrl,
                     MetaDescription = entity.SeoMetadata.MetaDescription,

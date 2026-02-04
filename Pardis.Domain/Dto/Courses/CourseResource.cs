@@ -1,4 +1,5 @@
-﻿using Pardis.Domain.Dto.Categories;
+using Pardis.Domain.Dto.Seo;
+using Pardis.Domain.Dto.Categories;
 using Pardis.Domain.Dto.Users;
 
 namespace Pardis.Domain.Dto.Courses;
@@ -19,12 +20,12 @@ public class CourseResource
     public required bool IsCompleted { get; set; }
     public required bool IsStarted { get; set; }
 
-    // ✅ تغییر: فقط اطلاعات ضروری Instructor
+    // ? ?????: ??? ??????? ????? Instructor
     public required InstructorBasicDto Instructor { get; set; }
     public required CategoryResource Category { get; set; }
     public List<CourseSectionDto> Sections { get; set; } = [];
     
-    // ✅ زمان‌های برگذاری دوره
+    // ? ???????? ??????? ????
     public List<CourseScheduleDto> Schedules { get; set; } = [];
 
     public required SeoDto Seo { get; set; }
@@ -36,7 +37,7 @@ public class CourseResource
 }
 
 /// <summary>
-/// DTO ساده برای Instructor - بدون Courses برای جلوگیری از circular reference
+/// DTO ???? ???? Instructor - ???? Courses ???? ??????? ?? circular reference
 /// </summary>
 public class InstructorBasicDto
 {
@@ -45,3 +46,4 @@ public class InstructorBasicDto
     public required string Email { get; set; }
     public string? Mobile { get; set; }
 }
+

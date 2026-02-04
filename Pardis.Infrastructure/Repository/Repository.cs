@@ -49,9 +49,21 @@ public class Repository<T> : IRepository<T> where T : class
         _dbSet.Update(entity);
     }
 
+    public Task UpdateAsync(T entity)
+    {
+        _dbSet.Update(entity);
+        return Task.CompletedTask;
+    }
+
     public void Remove(T entity)
     {
         _dbSet.Remove(entity);
+    }
+
+    public Task DeleteAsync(T entity)
+    {
+        _dbSet.Remove(entity);
+        return Task.CompletedTask;
     }
 
     public void RemoveRange(IEnumerable<T> entities)

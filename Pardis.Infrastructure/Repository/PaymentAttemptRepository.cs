@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Pardis.Application.Shopping.Contracts;
 using Pardis.Application._Shared.Pagination;
 using Pardis.Domain.Shopping;
+using System.Linq;
 
 namespace Pardis.Infrastructure.Repository;
 
@@ -16,6 +17,8 @@ public class PaymentAttemptRepository : IPaymentAttemptRepository
     {
         _context = context;
     }
+
+    public IQueryable<PaymentAttempt> Table => _context.PaymentAttempts;
 
     public async Task<PaymentAttempt?> GetByIdAsync(Guid paymentAttemptId, CancellationToken cancellationToken = default)
     {
@@ -81,11 +84,11 @@ public class PaymentAttemptRepository : IPaymentAttemptRepository
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            var normalized = searchTerm.Trim().ToLower();
+            var normalizedSearch = searchTerm.Trim().ToLower();
             query = query.Where(pa =>
-                (pa.User.FullName != null && pa.User.FullName.ToLower().Contains(normalized)) ||
-                (pa.Order.OrderNumber != null && pa.Order.OrderNumber.ToLower().Contains(normalized)) ||
-                (pa.TrackingCode != null && pa.TrackingCode.ToLower().Contains(normalized)));
+                (pa.User.FullName != null && pa.User.FullName.ToLower().Contains(normalizedSearch)) ||
+                (pa.Order.OrderNumber != null && pa.Order.OrderNumber.ToLower().Contains(normalizedSearch)) ||
+                (pa.TrackingCode != null && pa.TrackingCode.ToLower().Contains(normalizedSearch)));
         }
 
         if (status.HasValue)
@@ -141,5 +144,40 @@ public class PaymentAttemptRepository : IPaymentAttemptRepository
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task ExecuteInTransactionAsync(
+        Func<CancellationToken, Task> operation,
+        CancellationToken cancellationToken = default)
+    {
+        var strategy = _context.Database.CreateExecutionStrategy();
+
+        return strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+            await operation(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            await tx.CommitAsync(cancellationToken);
+        });
+    }
+
+    public Task<TResult> ExecuteInTransactionAsync<TResult>(
+        Func<CancellationToken, Task<TResult>> operation,
+        CancellationToken cancellationToken = default)
+    {
+        var strategy = _context.Database.CreateExecutionStrategy();
+
+        return strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+            var result = await operation(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            await tx.CommitAsync(cancellationToken);
+            return result;
+        });
     }
 }

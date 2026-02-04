@@ -283,6 +283,72 @@ namespace Pardis.Infrastructure.Migrations
                     b.ToTable("StudentAttendances");
                 });
 
+            modelBuilder.Entity("Pardis.Domain.Audit.PaymentAuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Action")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AdditionalData")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AdminUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<long>("Amount")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NewStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("PaymentAttemptId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PreviousStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserAgent")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdminUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PaymentAuditLogs");
+                });
+
             modelBuilder.Entity("Pardis.Domain.Blog.BlogCategory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -414,6 +480,9 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.Property<string>("CreatedById")
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)");
@@ -1234,6 +1303,9 @@ namespace Pardis.Infrastructure.Migrations
                     b.Property<string>("FailureReason")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("IdempotencyKey")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Method")
                         .HasColumnType("int");
 
@@ -1248,6 +1320,10 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.Property<DateTime?>("ReceiptUploadedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -1543,7 +1619,7 @@ namespace Pardis.Infrastructure.Migrations
                         {
                             Id = "8e445865-a24d-4543-a6c6-9443d048cdb9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "3aea6584-9ed6-4ad2-b3a6-3f774f1f7e40",
+                            ConcurrencyStamp = "f95a30cf-3210-4c5b-bd99-b90364f039bc",
                             CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@pardis.com",
                             EmailConfirmed = true,
@@ -1552,7 +1628,7 @@ namespace Pardis.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@PARDIS.COM",
                             NormalizedUserName = "ADMIN@PARDIS.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOKMSsvTIDwXHuR6Yo6VfMtJjUgoWRRsDVqbEuloQKDqPIfxx4NpwH0TwkuM3brCPg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKxLR1AH1r6YQ/5dmWkIN10F/K6Z9kwKh+SvuEr9lA+B9k7j0368BD/iy5KPdGdx8Q==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "8e445865-a24d-4543-a6c6-9443d048cdb9",
                             TwoFactorEnabled = false,
@@ -1562,7 +1638,7 @@ namespace Pardis.Infrastructure.Migrations
                         {
                             Id = "2c4e6097-f570-4927-b2f7-5f65d1373555",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "4cc3ea46-c871-4e7b-9d9f-d688f4404b0c",
+                            ConcurrencyStamp = "0aa101fa-c85d-4e71-ab3c-3f19055e411f",
                             CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "sara@pardis.com",
                             EmailConfirmed = true,
@@ -1571,7 +1647,7 @@ namespace Pardis.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "SARA@PARDIS.COM",
                             NormalizedUserName = "SARA@PARDIS.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEE8oQmcRLG7MdkZT0q3p/eaX4vEhWPh2CY3JuUrUaiRsuahEvKnaituuaCIghCHU7A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEM8RfCvBgzVQ/YlkWpwqBuFp2NyGxOVf4q1V0m4Nlp0H28DVAILy2O+I/blV7gdhmQ==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "2c4e6097-f570-4927-b2f7-5f65d1373555",
                             TwoFactorEnabled = false,
@@ -1693,6 +1769,23 @@ namespace Pardis.Infrastructure.Migrations
                     b.Navigation("Student");
                 });
 
+            modelBuilder.Entity("Pardis.Domain.Audit.PaymentAuditLog", b =>
+                {
+                    b.HasOne("Pardis.Domain.Users.User", "AdminUser")
+                        .WithMany()
+                        .HasForeignKey("AdminUserId");
+
+                    b.HasOne("Pardis.Domain.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AdminUser");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Pardis.Domain.Blog.BlogCategory", b =>
                 {
                     b.HasOne("Pardis.Domain.Users.User", "User")
@@ -1712,19 +1805,63 @@ namespace Pardis.Infrastructure.Migrations
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("CanonicalUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<string>("JsonLdSchemas")
                                 .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("Keywords")
+                                .HasMaxLength(255)
+                                .HasColumnType("nvarchar(255)");
 
                             b1.Property<string>("MetaDescription")
-                                .HasColumnType("nvarchar(max)");
+                                .HasMaxLength(160)
+                                .HasColumnType("nvarchar(160)");
 
                             b1.Property<string>("MetaTitle")
-                                .HasColumnType("nvarchar(max)");
+                                .HasMaxLength(60)
+                                .HasColumnType("nvarchar(60)");
 
                             b1.Property<bool>("NoFollow")
                                 .HasColumnType("bit");
 
                             b1.Property<bool>("NoIndex")
                                 .HasColumnType("bit");
+
+                            b1.Property<string>("OpenGraphDescription")
+                                .HasMaxLength(160)
+                                .HasColumnType("nvarchar(160)");
+
+                            b1.Property<string>("OpenGraphImage")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<string>("OpenGraphTitle")
+                                .HasMaxLength(60)
+                                .HasColumnType("nvarchar(60)");
+
+                            b1.Property<string>("OpenGraphType")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)");
+
+                            b1.Property<string>("TwitterCardType")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)");
+
+                            b1.Property<string>("TwitterDescription")
+                                .HasMaxLength(160)
+                                .HasColumnType("nvarchar(160)");
+
+                            b1.Property<string>("TwitterImage")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<string>("TwitterTitle")
+                                .HasMaxLength(60)
+                                .HasColumnType("nvarchar(60)");
 
                             b1.HasKey("BlogCategoryId");
 
@@ -1770,19 +1907,63 @@ namespace Pardis.Infrastructure.Migrations
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("CanonicalUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<string>("JsonLdSchemas")
                                 .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("Keywords")
+                                .HasMaxLength(255)
+                                .HasColumnType("nvarchar(255)");
 
                             b1.Property<string>("MetaDescription")
-                                .HasColumnType("nvarchar(max)");
+                                .HasMaxLength(160)
+                                .HasColumnType("nvarchar(160)");
 
                             b1.Property<string>("MetaTitle")
-                                .HasColumnType("nvarchar(max)");
+                                .HasMaxLength(60)
+                                .HasColumnType("nvarchar(60)");
 
                             b1.Property<bool>("NoFollow")
                                 .HasColumnType("bit");
 
                             b1.Property<bool>("NoIndex")
                                 .HasColumnType("bit");
+
+                            b1.Property<string>("OpenGraphDescription")
+                                .HasMaxLength(160)
+                                .HasColumnType("nvarchar(160)");
+
+                            b1.Property<string>("OpenGraphImage")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<string>("OpenGraphTitle")
+                                .HasMaxLength(60)
+                                .HasColumnType("nvarchar(60)");
+
+                            b1.Property<string>("OpenGraphType")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)");
+
+                            b1.Property<string>("TwitterCardType")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)");
+
+                            b1.Property<string>("TwitterDescription")
+                                .HasMaxLength(160)
+                                .HasColumnType("nvarchar(160)");
+
+                            b1.Property<string>("TwitterImage")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<string>("TwitterTitle")
+                                .HasMaxLength(60)
+                                .HasColumnType("nvarchar(60)");
 
                             b1.HasKey("PostId");
 
@@ -1816,19 +1997,63 @@ namespace Pardis.Infrastructure.Migrations
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("CanonicalUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<string>("JsonLdSchemas")
                                 .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("Keywords")
+                                .HasMaxLength(255)
+                                .HasColumnType("nvarchar(255)");
 
                             b1.Property<string>("MetaDescription")
-                                .HasColumnType("nvarchar(max)");
+                                .HasMaxLength(160)
+                                .HasColumnType("nvarchar(160)");
 
                             b1.Property<string>("MetaTitle")
-                                .HasColumnType("nvarchar(max)");
+                                .HasMaxLength(60)
+                                .HasColumnType("nvarchar(60)");
 
                             b1.Property<bool>("NoFollow")
                                 .HasColumnType("bit");
 
                             b1.Property<bool>("NoIndex")
                                 .HasColumnType("bit");
+
+                            b1.Property<string>("OpenGraphDescription")
+                                .HasMaxLength(160)
+                                .HasColumnType("nvarchar(160)");
+
+                            b1.Property<string>("OpenGraphImage")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<string>("OpenGraphTitle")
+                                .HasMaxLength(60)
+                                .HasColumnType("nvarchar(60)");
+
+                            b1.Property<string>("OpenGraphType")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)");
+
+                            b1.Property<string>("TwitterCardType")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)");
+
+                            b1.Property<string>("TwitterDescription")
+                                .HasMaxLength(160)
+                                .HasColumnType("nvarchar(160)");
+
+                            b1.Property<string>("TwitterImage")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<string>("TwitterTitle")
+                                .HasMaxLength(60)
+                                .HasColumnType("nvarchar(60)");
 
                             b1.HasKey("CategoryId");
 
@@ -1844,7 +2069,9 @@ namespace Pardis.Infrastructure.Migrations
                                     MetaDescription = "جامع ترین دوره ها",
                                     MetaTitle = "آموزش برنامه نویسی",
                                     NoFollow = false,
-                                    NoIndex = false
+                                    NoIndex = false,
+                                    OpenGraphType = "website",
+                                    TwitterCardType = "summary_large_image"
                                 },
                                 new
                                 {
@@ -1852,7 +2079,9 @@ namespace Pardis.Infrastructure.Migrations
                                     MetaDescription = "ASP.NET و React",
                                     MetaTitle = "آموزش طراحی سایت",
                                     NoFollow = false,
-                                    NoIndex = false
+                                    NoIndex = false,
+                                    OpenGraphType = "website",
+                                    TwitterCardType = "summary_large_image"
                                 },
                                 new
                                 {
@@ -1860,7 +2089,9 @@ namespace Pardis.Infrastructure.Migrations
                                     MetaDescription = "فلاتر و کاتلین",
                                     MetaTitle = "آموزش موبایل",
                                     NoFollow = false,
-                                    NoIndex = false
+                                    NoIndex = false,
+                                    OpenGraphType = "website",
+                                    TwitterCardType = "summary_large_image"
                                 },
                                 new
                                 {
@@ -1868,7 +2099,9 @@ namespace Pardis.Infrastructure.Migrations
                                     MetaDescription = "نقاشی و طراحی",
                                     MetaTitle = "آموزش هنر",
                                     NoFollow = false,
-                                    NoIndex = false
+                                    NoIndex = false,
+                                    OpenGraphType = "website",
+                                    TwitterCardType = "summary_large_image"
                                 });
                         });
 
@@ -1876,8 +2109,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.Navigation("Parent");
 
-                    b.Navigation("Seo")
-                        .IsRequired();
+                    b.Navigation("Seo");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Comments.CourseComment", b =>
@@ -1926,19 +2158,63 @@ namespace Pardis.Infrastructure.Migrations
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("CanonicalUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<string>("JsonLdSchemas")
                                 .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("Keywords")
+                                .HasMaxLength(255)
+                                .HasColumnType("nvarchar(255)");
 
                             b1.Property<string>("MetaDescription")
-                                .HasColumnType("nvarchar(max)");
+                                .HasMaxLength(160)
+                                .HasColumnType("nvarchar(160)");
 
                             b1.Property<string>("MetaTitle")
-                                .HasColumnType("nvarchar(max)");
+                                .HasMaxLength(60)
+                                .HasColumnType("nvarchar(60)");
 
                             b1.Property<bool>("NoFollow")
                                 .HasColumnType("bit");
 
                             b1.Property<bool>("NoIndex")
                                 .HasColumnType("bit");
+
+                            b1.Property<string>("OpenGraphDescription")
+                                .HasMaxLength(160)
+                                .HasColumnType("nvarchar(160)");
+
+                            b1.Property<string>("OpenGraphImage")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<string>("OpenGraphTitle")
+                                .HasMaxLength(60)
+                                .HasColumnType("nvarchar(60)");
+
+                            b1.Property<string>("OpenGraphType")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)");
+
+                            b1.Property<string>("TwitterCardType")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)");
+
+                            b1.Property<string>("TwitterDescription")
+                                .HasMaxLength(160)
+                                .HasColumnType("nvarchar(160)");
+
+                            b1.Property<string>("TwitterImage")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<string>("TwitterTitle")
+                                .HasMaxLength(60)
+                                .HasColumnType("nvarchar(60)");
 
                             b1.HasKey("CourseId");
 
@@ -1954,7 +2230,9 @@ namespace Pardis.Infrastructure.Migrations
                                     MetaDescription = "بهترین دوره بک اند",
                                     MetaTitle = "دوره ASP.NET Core",
                                     NoFollow = false,
-                                    NoIndex = false
+                                    NoIndex = false,
+                                    OpenGraphType = "website",
+                                    TwitterCardType = "summary_large_image"
                                 },
                                 new
                                 {
@@ -1962,7 +2240,9 @@ namespace Pardis.Infrastructure.Migrations
                                     MetaDescription = "آموزش فرانت اند",
                                     MetaTitle = "دوره React",
                                     NoFollow = false,
-                                    NoIndex = false
+                                    NoIndex = false,
+                                    OpenGraphType = "website",
+                                    TwitterCardType = "summary_large_image"
                                 },
                                 new
                                 {
@@ -1970,7 +2250,9 @@ namespace Pardis.Infrastructure.Migrations
                                     MetaDescription = "برنامه نویسی موبایل",
                                     MetaTitle = "دوره Flutter",
                                     NoFollow = false,
-                                    NoIndex = true
+                                    NoIndex = true,
+                                    OpenGraphType = "website",
+                                    TwitterCardType = "summary_large_image"
                                 });
                         });
 
@@ -2016,8 +2298,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.Navigation("Sections");
 
-                    b.Navigation("Seo")
-                        .IsRequired();
+                    b.Navigation("Seo");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Courses.CourseSchedule", b =>

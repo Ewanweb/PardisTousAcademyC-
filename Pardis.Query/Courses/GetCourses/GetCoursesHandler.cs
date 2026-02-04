@@ -1,4 +1,5 @@
-﻿using MediatR;
+using Pardis.Domain.Dto.Seo;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Pardis.Domain;
 using Pardis.Domain.Courses;
@@ -21,14 +22,14 @@ namespace Pardis.Query.Courses.GetCourses
 
         public async Task<List<CourseResource>> Handle(GetCoursesQuery request, CancellationToken token)
         {
-            // ✅ بهینه‌سازی: برای صفحه اصلی فقط اطلاعات ضروری
+            // ? ??????????: ???? ???? ???? ??? ??????? ?????
             var query = _repository.Table
-                .Include(c => c.Instructor) // فقط instructor
-                .Include(c => c.Category)   // فقط category
-                .AsNoTracking() // برای سرعت بیشتر
+                .Include(c => c.Instructor) // ??? instructor
+                .Include(c => c.Category)   // ??? category
+                .AsNoTracking() // ???? ???? ?????
                 .AsQueryable();
 
-            // فیلتر سطل زباله
+            // ????? ??? ?????
             if (request.Trashed)
             {
                 query = query.IgnoreQueryFilters().Where(c => c.IsDeleted);
@@ -38,36 +39,36 @@ namespace Pardis.Query.Courses.GetCourses
                 query = query.Where(c => !c.IsDeleted);
             }
 
-            // فیلتر دسته‌بندی
+            // ????? ?????????
             if (request.CategoryId.HasValue)
             {
                 query = query.Where(c => c.CategoryId == request.CategoryId);
             }
 
-            // فیلتر نقش‌ها
+            // ????? ??????
             if (request.IsAdminOrManager)
             {
-                // ادمین همه را می‌بیند
+                // ????? ??? ?? ???????
             }
             else if (request.IsInstructor && !string.IsNullOrEmpty(request.CurrentUserId))
             {
-                // مدرس فقط دوره‌های خودش
+                // ???? ??? ???????? ????
                 query = query.Where(c => c.InstructorId == request.CurrentUserId);
             }
             else
             {
-                // کاربر عادی فقط منتشر شده‌ها
+                // ????? ???? ??? ????? ??????
                 query = query.Where(c => c.Status == CourseStatus.Published);
             }
 
-            // ✅ بهینه‌سازی: صفحه‌بندی برای بهتر شدن performance
+            // ? ??????????: ????????? ???? ???? ??? performance
             var courses = await query
                 .OrderByDescending(c => c.CreatedAt)
                 .Skip((request.Page - 1) * request.PageSize)
                 .Take(request.PageSize)
                 .ToListAsync(token);
 
-            // ✅ تبدیل ساده به Resource (بدون اطلاعات اضافی)
+            // ? ????? ???? ?? Resource (???? ??????? ?????)
             var result = courses.Select(c => new CourseResource
             {
                 Id = c.Id,
@@ -87,7 +88,7 @@ namespace Pardis.Query.Courses.GetCourses
                 UpdatedAt = c.UpdatedAt,
                 IsDeleted = c.IsDeleted,
 
-                // ✅ فقط اطلاعات ضروری instructor
+                // ? ??? ??????? ????? instructor
                 Instructor = c.Instructor != null ? new InstructorBasicDto
                 {
                     Id = c.Instructor.Id,
@@ -96,7 +97,7 @@ namespace Pardis.Query.Courses.GetCourses
                     Mobile = c.Instructor.PhoneNumber
                 } : null,
 
-                // ✅ فقط اطلاعات ضروری category
+                // ? ??? ??????? ????? category
                 Category = c.Category != null ? new CategoryResource
                 {
                     Id = c.Category.Id,
@@ -105,7 +106,7 @@ namespace Pardis.Query.Courses.GetCourses
                     CoursesCount = c.Category.CoursesCount
                 } : null,
 
-                // ✅ برای صفحه اصلی این‌ها لازم نیست - empty lists
+                // ? ???? ???? ???? ?????? ???? ???? - empty lists
                 Sections = new List<CourseSectionDto>(),
                 Seo = new SeoDto(),
                 Schedules = new List<CourseScheduleDto>()

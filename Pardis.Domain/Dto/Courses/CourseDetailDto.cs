@@ -1,3 +1,4 @@
+using Pardis.Domain.Dto.Seo;
 using Pardis.Domain.Dto.Categories;
 using Pardis.Domain.Dto.Users;
 
@@ -44,3 +45,4 @@ public class CourseDetailDto
     public DateTime? DeletedAt { get; set; }
     public required bool IsDeleted { get; set; }
 }
+

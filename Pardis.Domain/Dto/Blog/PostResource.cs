@@ -1,4 +1,5 @@
-﻿namespace Pardis.Domain.Dto.Blog;
+using Pardis.Domain.Dto.Seo;
+namespace Pardis.Domain.Dto.Blog;
 
 public class PostResource
 {

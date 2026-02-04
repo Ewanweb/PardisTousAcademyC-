@@ -1,4 +1,5 @@
-﻿using AutoMapper; // اضافه شد
+using Pardis.Domain.Seo;
+using AutoMapper; // ????? ??
 using MediatR;
 using Pardis.Application.FileUtil;
 using Pardis.Domain;
@@ -15,12 +16,12 @@ namespace Pardis.Application.Courses.Update
         private readonly IRepository<Course> _repository;
         private readonly IRepository<Category> _categoryRepository;
         private readonly IFileService _fileService;
-        private readonly IMapper _mapper; // اضافه شد
+        private readonly IMapper _mapper; // ????? ??
 
         public UpdateCourseHandler(IRepository<Course> repository,
                                    IRepository<Category> categoryRepository,
                                    IFileService fileService,
-                                   IMapper mapper) // تزریق شد
+                                   IMapper mapper) // ????? ??
         {
             _repository = repository;
             _categoryRepository = categoryRepository;
@@ -74,31 +75,31 @@ namespace Pardis.Application.Courses.Update
                 if (newCat != null) newCat.CoursesCount++;
 
                 course.CategoryId = request.Dto.CategoryId.Value;
-                course.Category = newCat; // برای مپینگ صحیح در خروجی
+                course.Category = newCat; // ???? ????? ???? ?? ?????
             }
 
             if (request.Dto.Seo != null)
             {
-                // استفاده از مپر برای آپدیت Seo هم ممکن است، اما چون nested است دستی هم مشکلی ندارد
-                // یا می‌توانید از _mapper.Map(request.Seo, course.Seo) استفاده کنید
+                // ??????? ?? ??? ???? ????? Seo ?? ???? ???? ??? ??? nested ??? ???? ?? ????? ?????
+                // ?? ????????? ?? _mapper.Map(request.Seo, course.Seo) ??????? ????
                 if (course.Seo == null) course.Seo = new Pardis.Domain.Seo.SeoMetadata();
-                _mapper.Map(request.Dto.Seo, course.Seo); // آپدیت سئو با مپر
+                _mapper.Map(request.Dto.Seo, course.Seo); // ????? ??? ?? ???
             }
 
             if (request.Dto.Sections != null)
             {
-                // الف) حذف موارد حذف شده
-                // سرفصل‌هایی که در دیتابیس هستند اما در لیست جدید ارسالی نیستند
+                // ???) ??? ????? ??? ???
+                // ?????????? ?? ?? ??????? ????? ??? ?? ???? ???? ?????? ??????
                 var sentIds = request.Dto.Sections.Where(s => s.Id != Guid.Empty).Select(s => s.Id).ToList();
                 var sectionsToDelete = course.Sections.Where(s => !sentIds.Contains(s.Id)).ToList();
 
                 foreach (var section in sectionsToDelete)
                 {
-                    // حذف از کالکشن (EF Core خودش Delete را در دیتابیس اجرا می‌کند)
+                    // ??? ?? ?????? (EF Core ???? Delete ?? ?? ??????? ???? ??????)
                     course.Sections.Remove(section);
                 }
 
-                // ب) افزودن یا ویرایش موارد
+                // ?) ?????? ?? ?????? ?????
                 int orderIndex = 1;
                 foreach (var sectionDto in request.Dto.Sections)
                 {
@@ -106,15 +107,15 @@ namespace Pardis.Application.Courses.Update
 
                     if (existingSection != null)
                     {
-                        // --- ویرایش ---
+                        // --- ?????? ---
                         existingSection.Title = sectionDto.Title;
                         existingSection.Description = sectionDto.Description;
                         existingSection.Order = orderIndex++;
                     }
                     else
                     {
-                        // --- افزودن جدید ---
-                        // استفاده از کانستراکتوری که ساختید
+                        // --- ?????? ???? ---
+                        // ??????? ?? ???????????? ?? ??????
                         var newSection = new CourseSection(
                             sectionDto.Title,
                             sectionDto.Description ?? "",
@@ -130,8 +131,8 @@ namespace Pardis.Application.Courses.Update
 
             await _repository.SaveChangesAsync(cancellationToken);
 
-            // --- تغییر اصلی اینجاست ---
-            // به جای آن همه کد دستی، فقط یک خط می‌نویسیم:
+            // --- ????? ???? ??????? ---
+            // ?? ??? ?? ??? ?? ????? ??? ?? ?? ?????????:
             var result = _mapper.Map<CourseResource>(course);
             return OperationResult<CourseResource>.Success(result);
             
