@@ -18,67 +18,65 @@ namespace Pardis.Application.Categories.Delete
 
         public async Task<OperationResult> Handle(DeleteCategoryCommand request, CancellationToken token)
         {
-            // استفاده از Transaction برای اطمینان از انجام همزمان انتقال و حذف
-            using var transaction = _repository.BeginTransaction();
-
             try
             {
-                var category = await _repository.GetByIdAsync(request.Id);
-                if (category == null) return OperationResult.NotFound("دسته یافت نشد.");
-
-                // --- سناریوی ۱: درخواست انتقال محتوا وجود دارد ---
-                if (request.MigrateToId.HasValue)
+                return await _repository.ExecuteInTransactionAsync(async (ct) =>
                 {
-                    var targetCategory = await _repository.GetByIdAsync(request.MigrateToId.Value);
-                    if (targetCategory == null) return OperationResult.Error("دسته‌بندی مقصد یافت نشد.");
+                    var category = await _repository.GetByIdAsync(request.Id);
+                    if (category == null) return OperationResult.NotFound("دسته یافت نشد.");
 
-                    // چک کردن منطق درختی (جلوگیری از انتقال پدر به فرزند خودش)
-                    if (await IsDescendant(request.MigrateToId.Value, request.Id))
+                    // --- سناریوی ۱: درخواست انتقال محتوا وجود دارد ---
+                    if (request.MigrateToId.HasValue)
                     {
-                        return OperationResult.Error("نمی‌توانید محتوا را به یکی از زیرمجموعه‌های همین دسته منتقل کنید.");
+                        var targetCategory = await _repository.GetByIdAsync(request.MigrateToId.Value);
+                        if (targetCategory == null) return OperationResult.Error("دسته‌بندی مقصد یافت نشد.");
+
+                        // چک کردن منطق درختی (جلوگیری از انتقال پدر به فرزند خودش)
+                        if (await IsDescendant(request.MigrateToId.Value, request.Id))
+                        {
+                            return OperationResult.Error("نمی‌توانید محتوا را به یکی از زیرمجموعه‌های همین دسته منتقل کنید.");
+                        }
+
+                        // الف) انتقال تمام دوره‌ها به دسته جدید
+                        // از ExecuteUpdate برای سرعت بالا استفاده می‌کنیم (EF Core 7+)
+                        await _courseRepository.MoveCoursesForDelete(request.Id, request.MigrateToId.Value, ct);
+
+                        // ب) انتقال تمام زیرمجموعه‌ها (فرزندان) به دسته جدید
+                        await _repository.MoveCategoryForDelete(request.Id, request.MigrateToId.Value, ct);
+
+                        // نکته: اگر نیاز باشد شمارنده (CoursesCount) دسته مقصد را آپدیت کنید، اینجا انجام دهید.
+                    }
+                    else
+                    {
+                        // 1. چک کردن فرزندان (Children)
+                        bool hasChildren = await _repository.AnyAsync(
+                            // Expression: آیا دسته ای وجود دارد که ParentId آن برابر با Id درخواستی باشد؟
+                            c => c.ParentId == request.Id,
+                            ct
+                        );
+
+                        // 2. چک کردن دوره‌ها (Courses)
+                        bool hasCourses = await _courseRepository.AnyAsync(
+                            // Expression: آیا دوره‌ای وجود دارد که CategoryId آن برابر با Id درخواستی باشد؟
+                            c => c.CategoryId == request.Id,
+                            ct
+                        );
+
+                        if (hasChildren || hasCourses)
+                        {
+                            return OperationResult.Error("این دسته خالی نیست! لطفاً شناسه مقصد را ارسال کنید.");
+                        }
                     }
 
-                    // الف) انتقال تمام دوره‌ها به دسته جدید
-                    // از ExecuteUpdate برای سرعت بالا استفاده می‌کنیم (EF Core 7+)
-                    await _courseRepository.MoveCoursesForDelete(request.Id, request.MigrateToId.Value, token);
+                    // حذف نهایی
+                    _repository.Remove(category);
+                    // SaveChanges در ExecuteInTransactionAsync انجام می‌شود
 
-                    // ب) انتقال تمام زیرمجموعه‌ها (فرزندان) به دسته جدید
-                    await _repository.MoveCategoryForDelete(request.Id, request.MigrateToId.Value, token);
-
-                    // نکته: اگر نیاز باشد شمارنده (CoursesCount) دسته مقصد را آپدیت کنید، اینجا انجام دهید.
-                }
-                else
-                {
-                    // 1. چک کردن فرزندان (Children)
-                    bool hasChildren = await _repository.AnyAsync(
-                        // Expression: آیا دسته ای وجود دارد که ParentId آن برابر با Id درخواستی باشد؟
-                        c => c.ParentId == request.Id,
-                        token
-                    );
-
-                    // 2. چک کردن دوره‌ها (Courses)
-                    bool hasCourses = await _courseRepository.AnyAsync(
-                        // Expression: آیا دوره‌ای وجود دارد که CategoryId آن برابر با Id درخواستی باشد؟
-                        c => c.CategoryId == request.Id,
-                        token
-                    );
-
-                    if (hasChildren || hasCourses)
-                    {
-                        return OperationResult.Error("این دسته خالی نیست! لطفاً شناسه مقصد را ارسال کنید.");
-                    }
-                }
-
-                // حذف نهایی
-                _repository.Remove(category);
-                await _repository.SaveChangesAsync(token);
-
-                await transaction.CommitAsync(token);
-                return OperationResult.Success("دسته با موفقیت حذف شد.");
+                    return OperationResult.Success("دسته با موفقیت حذف شد.");
+                }, token);
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(token);
                 return OperationResult.Error($"خطا در حذف: {ex.Message}");
             }
         }

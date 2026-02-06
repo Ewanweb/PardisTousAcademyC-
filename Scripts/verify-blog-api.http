@@ -1,0 +1,205 @@
+### Blog API Verification Script
+### Use this file with REST Client extension in VS Code or similar tools
+
+@baseUrl = https://localhost:44367/api
+@adminBaseUrl = https://localhost:44367/api/admin
+
+### 1. Get all blog posts (public)
+GET {{baseUrl}}/blog/posts
+Accept: application/json
+
+### 2. Get blog posts with pagination and filters
+GET {{baseUrl}}/blog/posts?page=1&pageSize=12&sort=newest&category=&tag=&q=
+Accept: application/json
+
+### 3. Get blog categories
+GET {{baseUrl}}/blog/categories
+Accept: application/json
+
+### 4. Get blog tags
+GET {{baseUrl}}/blog/tags
+Accept: application/json
+
+### 5. Search blog posts
+GET {{baseUrl}}/blog/search?q=test&page=1&pageSize=12
+Accept: application/json
+
+### 6. Get post by slug (replace 'test-slug' with actual slug)
+GET {{baseUrl}}/blog/posts/test-slug
+Accept: application/json
+
+### 7. Get posts by category (replace 'category-slug' with actual category slug)
+GET {{baseUrl}}/blog/category/category-slug/posts?page=1&pageSize=12
+Accept: application/json
+
+### 8. Get posts by tag (replace 'tag-slug' with actual tag slug)
+GET {{baseUrl}}/blog/tag/tag-slug/posts?page=1&pageSize=12
+Accept: application/json
+
+### 9. Get related posts (replace 'test-slug' with actual slug)
+GET {{baseUrl}}/blog/posts/test-slug/related?take=6
+Accept: application/json
+
+### 10. Get post navigation (replace 'test-slug' with actual slug)
+GET {{baseUrl}}/blog/posts/test-slug/nav
+Accept: application/json
+
+### 11. Increment post view count (replace 'test-slug' with actual slug)
+POST {{baseUrl}}/blog/posts/test-slug/view
+Content-Type: application/json
+
+### ADMIN ENDPOINTS (Require Authentication)
+### Note: Add Authorization header with valid JWT token
+
+### 12. Get admin posts list (with drafts)
+GET {{adminBaseUrl}}/blog/posts?page=1&pageSize=20&status=&category=&tag=&q=
+Accept: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### 13. Create new blog post
+POST {{adminBaseUrl}}/blog/posts
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "blogCategoryId": "123e4567-e89b-12d3-a456-426614174000",
+  "title": "Test Blog Post",
+  "slug": "test-blog-post",
+  "content": "<p>This is a test blog post content with <strong>HTML formatting</strong>.</p>",
+  "excerpt": "This is a test excerpt for the blog post.",
+  "coverImageUrl": "https://example.com/test-image.jpg",
+  "status": "Draft",
+  "publishedAt": null,
+  "tags": ["test", "blog", "api"],
+  "seo": {
+    "metaTitle": "Test Blog Post - SEO Title",
+    "metaDescription": "This is a test blog post for API verification",
+    "canonicalUrl": "https://example.com/blog/test-blog-post",
+    "noIndex": false,
+    "noFollow": false,
+    "ogTitle": "Test Blog Post - OG Title",
+    "ogDescription": "This is a test blog post for social sharing",
+    "ogImage": "https://example.com/og-image.jpg",
+    "ogType": "article",
+    "twitterTitle": "Test Blog Post - Twitter Title",
+    "twitterDescription": "This is a test blog post for Twitter",
+    "twitterImage": "https://example.com/twitter-image.jpg",
+    "twitterCard": "summary_large_image"
+  }
+}
+
+### 14. Update blog post (replace with actual post ID)
+PUT {{adminBaseUrl}}/blog/posts/123e4567-e89b-12d3-a456-426614174000
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "blogCategoryId": "123e4567-e89b-12d3-a456-426614174000",
+  "title": "Updated Test Blog Post",
+  "slug": "updated-test-blog-post",
+  "content": "<p>This is updated content for the test blog post.</p>",
+  "excerpt": "This is an updated excerpt.",
+  "coverImageUrl": "https://example.com/updated-image.jpg",
+  "status": "Published",
+  "publishedAt": "2024-01-01T12:00:00Z",
+  "tags": ["updated", "test", "blog"],
+  "seo": {
+    "metaTitle": "Updated Test Blog Post",
+    "metaDescription": "Updated description",
+    "canonicalUrl": "https://example.com/blog/updated-test-blog-post",
+    "noIndex": false,
+    "noFollow": false
+  }
+}
+
+### 15. Publish blog post (replace with actual post ID)
+POST {{adminBaseUrl}}/blog/posts/123e4567-e89b-12d3-a456-426614174000/publish
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "publishedAt": "2024-01-01T12:00:00Z"
+}
+
+### 16. Delete blog post (replace with actual post ID)
+DELETE {{adminBaseUrl}}/blog/posts/123e4567-e89b-12d3-a456-426614174000
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### 17. Create blog category
+POST {{adminBaseUrl}}/blog/categories
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "title": "Test Category",
+  "slug": "test-category",
+  "description": "This is a test category for blog posts",
+  "priority": 1,
+  "coverImageUrl": "https://example.com/category-image.jpg",
+  "seo": {
+    "metaTitle": "Test Category - Blog",
+    "metaDescription": "Test category for organizing blog posts",
+    "canonicalUrl": "https://example.com/blog/category/test-category",
+    "noIndex": false,
+    "noFollow": false
+  }
+}
+
+### 18. Update blog category (replace with actual category ID)
+PUT {{adminBaseUrl}}/blog/categories/123e4567-e89b-12d3-a456-426614174001
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "title": "Updated Test Category",
+  "slug": "updated-test-category",
+  "description": "Updated description for test category",
+  "priority": 2,
+  "coverImageUrl": "https://example.com/updated-category-image.jpg",
+  "seo": {
+    "metaTitle": "Updated Test Category",
+    "metaDescription": "Updated category description"
+  }
+}
+
+### 19. Delete blog category (replace with actual category ID)
+DELETE {{adminBaseUrl}}/blog/categories/123e4567-e89b-12d3-a456-426614174001
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### 20. Create blog tag
+POST {{adminBaseUrl}}/blog/tags
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "title": "Test Tag",
+  "slug": "test-tag"
+}
+
+### 21. Update blog tag (replace with actual tag ID)
+PUT {{adminBaseUrl}}/blog/tags/123e4567-e89b-12d3-a456-426614174002
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "title": "Updated Test Tag",
+  "slug": "updated-test-tag"
+}
+
+### 22. Delete blog tag (replace with actual tag ID)
+DELETE {{adminBaseUrl}}/blog/tags/123e4567-e89b-12d3-a456-426614174002
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### VERIFICATION CHECKLIST:
+### ✅ All public endpoints return 200 OK
+### ✅ Response format matches expected structure (success, data, message, timestamp)
+### ✅ Pagination works correctly (page, pageSize, totalCount, totalPages, hasNext, hasPrev)
+### ✅ Search returns highlighted results when matches found
+### ✅ Slug-based endpoints handle non-existent slugs gracefully
+### ✅ Admin endpoints require authentication (401 without token)
+### ✅ Admin endpoints validate input data (400 for invalid data)
+### ✅ CRUD operations work correctly for posts, categories, and tags
+### ✅ SEO metadata is properly handled in all responses
+### ✅ Content sanitization prevents XSS attacks
+### ✅ Slug generation and uniqueness validation works
+### ✅ View increment tracking works without duplicates

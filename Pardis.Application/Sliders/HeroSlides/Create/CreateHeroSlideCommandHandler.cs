@@ -10,16 +10,16 @@ namespace Pardis.Application.Sliders.HeroSlides.Create
     public class CreateHeroSlideCommandHandler : IRequestHandler<CreateHeroSlideCommand, OperationResult>
     {
         private readonly IHeroSlideRepository _heroSlideRepository;
-        private readonly IFileService _imageService;
+        private readonly ISecureFileService _secureFileService;
         private readonly ILogger<CreateHeroSlideCommandHandler> _logger;
 
         public CreateHeroSlideCommandHandler(
             IHeroSlideRepository heroSlideRepository, 
-            IFileService imageService,
+            ISecureFileService secureFileService,
             ILogger<CreateHeroSlideCommandHandler> logger)
         {
             _heroSlideRepository = heroSlideRepository;
-            _imageService = imageService;
+            _secureFileService = secureFileService;
             _logger = logger;
         }
 
@@ -46,12 +46,20 @@ namespace Pardis.Application.Sliders.HeroSlides.Create
                 {
                     try
                     {
-                        if (!Directory.Exists(Directories.Slider))
-                            Directory.CreateDirectory(Directories.Slider);
-                        
-                        imageUrl = await _imageService.SaveFileAndGenerateName(request.Dto.ImageFile, Directories.Slider);
+                        var uploadResult = await _secureFileService.SaveFileSecurely(
+                            request.Dto.ImageFile,
+                            "sliders",
+                            request.CurrentUserId
+                        );
+
+                        if (!uploadResult.IsSuccess)
+                        {
+                            _logger.LogError("خطا در آپلود فایل تصویر: {Error}", uploadResult.ErrorMessage);
+                            return OperationResult.Error($"خطا در آپلود تصویر: {uploadResult.ErrorMessage}");
+                        }
+
                         // ساخت URL کامل برای دسترسی از طریق وب
-                        imageUrl = $"/uploads/sliders/{imageUrl}";
+                        imageUrl = $"/uploads/sliders/{uploadResult.SecureFileName}";
                         _logger.LogInformation("فایل تصویر با موفقیت آپلود شد: {ImageUrl}", imageUrl);
                     }
                     catch (Exception ex)

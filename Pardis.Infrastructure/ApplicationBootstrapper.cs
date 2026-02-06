@@ -28,6 +28,8 @@ using Pardis.Domain.Blog;
 using Microsoft.Extensions.Logging;
 using Pardis.Application.Categories.Update;
 using Pardis.Domain.Audit;
+using Pardis.Domain.Consultation;
+using Pardis.Domain.Idempotency;
 
 
 namespace Pardis.Infrastructure
@@ -162,6 +164,17 @@ namespace Pardis.Infrastructure
                 
                 return new FileService(tempConfig, provider.GetRequiredService<ILogger<FileService>>());
             });
+
+            // Register secure file service
+            service.AddScoped<ISecureFileService>(provider =>
+            {
+                var webHostEnvironment = provider.GetRequiredService<IWebHostEnvironment>();
+                var logger = provider.GetRequiredService<ILogger<SecureFileService>>();
+                
+                // Use wwwroot as the root path for secure file storage
+                return new SecureFileService(webHostEnvironment.WebRootPath, logger);
+            });
+
             service.AddScoped<ITokenService, TokenService>();
             service.AddScoped<IUserRepository, UserRepository>();
             service.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -190,11 +203,21 @@ namespace Pardis.Infrastructure
             service.AddScoped<IPaymentAttemptRepository, PaymentAttemptRepository>();
             service.AddScoped<IPaymentAuditLogRepository, PaymentAuditLogRepository>();
             
+            // Consultation Repository
+            service.AddScoped<IConsultationRequestRepository, ConsultationRequestRepository>();
+            
+            // Idempotency
+            service.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
+            service.AddScoped<IIdempotencyService, IdempotencyService>();
+            
             // Payment Repositories (existing)
             service.AddScoped<IEnrollmentRepository, CourseEnrollmentRepository>();
 
             // ریپازیتوری جنریک
             service.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            
+            // System Logger
+            service.AddScoped<ISystemLogger, SystemLogger>();
 
             service.AddSeoServices();
 

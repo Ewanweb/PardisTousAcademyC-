@@ -16,12 +16,32 @@ public class GetPaymentAttemptHandler : IRequestHandler<GetPaymentAttemptQuery, 
 
     public async Task<GetPaymentAttemptResult?> Handle(GetPaymentAttemptQuery request, CancellationToken cancellationToken)
     {
-        var attempt = await _context.PaymentAttempts
+        // If UserId is provided, filter by it (for user-specific queries)
+        // If UserId is null, don't filter (for admin queries)
+        var query = _context.PaymentAttempts
             .Include(p => p.Order)
-            .FirstOrDefaultAsync(p => p.Id == request.PaymentAttemptId && p.UserId == request.UserId, cancellationToken);
+            .Where(p => p.Id == request.PaymentAttemptId);
+
+        if (!string.IsNullOrEmpty(request.UserId))
+        {
+            query = query.Where(p => p.UserId == request.UserId);
+        }
+
+        var attempt = await query.FirstOrDefaultAsync(cancellationToken);
 
         if (attempt == null)
             return null!;
+
+        // Get admin reviewer name if available
+        string? adminReviewerName = null;
+        if (!string.IsNullOrEmpty(attempt.AdminReviewedBy))
+        {
+            var adminUser = await _context.Users
+                .Where(u => u.Id == attempt.AdminReviewedBy)
+                .Select(u => u.FullName)
+                .FirstOrDefaultAsync(cancellationToken);
+            adminReviewerName = adminUser;
+        }
 
         var result = new GetPaymentAttemptResult
         {
@@ -37,7 +57,11 @@ public class GetPaymentAttemptHandler : IRequestHandler<GetPaymentAttemptQuery, 
             RejectReason = attempt.FailureReason,
             CreatedAt = attempt.CreatedAt,
             ExpiresAt = null, // Manual payments don't expire
-            RequiresReceiptUpload = attempt.RequiresReceiptUpload()
+            RequiresReceiptUpload = attempt.RequiresReceiptUpload(),
+            AdminReviewerId = attempt.AdminReviewedBy,
+            AdminReviewerName = adminReviewerName,
+            AdminReviewedAt = attempt.AdminReviewedAt,
+            AdminDecision = attempt.AdminDecision
         };
 
         return result;

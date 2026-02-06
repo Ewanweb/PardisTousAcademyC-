@@ -98,6 +98,15 @@ public class Order : BaseEntity
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void ResetToDraft()
+    {
+        if (Status == OrderStatus.Completed)
+            throw new InvalidOperationException("سفارش تکمیل شده قابل بازگشت به حالت پیش‌نویس نیست");
+
+        Status = OrderStatus.Draft;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public bool HasSuccessfulPayment() => PaymentAttempts.Any(p => p.Status == PaymentAttemptStatus.Paid);
 
     public long GetPaidAmount() => PaymentAttempts.Where(p => p.Status == PaymentAttemptStatus.Paid).Sum(p => p.Amount);

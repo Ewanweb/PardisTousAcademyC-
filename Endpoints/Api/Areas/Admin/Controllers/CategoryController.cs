@@ -12,6 +12,7 @@ using Pardis.Query.Categories.GetCategories;
 using Pardis.Query.Categories.GetCategoryById;
 using Pardis.Query.Categories.GetCategoryChildren;
 using System.Security.Claims;
+using Pardis.Query.Categories.GetParentCategories;
 
 namespace Api.Areas.Admin.Controllers
 {
@@ -187,6 +188,24 @@ namespace Api.Areas.Admin.Controllers
 
                 return HandleOperationResult(result, "دسته‌بندی با موفقیت حذف شد");
             }, "خطا در حذف دسته‌بندی");
+        }
+
+        [HttpGet("Parent")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 409)]
+        [ProducesResponseType(typeof(object), 500)]
+        public async Task<IActionResult> GetParentList()
+        {
+            return await ExecuteAsync(async () =>
+            {
+                var result = await _mediator.Send(new GetParentCategoriesQuery());
+
+                if (result.Status != OperationResultStatus.Success)
+                    return ErrorResponse(result.Message ?? "خطا در دریافت دسته‌بندی", 409, "CONTENT_DEPENDENCY_ERROR");
+
+                return HandleOperationResult(result, "دسته‌بندی با موفقیت دریافت شد");
+            }, "خطا در دریافت دسته‌بندی");
         }
     }
 }

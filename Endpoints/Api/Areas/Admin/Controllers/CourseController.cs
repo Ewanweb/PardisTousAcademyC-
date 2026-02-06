@@ -190,6 +190,7 @@ namespace Api.Areas.Admin.Controllers
                 UpdateCourseCommand command = new UpdateCourseCommand()
                 {
                     Dto = dto,
+                    CurrentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
                 };
 
                 var result = await _mediator.Send(command);

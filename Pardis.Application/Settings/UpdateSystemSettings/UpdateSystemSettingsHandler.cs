@@ -20,19 +20,11 @@ public class UpdateSystemSettingsHandler : IRequestHandler<UpdateSystemSettingsC
 
     public async Task<OperationResult<SystemSettingsResponseDto>> Handle(UpdateSystemSettingsCommand request, CancellationToken cancellationToken)
     {
-        await using var transaction = _settingsRepository.BeginTransaction();
-        
         try
         {
             // Get existing settings
             var existingSettings = await _settingsRepository.Table
                 .ToListAsync(cancellationToken);
-
-            // Simple version check - in a real system, you'd want proper optimistic concurrency
-            var latestUpdate = existingSettings.OrderByDescending(s => s.UpdatedAt).FirstOrDefault()?.UpdatedAt ?? DateTime.MinValue;
-            
-            // For now, we'll skip strict version checking and just update
-            // In production, you'd implement proper optimistic concurrency control
 
             // Update existing settings and add new ones
             foreach (var kvp in request.Data)
@@ -50,12 +42,8 @@ public class UpdateSystemSettingsHandler : IRequestHandler<UpdateSystemSettingsC
                     await _settingsRepository.AddAsync(newSetting);
                 }
             }
-
-            // Remove settings that are no longer in the request (optional behavior)
-            // For safety, we'll keep existing settings that aren't in the update
             
             await _settingsRepository.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
 
             // Return updated settings
             var updatedSettings = await _settingsRepository.Table
@@ -77,7 +65,6 @@ public class UpdateSystemSettingsHandler : IRequestHandler<UpdateSystemSettingsC
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync(cancellationToken);
             return OperationResult<SystemSettingsResponseDto>.Error($"Failed to update system settings: {ex.Message}");
         }
     }

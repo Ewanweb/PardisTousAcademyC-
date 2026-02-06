@@ -362,9 +362,18 @@ namespace Pardis.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
                     b.Property<string>("Slug")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Thumbnail")
                         .IsRequired()
@@ -390,6 +399,9 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
                     b.HasIndex("UserId");
 
                     b.HasIndex("UserId1");
@@ -413,6 +425,13 @@ namespace Pardis.Infrastructure.Migrations
                     b.Property<Guid?>("BlogCategoryId1")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CoverImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -420,9 +439,25 @@ namespace Pardis.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Slug")
+                    b.Property<string>("Excerpt")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ReadingTimeMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<string>("SummaryDescription")
                         .IsRequired()
@@ -459,11 +494,98 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("BlogCategoryId1");
 
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
                     b.HasIndex("UserId");
 
                     b.HasIndex("UserId1");
 
+                    b.HasIndex("Status", "PublishedAt");
+
                     b.ToTable("Posts");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Blog.PostSlugHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NewSlug")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("OldSlug")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OldSlug");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("PostSlugHistories");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Blog.PostTag", b =>
+                {
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TagId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("PostId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("PostTags");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Blog.Tag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Categories.Category", b =>
@@ -608,6 +730,53 @@ namespace Pardis.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("CourseComments");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Consultation.ConsultationRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AdminNotes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ContactedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CourseName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConsultationRequests");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Courses.Course", b =>
@@ -876,6 +1045,55 @@ namespace Pardis.Infrastructure.Migrations
                     b.HasIndex("CourseScheduleId");
 
                     b.ToTable("UserCourseSchedules");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Idempotency.IdempotencyRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("OperationType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ResponseData")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StatusCode")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("IdempotencyRecords");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Logging.SystemLog", b =>
@@ -1322,8 +1540,10 @@ namespace Pardis.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
                         .IsRequired()
-                        .HasColumnType("varbinary(max)");
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -1619,7 +1839,7 @@ namespace Pardis.Infrastructure.Migrations
                         {
                             Id = "8e445865-a24d-4543-a6c6-9443d048cdb9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f95a30cf-3210-4c5b-bd99-b90364f039bc",
+                            ConcurrencyStamp = "b54cc6e0-47b5-446f-a585-4d7dcaf56496",
                             CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@pardis.com",
                             EmailConfirmed = true,
@@ -1628,7 +1848,7 @@ namespace Pardis.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@PARDIS.COM",
                             NormalizedUserName = "ADMIN@PARDIS.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKxLR1AH1r6YQ/5dmWkIN10F/K6Z9kwKh+SvuEr9lA+B9k7j0368BD/iy5KPdGdx8Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJZlns52wy8rcOUQFffIVau1Ztx72uGHkNEyia949gbHABLTaFgx5hosyPWqUbCiyQ==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "8e445865-a24d-4543-a6c6-9443d048cdb9",
                             TwoFactorEnabled = false,
@@ -1638,7 +1858,7 @@ namespace Pardis.Infrastructure.Migrations
                         {
                             Id = "2c4e6097-f570-4927-b2f7-5f65d1373555",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0aa101fa-c85d-4e71-ab3c-3f19055e411f",
+                            ConcurrencyStamp = "cc87f543-658d-4ece-b6b7-a8f3c7ffed8b",
                             CreatedAt = new DateTime(2024, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "sara@pardis.com",
                             EmailConfirmed = true,
@@ -1647,7 +1867,7 @@ namespace Pardis.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "SARA@PARDIS.COM",
                             NormalizedUserName = "SARA@PARDIS.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEM8RfCvBgzVQ/YlkWpwqBuFp2NyGxOVf4q1V0m4Nlp0H28DVAILy2O+I/blV7gdhmQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENm+OCB0PzczXiHNgwF12n0w+ax5LGJ7EXcXlnJaKfZXMjtEvNiV2dgQnCO/m7PdqA==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "2c4e6097-f570-4927-b2f7-5f65d1373555",
                             TwoFactorEnabled = false,
@@ -1979,6 +2199,36 @@ namespace Pardis.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Blog.PostSlugHistory", b =>
+                {
+                    b.HasOne("Pardis.Domain.Blog.Post", "Post")
+                        .WithMany("SlugHistory")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Blog.PostTag", b =>
+                {
+                    b.HasOne("Pardis.Domain.Blog.Post", "Post")
+                        .WithMany("PostTags")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Pardis.Domain.Blog.Tag", "Tag")
+                        .WithMany("PostTags")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("Tag");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Categories.Category", b =>
@@ -2460,6 +2710,18 @@ namespace Pardis.Infrastructure.Migrations
             modelBuilder.Entity("Pardis.Domain.Blog.BlogCategory", b =>
                 {
                     b.Navigation("Posts");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Blog.Post", b =>
+                {
+                    b.Navigation("PostTags");
+
+                    b.Navigation("SlugHistory");
+                });
+
+            modelBuilder.Entity("Pardis.Domain.Blog.Tag", b =>
+                {
+                    b.Navigation("PostTags");
                 });
 
             modelBuilder.Entity("Pardis.Domain.Categories.Category", b =>

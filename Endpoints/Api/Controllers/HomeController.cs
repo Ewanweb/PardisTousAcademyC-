@@ -100,5 +100,25 @@ namespace Api.Controllers
                 return SuccessResponse(result, "لیست دوره‌ها با موفقیت دریافت شد");
             }, "خطا در دریافت لیست دوره‌ها");
         }
+
+        /// <summary>
+        /// دریافت تنظیمات فوتر برای نمایش در سایت
+        /// </summary>
+        /// <returns>تنظیمات فوتر</returns>
+        /// <response code="200">تنظیمات فوتر با موفقیت دریافت شد</response>
+        /// <response code="500">خطای سرور</response>
+        [HttpGet("FooterSettings")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 500)]
+        public async Task<IActionResult> GetFooterSettings()
+        {
+            return await ExecuteAsync(async () =>
+            {
+                var query = new Pardis.Query.Settings.GetFooterSettings.GetFooterSettingsQuery();
+                var result = await _mediator.Send(query);
+                // ✅ بهینه‌سازی: caching برای 1 ساعت
+                return SuccessResponseCached(result, maxAgeSeconds: 3600, "تنظیمات فوتر با موفقیت دریافت شد");
+            }, "خطا در دریافت تنظیمات فوتر");
+        }
     }
 }

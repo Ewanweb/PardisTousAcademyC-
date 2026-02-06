@@ -22,37 +22,34 @@ public partial class SoftDeleteCommandHandler
 
         public async Task<OperationResult> Handle(RestoreCourseCommand request, CancellationToken token)
         {
-            using var transaction = _repository.BeginTransaction();
-
             try
             {
-                var course = await _repository.GetDeletedCourseById(request.Id, token) ;
-
-                if (course == null) return OperationResult.NotFound("دوره یافت نشد.");
-
-                if (!course.IsDeleted) return OperationResult.Error("این دوره حذف نشده است.");
-
-                course.IsDeleted = false;
-                course.DeletedAt = null;
-
-
-                if (course.CategoryId != Guid.Empty)
+                return await _repository.ExecuteInTransactionAsync(async (ct) =>
                 {
-                    var category = await _categoryRepository.GetByIdAsync(course.CategoryId);
-                    if (category != null)
+                    var course = await _repository.GetDeletedCourseById(request.Id, ct);
+
+                    if (course == null) return OperationResult.NotFound("دوره یافت نشد.");
+
+                    if (!course.IsDeleted) return OperationResult.Error("این دوره حذف نشده است.");
+
+                    course.IsDeleted = false;
+                    course.DeletedAt = null;
+
+                    if (course.CategoryId != Guid.Empty)
                     {
-                        category.CoursesCount++;
+                        var category = await _categoryRepository.GetByIdAsync(course.CategoryId);
+                        if (category != null)
+                        {
+                            category.CoursesCount++;
+                        }
                     }
-                }
 
-                await _repository.SaveChangesAsync(token);
-                await transaction.CommitAsync(token);
-
-                return OperationResult.Success("دوره با موفقیت بازیابی شد.");
+                    // SaveChanges در ExecuteInTransactionAsync انجام می‌شود
+                    return OperationResult.Success("دوره با موفقیت بازیابی شد.");
+                }, token);
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(token);
                 return OperationResult.Error($"خطا در بازیابی: {ex.Message}");
             }
         }

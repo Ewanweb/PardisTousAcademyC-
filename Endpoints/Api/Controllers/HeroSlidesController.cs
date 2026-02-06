@@ -81,12 +81,12 @@ namespace Api.Controllers
         /// ایجاد اسلاید اصلی جدید
         /// </summary>
         [HttpPost]
-        // [Authorize] // موقتاً حذف شده برای تست
+        [Authorize]
         public async Task<IActionResult> CreateHeroSlide([FromForm] CreateHeroSlideDto dto)
         {
             var command = new CreateHeroSlideCommand(dto)
             {
-                CurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                CurrentUserId = GetCurrentUserId()
             };
 
             var result = await Mediator.Send(command);

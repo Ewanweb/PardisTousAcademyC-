@@ -19,6 +19,7 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
     private readonly ICourseEnrollmentRepository _enrollmentRepository;
     private readonly IPaymentAuditLogRepository _auditRepository;
     private readonly ILogger<AdminReviewPaymentHandler> _logger;
+    private readonly ISystemLogger _systemLogger;
 
     public AdminReviewPaymentHandler(
         IPaymentAttemptRepository paymentAttemptRepository,
@@ -26,7 +27,8 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
         ICartRepository cartRepository,
         ICourseEnrollmentRepository enrollmentRepository,
         IPaymentAuditLogRepository auditRepository,
-        ILogger<AdminReviewPaymentHandler> logger)
+        ILogger<AdminReviewPaymentHandler> logger,
+        ISystemLogger systemLogger)
     {
         _paymentAttemptRepository = paymentAttemptRepository;
         _orderRepository = orderRepository;
@@ -34,6 +36,7 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
         _enrollmentRepository = enrollmentRepository;
         _auditRepository = auditRepository;
         _logger = logger;
+        _systemLogger = systemLogger;
     }
 
     public async Task<OperationResult<AdminReviewPaymentResult>> Handle(AdminReviewPaymentCommand request, CancellationToken cancellationToken)
@@ -65,9 +68,10 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
             // CRITICAL: Use distributed transaction with optimistic locking
             return await _paymentAttemptRepository.ExecuteInTransactionAsync(async (ct) =>
             {
-                // Get payment attempt with optimistic locking
+                // Get payment attempt with optimistic locking and include Order with all PaymentAttempts
                 var paymentAttempt = await _paymentAttemptRepository.Table
                     .Include(p => p.Order)
+                        .ThenInclude(o => o.PaymentAttempts) // ✅ Load all payment attempts for the order
                     .FirstOrDefaultAsync(p => p.Id == request.PaymentAttemptId, ct);
 
                 if (paymentAttempt == null)
@@ -95,8 +99,18 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
                         order.CompleteOrder();
                         await _orderRepository.UpdateAsync(order, ct);
                         
+                        // Log payment approval
+                        await _systemLogger.LogSuccessAsync(
+                            $"پرداخت به مبلغ {paymentAttempt.Amount:N0} تومان توسط ادمین تایید شد",
+                            "Payment",
+                            paymentAttempt.UserId,
+                            "PaymentApproved",
+                            request.IdempotencyKey,
+                            $"OrderId: {order.Id}, AdminId: {request.AdminUserId}"
+                        );
+                        
                         // CRITICAL: Create enrollments with compensation logic
-                        enrollmentResults = await CreateEnrollmentsWithCompensation(order, request, ct);
+                        enrollmentResults = await CreateEnrollmentsWithCompensation(order, paymentAttempt, request, ct);
 
                         // Clear cart only if enrollments succeed
                         if (enrollmentResults.All(r => !r.Contains("خطا")))
@@ -109,6 +123,24 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
                 {
                     var reason = request.RejectReason ?? "رسید پرداخت تایید نشد";
                     paymentAttempt.RejectByAdmin(request.AdminUserId, reason, request.IdempotencyKey);
+                    
+                    // CRITICAL: Reset order to Draft so user can retry payment
+                    var order = paymentAttempt.Order;
+                    if (order != null)
+                    {
+                        order.ResetToDraft();
+                        await _orderRepository.UpdateAsync(order, ct);
+                    }
+                    
+                    // Log payment rejection
+                    await _systemLogger.LogWarningAsync(
+                        $"پرداخت به مبلغ {paymentAttempt.Amount:N0} تومان توسط ادمین رد شد. دلیل: {reason}",
+                        "Payment",
+                        paymentAttempt.UserId,
+                        "PaymentRejected",
+                        request.IdempotencyKey,
+                        $"AdminId: {request.AdminUserId}"
+                    );
                 }
 
                 // CRITICAL: Update with optimistic locking check
@@ -144,7 +176,7 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
         }
     }
 
-    private async Task<List<string>> CreateEnrollmentsWithCompensation(Order order, AdminReviewPaymentCommand request, CancellationToken ct)
+    private async Task<List<string>> CreateEnrollmentsWithCompensation(Order order, PaymentAttempt currentPaymentAttempt, AdminReviewPaymentCommand request, CancellationToken ct)
     {
         var results = new List<string>();
         var createdEnrollments = new List<CourseEnrollment>();
@@ -172,9 +204,19 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
                     createdEnrollments.Add(enrollment);
                     
                     results.Add($"دوره {item.CourseTitle}: ثبت‌نام موفق");
+                    
+                    // Log successful enrollment
+                    await _systemLogger.LogSuccessAsync(
+                        $"کاربر در دوره '{item.CourseTitle}' ثبت‌نام شد",
+                        "Enrollment",
+                        order.UserId,
+                        "CourseEnrolled",
+                        null,
+                        $"CourseId: {item.CourseId}, Price: {item.Price:N0}"
+                    );
 
-                    // Audit log for enrollment
-                    await CreateAuditLog(order.PaymentAttempts.First(), PaymentAuditAction.EnrollmentCreated,
+                    // Audit log for enrollment - use current payment attempt
+                    await CreateAuditLog(currentPaymentAttempt, PaymentAuditAction.EnrollmentCreated,
                         "None", request, ct, $"CourseId: {item.CourseId}");
                 }
                 catch (Exception ex)
@@ -206,8 +248,8 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
         {
             _logger.LogError(ex, "خطا در ایجاد ثبت‌نام‌ها برای سفارش {OrderId}", order.Id);
             
-            // Audit log for failure
-            await CreateAuditLog(order.PaymentAttempts.First(), PaymentAuditAction.EnrollmentFailed,
+            // Audit log for failure - use current payment attempt
+            await CreateAuditLog(currentPaymentAttempt, PaymentAuditAction.EnrollmentFailed,
                 "None", request, ct, ex.Message);
             
             throw;
@@ -241,13 +283,20 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
     {
         try
         {
+            // Skip audit log if we don't have a valid payment attempt with a user
+            if (paymentAttempt == null || string.IsNullOrEmpty(paymentAttempt.UserId))
+            {
+                _logger.LogWarning("Skipping audit log for action {Action} - no valid payment attempt or user", action);
+                return;
+            }
+
             var auditLog = new PaymentAuditLog(
-                paymentAttempt?.Id ?? Guid.Empty,
-                paymentAttempt?.UserId ?? string.Empty,
+                paymentAttempt.Id,
+                paymentAttempt.UserId,
                 action,
                 previousStatus,
-                paymentAttempt?.Status.ToString() ?? "Unknown",
-                paymentAttempt?.Amount ?? 0,
+                paymentAttempt.Status.ToString(),
+                paymentAttempt.Amount,
                 request.IpAddress,
                 request.UserAgent,
                 request.AdminUserId,

@@ -21,34 +21,30 @@ public partial class SoftDeleteCommandHandler
 
         public async Task<OperationResult> Handle(ForceDeleteCourseCommand request, CancellationToken token)
         {
-            using var transaction = _repository.BeginTransaction();
-
             try
             {
-                // پیدا کردن دوره (حتی اگر سافت دیلیت شده باشد)
-                var course = await _repository.GetDeletedCourseById(request.Id, token);
-
-                if (course == null) return OperationResult.NotFound("دوره یافت نشد.");
-
-
-                if (!string.IsNullOrEmpty(course.Thumbnail))
+                return await _repository.ExecuteInTransactionAsync(async (ct) =>
                 {
-                    _fileService.DeleteFile(Directories.Course, course.Thumbnail);
-                }
+                    // پیدا کردن دوره (حتی اگر سافت دیلیت شده باشد)
+                    var course = await _repository.GetDeletedCourseById(request.Id, ct);
 
+                    if (course == null) return OperationResult.NotFound("دوره یافت نشد.");
 
-                // 3. حذف نهایی از دیتابیس
-                // نکته: چون Seo به صورت Owned Type تعریف شده، با حذف دوره، سئو هم خودکار حذف می‌شود.
-                _repository.Remove(course);
+                    if (!string.IsNullOrEmpty(course.Thumbnail))
+                    {
+                        _fileService.DeleteFile(Directories.Course, course.Thumbnail);
+                    }
 
-                await _repository.SaveChangesAsync(token);
-                await transaction.CommitAsync(token);
+                    // 3. حذف نهایی از دیتابیس
+                    // نکته: چون Seo به صورت Owned Type تعریف شده، با حذف دوره، سئو هم خودکار حذف می‌شود.
+                    _repository.Remove(course);
 
-                return OperationResult.Success("دوره به طور کامل حذف شد.");
+                    // SaveChanges در ExecuteInTransactionAsync انجام می‌شود
+                    return OperationResult.Success("دوره به طور کامل حذف شد.");
+                }, token);
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(token);
                 // نکته: اگر فایل حذف شده باشد، قابل بازگشت نیست (رول‌بک فقط دیتابیس را برمی‌گرداند)
                 return OperationResult.Error($"خطا در حذف دائم: {ex.Message}");
             }

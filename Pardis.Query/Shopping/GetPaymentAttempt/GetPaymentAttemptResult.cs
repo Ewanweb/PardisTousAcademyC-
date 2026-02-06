@@ -17,4 +17,10 @@ public class GetPaymentAttemptResult
     public DateTime CreatedAt { get; set; }
     public DateTime? ExpiresAt { get; set; }
     public bool RequiresReceiptUpload { get; set; }
+    
+    // Admin review information
+    public string? AdminReviewerId { get; set; }
+    public string? AdminReviewerName { get; set; }
+    public DateTime? AdminReviewedAt { get; set; }
+    public string? AdminDecision { get; set; }
 }

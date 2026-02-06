@@ -95,4 +95,96 @@ public static class SystemSettingKeys
     /// توضیحات پرداخت دستی
     /// </summary>
     public const string ManualPaymentDescription = "ManualPayment.Description";
+    
+    // ==================== Footer Settings ====================
+    
+    /// <summary>
+    /// نام برند در فوتر
+    /// </summary>
+    public const string FooterBrandName = "Footer.BrandName";
+    
+    /// <summary>
+    /// توضیحات برند در فوتر
+    /// </summary>
+    public const string FooterBrandDescription = "Footer.BrandDescription";
+    
+    /// <summary>
+    /// آدرس دفتر مرکزی
+    /// </summary>
+    public const string FooterAddress = "Footer.Address";
+    
+    /// <summary>
+    /// شماره تلفن پشتیبانی
+    /// </summary>
+    public const string FooterPhone = "Footer.Phone";
+    
+    /// <summary>
+    /// ایمیل تماس
+    /// </summary>
+    public const string FooterEmail = "Footer.Email";
+    
+    /// <summary>
+    /// لینک اینستاگرام
+    /// </summary>
+    public const string FooterInstagramUrl = "Footer.InstagramUrl";
+    
+    /// <summary>
+    /// لینک توییتر
+    /// </summary>
+    public const string FooterTwitterUrl = "Footer.TwitterUrl";
+    
+    /// <summary>
+    /// لینک لینکدین
+    /// </summary>
+    public const string FooterLinkedinUrl = "Footer.LinkedinUrl";
+    
+    /// <summary>
+    /// لینک یوتیوب
+    /// </summary>
+    public const string FooterYoutubeUrl = "Footer.YoutubeUrl";
+    
+    /// <summary>
+    /// تعداد دوره‌های آموزشی (آمار)
+    /// </summary>
+    public const string FooterStatsCoursesCount = "Footer.Stats.CoursesCount";
+    
+    /// <summary>
+    /// تعداد دانشجویان (آمار)
+    /// </summary>
+    public const string FooterStatsStudentsCount = "Footer.Stats.StudentsCount";
+    
+    /// <summary>
+    /// تعداد مدرسین (آمار)
+    /// </summary>
+    public const string FooterStatsInstructorsCount = "Footer.Stats.InstructorsCount";
+    
+    /// <summary>
+    /// متن کپی‌رایت
+    /// </summary>
+    public const string FooterCopyrightText = "Footer.CopyrightText";
+    
+    /// <summary>
+    /// لینک نماد اعتماد الکترونیک
+    /// </summary>
+    public const string FooterEnamadUrl = "Footer.EnamadUrl";
+    
+    /// <summary>
+    /// کد نماد اعتماد الکترونیک
+    /// </summary>
+    public const string FooterEnamadCode = "Footer.EnamadCode";
+    
+    /// <summary>
+    /// آیا نمایش خبرنامه فعال است؟
+    /// </summary>
+    public const string FooterNewsletterEnabled = "Footer.NewsletterEnabled";
+    
+    /// <summary>
+    /// عنوان بخش خبرنامه
+    /// </summary>
+    public const string FooterNewsletterTitle = "Footer.NewsletterTitle";
+    
+    /// <summary>
+    /// توضیحات بخش خبرنامه
+    /// </summary>
+    public const string FooterNewsletterDescription = "Footer.NewsletterDescription";
 }

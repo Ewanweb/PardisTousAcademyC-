@@ -16,6 +16,8 @@ using Pardis.Domain.Settings;
 using Pardis.Domain.Shopping;
 using Pardis.Domain.Logging;
 using Pardis.Domain.Audit;
+using Pardis.Domain.Consultation;
+using Pardis.Domain.Idempotency;
 
 namespace Pardis.Infrastructure
 {
@@ -68,6 +70,15 @@ namespace Pardis.Infrastructure
         public DbSet<PaymentAuditLog> PaymentAuditLogs { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<BlogCategory> BlogCategories { get; set; }
+        public DbSet<Tag> Tags { get; set; }
+        public DbSet<PostTag> PostTags { get; set; }
+        public DbSet<PostSlugHistory> PostSlugHistories { get; set; }
+        
+        // ✅ درخواست‌های مشاوره
+        public DbSet<ConsultationRequest> ConsultationRequests { get; set; }
+        
+        // ✅ Idempotency Records
+        public DbSet<IdempotencyRecord> IdempotencyRecords { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

@@ -13,16 +13,16 @@ namespace Pardis.Application.Shopping.PaymentAttempts.UploadReceipt;
 public class UploadReceiptHandler : IRequestHandler<UploadReceiptCommand, OperationResult<UploadReceiptResult>>
 {
     private readonly IPaymentAttemptRepository _paymentAttemptRepository;
-    private readonly IFileService _fileService;
+    private readonly ISecureFileService _secureFileService;
     private readonly IMapper _mapper;
 
     public UploadReceiptHandler(
         IPaymentAttemptRepository paymentAttemptRepository,
-        IFileService fileService,
+        ISecureFileService secureFileService,
         IMapper mapper)
     {
         _paymentAttemptRepository = paymentAttemptRepository;
-        _fileService = fileService;
+        _secureFileService = secureFileService;
         _mapper = mapper;
     }
 
@@ -59,12 +59,19 @@ public class UploadReceiptHandler : IRequestHandler<UploadReceiptCommand, Operat
             if (!allowedExtensions.Contains(extension))
                 return OperationResult<UploadReceiptResult>.Error("فرمت فایل نامعتبر است. فقط تصاویر و PDF مجاز هستند");
 
-            // آپلود فایل - save to wwwroot/uploads/payment-receipts
-            var fileName = await _fileService.SaveFileAndGenerateName(request.ReceiptFile, "uploads/payment-receipts");
-            if (string.IsNullOrEmpty(fileName))
-                return OperationResult<UploadReceiptResult>.Error("خطا در آپلود فایل");
+            // آپلود فایل با استفاده از سرویس امن
+            var uploadResult = await _secureFileService.SaveFileSecurely(
+                request.ReceiptFile,
+                "payment-receipts",
+                request.UserId
+            );
 
-            var fileUrl = $"/uploads/payment-receipts/{fileName}";
+            if (!uploadResult.IsSuccess)
+                return OperationResult<UploadReceiptResult>.Error($"خطا در آپلود فایل: {uploadResult.ErrorMessage}");
+
+            // ساخت مسیر نسبی برای ذخیره در دیتابیس
+            var fileUrl = $"/uploads/{uploadResult.Category}/{uploadResult.SecureFileName}";
+            var fileName = uploadResult.SecureFileName ?? string.Empty;
 
             // به‌روزرسانی تلاش پرداخت
             paymentAttempt.UploadReceipt(fileUrl, fileName);

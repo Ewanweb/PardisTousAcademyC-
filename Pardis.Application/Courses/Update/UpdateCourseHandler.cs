@@ -1,13 +1,12 @@
-using Pardis.Domain.Seo;
-using AutoMapper; // ????? ??
+using AutoMapper;
 using MediatR;
 using Pardis.Application.FileUtil;
 using Pardis.Domain;
 using Pardis.Domain.Courses;
-using static Pardis.Domain.Dto.Dtos;
 using Pardis.Domain.Categories;
 using Pardis.Application._Shared;
 using Pardis.Domain.Dto.Courses;
+using Pardis.Domain.Seo;
 
 namespace Pardis.Application.Courses.Update
 {
@@ -15,17 +14,18 @@ namespace Pardis.Application.Courses.Update
     {
         private readonly IRepository<Course> _repository;
         private readonly IRepository<Category> _categoryRepository;
-        private readonly IFileService _fileService;
-        private readonly IMapper _mapper; // ????? ??
+        private readonly ISecureFileService _secureFileService;
+        private readonly IMapper _mapper;
 
-        public UpdateCourseHandler(IRepository<Course> repository,
-                                   IRepository<Category> categoryRepository,
-                                   IFileService fileService,
-                                   IMapper mapper) // ????? ??
+        public UpdateCourseHandler(
+            IRepository<Course> repository,
+            IRepository<Category> categoryRepository,
+            ISecureFileService secureFileService,
+            IMapper mapper)
         {
             _repository = repository;
             _categoryRepository = categoryRepository;
-            _fileService = fileService;
+            _secureFileService = secureFileService;
             _mapper = mapper;
         }
 
@@ -59,11 +59,21 @@ namespace Pardis.Application.Courses.Update
 
             if (request.Dto.Image != null)
             {
-                if (course.Thumbnail != null)
-                    _fileService.DeleteFile(Directories.Course, course.Thumbnail);
+                // آپلود تصویر جدید با استفاده از سرویس امن
+                var uploadResult = await _secureFileService.SaveFileSecurely(
+                    request.Dto.Image, 
+                    "courses", 
+                    request.CurrentUserId
+                );
 
-                string image = await _fileService.SaveFileAndGenerateName(request.Dto.Image, Directories.Course);
-                course.Thumbnail = $"/uploads/courses/thumbnails/{image}";
+                if (!uploadResult.IsSuccess)
+                {
+                    return OperationResult<CourseResource>.Error(
+                        uploadResult.ErrorMessage ?? "خطا در آپلود تصویر دوره"
+                    );
+                }
+
+                course.Thumbnail = $"/uploads/courses/{uploadResult.SecureFileName}";
             }
 
             if (request.Dto.CategoryId.HasValue && request.Dto.CategoryId.Value != oldCategoryId)
@@ -80,26 +90,22 @@ namespace Pardis.Application.Courses.Update
 
             if (request.Dto.Seo != null)
             {
-                // ??????? ?? ??? ???? ????? Seo ?? ???? ???? ??? ??? nested ??? ???? ?? ????? ?????
-                // ?? ????????? ?? _mapper.Map(request.Seo, course.Seo) ??????? ????
-                if (course.Seo == null) course.Seo = new Pardis.Domain.Seo.SeoMetadata();
-                _mapper.Map(request.Dto.Seo, course.Seo); // ????? ??? ?? ???
+                if (course.Seo == null) course.Seo = new SeoMetadata();
+                _mapper.Map(request.Dto.Seo, course.Seo);
             }
 
             if (request.Dto.Sections != null)
             {
-                // ???) ??? ????? ??? ???
-                // ?????????? ?? ?? ??????? ????? ??? ?? ???? ???? ?????? ??????
+                // حذف سرفصل‌های قدیمی
                 var sentIds = request.Dto.Sections.Where(s => s.Id != Guid.Empty).Select(s => s.Id).ToList();
                 var sectionsToDelete = course.Sections.Where(s => !sentIds.Contains(s.Id)).ToList();
 
                 foreach (var section in sectionsToDelete)
                 {
-                    // ??? ?? ?????? (EF Core ???? Delete ?? ?? ??????? ???? ??????)
                     course.Sections.Remove(section);
                 }
 
-                // ?) ?????? ?? ?????? ?????
+                // بروزرسانی یا ایجاد سرفصل‌ها
                 int orderIndex = 1;
                 foreach (var sectionDto in request.Dto.Sections)
                 {
@@ -107,18 +113,17 @@ namespace Pardis.Application.Courses.Update
 
                     if (existingSection != null)
                     {
-                        // --- ?????? ---
+                        // بروزرسانی
                         existingSection.Title = sectionDto.Title;
-                        existingSection.Description = sectionDto.Description;
+                        existingSection.Description = sectionDto.Description ?? string.Empty;
                         existingSection.Order = orderIndex++;
                     }
                     else
                     {
-                        // --- ?????? ???? ---
-                        // ??????? ?? ???????????? ?? ??????
+                        // ایجاد جدید
                         var newSection = new CourseSection(
                             sectionDto.Title,
-                            sectionDto.Description ?? "",
+                            sectionDto.Description ?? string.Empty,
                             orderIndex++,
                             course.Id
                         );
@@ -131,11 +136,8 @@ namespace Pardis.Application.Courses.Update
 
             await _repository.SaveChangesAsync(cancellationToken);
 
-            // --- ????? ???? ??????? ---
-            // ?? ??? ?? ??? ?? ????? ??? ?? ?? ?????????:
             var result = _mapper.Map<CourseResource>(course);
             return OperationResult<CourseResource>.Success(result);
-            
         }
     }
 }

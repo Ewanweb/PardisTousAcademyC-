@@ -10,16 +10,16 @@ namespace Pardis.Application.Sliders.HeroSlides.Update
     public class UpdateHeroSlideCommandHandler : IRequestHandler<UpdateHeroSlideCommand, OperationResult>
     {
         private readonly IHeroSlideRepository _heroSlideRepository;
-        private readonly IFileService _imageService;
+        private readonly ISecureFileService _secureFileService;
         private readonly ILogger<UpdateHeroSlideCommandHandler> _logger;
 
         public UpdateHeroSlideCommandHandler(
             IHeroSlideRepository heroSlideRepository, 
-            IFileService imageService,
+            ISecureFileService secureFileService,
             ILogger<UpdateHeroSlideCommandHandler> logger)
         {
             _heroSlideRepository = heroSlideRepository;
-            _imageService = imageService;
+            _secureFileService = secureFileService;
             _logger = logger;
         }
 
@@ -40,16 +40,36 @@ namespace Pardis.Application.Sliders.HeroSlides.Update
                 {
                     try
                     {
-                        // Delete old image
-                        if (!string.IsNullOrEmpty(heroSlide.ImageUrl))
+                        var uploadResult = await _secureFileService.SaveFileSecurely(
+                            request.Dto.ImageFile,
+                            "sliders",
+                            request.CurrentUserId
+                        );
+
+                        if (!uploadResult.IsSuccess)
                         {
-                            _imageService.DeleteFile(Directories.Slider,heroSlide.ImageUrl);
+                            _logger.LogError("خطا در آپلود تصویر جدید: {Error}", uploadResult.ErrorMessage);
+                            return OperationResult.Error($"خطا در آپلود تصویر: {uploadResult.ErrorMessage}");
                         }
 
-                        // Upload new image
-                        newImageUrl = await _imageService.SaveFileAndGenerateName(request.Dto.ImageFile, Directories.Slider);
+                        // Delete old image if exists
+                        if (!string.IsNullOrEmpty(heroSlide.ImageUrl))
+                        {
+                            try
+                            {
+                                if (File.Exists($"{Directories.Slider}/{heroSlide.ImageUrl}"))
+                                {
+                                    File.Delete($"{Directories.Slider}/{heroSlide.ImageUrl}");
+                                }
+                            }
+                            catch (Exception deleteEx)
+                            {
+                                _logger.LogWarning(deleteEx, "خطا در حذف تصویر قدیمی");
+                            }
+                        }
+
                         // ساخت URL کامل برای دسترسی از طریق وب
-                        newImageUrl = $"/uploads/sliders/{newImageUrl}";
+                        newImageUrl = $"/uploads/sliders/{uploadResult.SecureFileName}";
                         _logger.LogInformation("تصویر جدید با موفقیت آپلود شد: {ImageUrl}", newImageUrl);
                     }
                     catch (Exception ex)

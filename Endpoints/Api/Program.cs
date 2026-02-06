@@ -142,6 +142,10 @@ using (var scope = app.Services.CreateScope())
     {
         await Pardis.Infrastructure.RoleSeeder.SeedAsync(services);
         await Pardis.Infrastructure.UserSeeder.SeedAsync(services);
+        
+        // Seed sample system logs
+        var dbContext = services.GetRequiredService<Pardis.Infrastructure.AppDbContext>();
+        await Pardis.Infrastructure.SystemLogSeeder.SeedSampleLogs(dbContext);
     }
     catch (Exception ex)
     {

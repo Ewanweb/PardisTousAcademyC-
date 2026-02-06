@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pardis.Application._Shared;
+using Pardis.Application._Shared.Pagination;
 using Pardis.Application.Shopping.PaymentAttempts.AdminReviewPayment;
 using Pardis.Query.Payments.GetAllPayments;
 using Pardis.Query.Shopping.GetPendingPayments;
@@ -72,7 +73,6 @@ public class PaymentManagementController : BaseController
     /// </summary>
     [HttpPost("{paymentAttemptId}/approve")]
     [Authorize(Policy = Policies.PaymentManagement.AdminActions)]
-    [ValidateAntiForgeryToken]
     [RateLimit(MaxRequests = 10, WindowMinutes = 1)] // Rate limiting
     public async Task<IActionResult> ApprovePayment(
         Guid paymentAttemptId, 
@@ -93,29 +93,33 @@ public class PaymentManagementController : BaseController
             if (paymentAttempt == null)
                 return BadRequestResponse("Payment attempt not found");
 
+            // Create command with all required fields
+            var command = new AdminReviewPaymentCommand
+            {
+                PaymentAttemptId = paymentAttemptId,
+                AdminUserId = userId,
+                IsApproved = request.IsApproved,
+                AdminNote = request.AdminNote,
+                RejectReason = request.RejectionReason,
+                ApprovedAmount = request.ApprovedAmount,
+                IdempotencyKey = idempotencyKey,
+                IpAddress = GetClientIpAddress(),
+                UserAgent = GetUserAgent()
+            };
+
             // Execute with idempotency
             var result = await _idempotencyService.ExecuteWithIdempotencyAsync(
                 idempotencyKey,
                 userId,
                 "approve_payment",
-                new { paymentAttemptId, request },
-                async (cancellationToken) =>
-                {
-                    var command = new AdminReviewPaymentCommand
-                    {
-                        PaymentAttemptId = paymentAttemptId,
-                        AdminUserId = userId,
-                        IsApproved = request.IsApproved,
-                        AdminNote = request.AdminNote,
-                        RejectReason = request.RejectionReason,
-                        ApprovedAmount = request.ApprovedAmount
-                    };
-
-                    return await _mediator.Send(command, cancellationToken);
-                });
+                command,
+                async (cancellationToken) => await _mediator.Send(command, cancellationToken));
 
             if (!result.IsSuccess)
-                return BadRequestResponse(result.ErrorMessage);
+                return ErrorResponse(result.ErrorMessage ?? "خطا در تایید پرداخت");
+
+            if (result.IsReplayed)
+                return SuccessResponse(result.Data, "عملیات قبلاً انجام شده است");
 
             return SuccessResponse(
                 result.Data,
@@ -128,7 +132,6 @@ public class PaymentManagementController : BaseController
 
     [HttpPost("{paymentAttemptId}/reject")]
     [Authorize(Policy = Policies.PaymentManagement.AdminActions)]
-    [ValidateAntiForgeryToken]
     [RateLimit(MaxRequests = 10, WindowMinutes = 1)]
     public async Task<IActionResult> RejectPayment(
         Guid paymentAttemptId, 
@@ -181,8 +184,13 @@ public class PaymentManagementController : BaseController
     {
         try
         {
-            // Check if payment exists and user has permission
-            var payment = await _mediator.Send(new GetPaymentAttemptQuery { Id = paymentAttemptId });
+            // Check if payment exists (don't filter by userId for admin check)
+            var payment = await _mediator.Send(new GetPaymentAttemptQuery 
+            { 
+                PaymentAttemptId = paymentAttemptId,
+                UserId = null // Admin can see all payments
+            });
+            
             if (payment == null)
                 return false;
 
@@ -226,17 +234,20 @@ public class PaymentManagementController : BaseController
     {
         return await ExecuteAsync(async () =>
         {
-            var pagination = GetPaginationRequest(page, pageSize);
             var query = new GetAllPaymentsQuery
             {
-                Pagination = pagination,
+                Pagination = new PaginationRequest
+                {
+                    Page = page,
+                    PageSize = pageSize
+                },
                 Search = search,
                 Status = status
             };
 
             var result = await _mediator.Send(query);
 
-            return SuccessResponse(
+            return HandleOperationResult(
                 result,
                 "لیست پرداخت‌ها با موفقیت دریافت شد"
             );

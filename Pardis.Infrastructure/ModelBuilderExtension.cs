@@ -248,6 +248,12 @@ namespace Pardis.Infrastructure
             builder.Entity<PaymentAttempt>()
                 .HasIndex(pa => pa.TrackingCode)
                 .IsUnique();
+            
+            // ✅ تنظیم RowVersion برای Optimistic Concurrency
+            builder.Entity<PaymentAttempt>()
+                .Property(pa => pa.RowVersion)
+                .IsRowVersion()
+                .IsConcurrencyToken();
 
             builder.Entity<AuthLog>()
                 .HasOne(x => x.User)
@@ -276,6 +282,55 @@ namespace Pardis.Infrastructure
                 .HasForeignKey(x => x.BlogCategoryId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Post_BlogCategory");
+
+            builder.Entity<Post>()
+                .HasIndex(x => x.Slug)
+                .IsUnique();
+
+            builder.Entity<Post>()
+                .HasIndex(x => new { x.Status, x.PublishedAt });
+
+            builder.Entity<BlogCategory>()
+                .HasIndex(x => x.Slug)
+                .IsUnique();
+
+            builder.Entity<Tag>()
+                .HasIndex(x => x.Slug)
+                .IsUnique();
+
+            builder.Entity<Tag>()
+                .Property(x => x.Title)
+                .HasMaxLength(80);
+
+            builder.Entity<Tag>()
+                .Property(x => x.Slug)
+                .HasMaxLength(80);
+
+            builder.Entity<PostTag>()
+                .HasKey(x => new { x.PostId, x.TagId });
+
+            builder.Entity<PostTag>()
+                .HasOne(x => x.Post)
+                .WithMany(x => x.PostTags)
+                .HasForeignKey(x => x.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<PostTag>()
+                .HasOne(x => x.Tag)
+                .WithMany(x => x.PostTags)
+                .HasForeignKey(x => x.TagId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<PostSlugHistory>()
+                .HasIndex(x => x.OldSlug);
+
+            builder.Entity<PostSlugHistory>()
+                .Property(x => x.OldSlug)
+                .HasMaxLength(200);
+
+            builder.Entity<PostSlugHistory>()
+                .Property(x => x.NewSlug)
+                .HasMaxLength(200);
 
 
             return builder;
