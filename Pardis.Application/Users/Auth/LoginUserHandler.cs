@@ -31,7 +31,6 @@ namespace Pardis.Application.Users.Auth
         {
             try
             {
-                // جستجو بر اساس شماره تلفن (که به عنوان UserName ذخیره شده)
                 var user = await _userManager.FindByNameAsync(request.Mobile);
 
                 if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))

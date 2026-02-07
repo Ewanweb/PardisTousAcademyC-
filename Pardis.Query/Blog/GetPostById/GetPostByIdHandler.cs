@@ -5,30 +5,27 @@ using Pardis.Domain.Blog;
 using Pardis.Domain.Dto.Blog;
 using Pardis.Domain.Dto.Seo;
 
-namespace Pardis.Query.Blog.GetPostBySlug;
+namespace Pardis.Query.Blog.GetPostById;
 
-public class GetPostBySlugHandler : IRequestHandler<GetPostBySlugQuery, PostSlugResolveDto>
+public class GetPostByIdHandler : IRequestHandler<GetPostByIdQuery, PostDetailDto?>
 {
     private readonly IRepository<Post> _postRepository;
-    private readonly IRepository<PostSlugHistory> _slugHistoryRepository;
 
-    public GetPostBySlugHandler(IRepository<Post> postRepository, IRepository<PostSlugHistory> slugHistoryRepository)
+    public GetPostByIdHandler(IRepository<Post> postRepository)
     {
         _postRepository = postRepository;
-        _slugHistoryRepository = slugHistoryRepository;
     }
 
-    public async Task<PostSlugResolveDto> Handle(GetPostBySlugQuery request, CancellationToken cancellationToken)
+    public async Task<PostDetailDto?> Handle(GetPostByIdQuery request, CancellationToken cancellationToken)
     {
         var query = _postRepository.Table
             .AsNoTracking()
-            .Where(p => !p.IsDeleted);
+            .Where(p => !p.IsDeleted && p.Id == request.Id);
 
         if (!request.IncludeDrafts)
             query = query.Where(p => p.Status == PostStatus.Published);
 
         var post = await query
-            .Where(p => p.Slug == request.Slug)
             .Select(p => new PostDetailDto
             {
                 Id = p.Id,
@@ -54,6 +51,7 @@ public class GetPostBySlugHandler : IRequestHandler<GetPostBySlugQuery, PostSlug
                     {
                         MetaTitle = p.BlogCategory.SeoMetadata.MetaTitle,
                         MetaDescription = p.BlogCategory.SeoMetadata.MetaDescription,
+                        Keywords = p.BlogCategory.SeoMetadata.Keywords,
                         CanonicalUrl = p.BlogCategory.SeoMetadata.CanonicalUrl,
                         NoIndex = p.BlogCategory.SeoMetadata.NoIndex,
                         NoFollow = p.BlogCategory.SeoMetadata.NoFollow
@@ -69,6 +67,7 @@ public class GetPostBySlugHandler : IRequestHandler<GetPostBySlugQuery, PostSlug
                 {
                     MetaTitle = p.SeoMetadata.MetaTitle,
                     MetaDescription = p.SeoMetadata.MetaDescription,
+                    Keywords = p.SeoMetadata.Keywords,
                     CanonicalUrl = p.SeoMetadata.CanonicalUrl,
                     NoIndex = p.SeoMetadata.NoIndex,
                     NoFollow = p.SeoMetadata.NoFollow,
@@ -84,35 +83,6 @@ public class GetPostBySlugHandler : IRequestHandler<GetPostBySlugQuery, PostSlug
             })
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (post != null)
-        {
-            return new PostSlugResolveDto
-            {
-                Post = post,
-                IsRedirect = false
-            };
-        }
-
-        var history = await _slugHistoryRepository.Table
-            .AsNoTracking()
-            .Where(h => h.OldSlug == request.Slug)
-            .OrderByDescending(h => h.ChangedAt)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (history != null)
-        {
-            return new PostSlugResolveDto
-            {
-                Post = null,
-                IsRedirect = true,
-                RedirectSlug = history.NewSlug
-            };
-        }
-
-        return new PostSlugResolveDto
-        {
-            Post = null,
-            IsRedirect = false
-        };
+        return post;
     }
 }

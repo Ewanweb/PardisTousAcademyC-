@@ -76,6 +76,7 @@ public class CreateBlogCategoryCommandHandler : IRequestHandler<CreateBlogCatego
             Slug = category.Slug,
             Description = category.Description,
             Priority = category.Priority,
+            CoverImageUrl = category.ThumbnailUrl,
             Seo = new SeoDto
             {
                 MetaTitle = category.SeoMetadata.MetaTitle,

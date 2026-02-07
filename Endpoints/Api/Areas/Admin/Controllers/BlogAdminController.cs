@@ -16,6 +16,7 @@ using Pardis.Application.Blog.Tags.UpdateTag;
 using Pardis.Application.Blog.Posts.UploadImage;
 using Pardis.Domain.Dto.Blog;
 using Pardis.Query.Blog.GetPostsList;
+using Pardis.Query.Blog.GetPostById;
 
 namespace Api.Areas.Admin.Controllers;
 
@@ -56,6 +57,18 @@ public class BlogAdminController : BaseController
             });
             return SuccessResponse(result);
         }, "خطا در دریافت لیست پست‌ها");
+    }
+
+    [HttpGet("posts/{id:guid}")]
+    public async Task<IActionResult> GetPostById(Guid id)
+    {
+        return await ExecuteAsync(async () =>
+        {
+            var result = await Mediator.Send(new GetPostByIdQuery { Id = id, IncludeDrafts = true });
+            if (result == null)
+                return NotFound(new { message = "پست یافت نشد" });
+            return SuccessResponse(result);
+        }, "خطا در دریافت پست");
     }
 
     [HttpPost("posts")]

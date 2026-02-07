@@ -134,6 +134,7 @@ public class UpdatePostCommandHandler : IRequestHandler<UpdatePostCommand, Opera
                     Slug = p.BlogCategory.Slug,
                     Description = p.BlogCategory.Description,
                     Priority = p.BlogCategory.Priority,
+                    CoverImageUrl = p.BlogCategory.ThumbnailUrl,
                     Seo = new SeoDto
                     {
                         MetaTitle = p.BlogCategory.SeoMetadata.MetaTitle,

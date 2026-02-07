@@ -45,6 +45,7 @@ public class BlogCategoryDto
     public string Slug { get; set; } = string.Empty;
     public string? Description { get; set; }
     public int Priority { get; set; }
+    public string? CoverImageUrl { get; set; }
     public SeoDto Seo { get; set; } = new();
 }
 

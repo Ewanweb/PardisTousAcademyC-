@@ -30,6 +30,7 @@ public class GetBlogCategoriesHandler : IRequestHandler<GetBlogCategoriesQuery, 
                 Slug = c.Slug,
                 Description = c.Description,
                 Priority = c.Priority,
+                CoverImageUrl = c.ThumbnailUrl,
                 Seo = new SeoDto
                 {
                     MetaTitle = c.SeoMetadata.MetaTitle,
