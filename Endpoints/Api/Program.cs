@@ -12,6 +12,12 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Kestrel server limits
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100MB
+});
+
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
@@ -29,6 +35,14 @@ builder.Services.AddScoped<IRequestContext, RequestContext>();
 // =========================================================
 // 1. ناحیه تعریف سرویس‌ها (DI Container)
 // =========================================================
+
+// Configure file upload limits
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 100 * 1024 * 1024; // 100MB
+    options.ValueLengthLimit = 100 * 1024 * 1024;
+    options.MultipartHeadersLengthLimit = 100 * 1024 * 1024;
+});
 
 builder.Services.AddControllers(options =>
     {
@@ -114,9 +128,19 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", b =>
     {
-        b.AllowAnyOrigin()
-         .AllowAnyMethod()
-         .AllowAnyHeader();
+        b.WithOrigins(
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "https://localhost:3000",
+            "https://localhost:5173",
+            "https://pardistous.ir",
+            "https://www.pardistous.ir",
+            "https://api.pardistous.ir"
+        )
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials()
+        .WithExposedHeaders("Content-Disposition");
     });
 });
 
@@ -163,6 +187,12 @@ if (app.Environment.IsDevelopment())
 // اضافه کردن میدل‌ویر مدیریت خطاهای سراسری
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
+// اضافه کردن میدل‌ویر لاگ درخواست‌ها (فقط در development)
+if (app.Environment.IsDevelopment())
+{
+    app.UseRequestLogging();
+}
+
 // ✅ اضافه کردن middleware برای debug authentication (فقط در development)
 if (app.Environment.IsDevelopment())
 {
@@ -198,6 +228,7 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads"
 });
 
+// CORS باید قبل از Authentication و Authorization باشد
 app.UseCors("AllowAll");
 
 app.UseAuthentication();

@@ -173,7 +173,8 @@ public class BlogAdminController : BaseController
     }
 
     [HttpPost("upload-image")]
-    [RequestSizeLimit(5 * 1024 * 1024)] // 5MB limit
+    [RequestSizeLimit(100 * 1024 * 1024)] // 100MB limit
+    [RequestFormLimits(MultipartBodyLengthLimit = 100 * 1024 * 1024)]
     public async Task<IActionResult> UploadImage([FromForm] IFormFile imageFile)
     {
         return await ExecuteAsync(async () =>

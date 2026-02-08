@@ -88,6 +88,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Content Update="web.config">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
 	  <None Include="wwwroot\Uploads\Corses\Thumbnail\00045af8-e312-4760-b0cd-b75d02d30fb30814008796880.png" />
 	  <None Include="wwwroot\Uploads\Corses\Thumbnail\053461f6-4d9a-419a-9c61-4d233fc3e9d10832133861721.jpeg" />
 	  <None Include="wwwroot\Uploads\Corses\Thumbnail\0922c1dc-56c2-441b-ae4e-a7f0eb7cf4a80828273106301.jpeg" />
