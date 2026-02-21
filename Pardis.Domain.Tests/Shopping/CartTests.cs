@@ -253,7 +253,7 @@ public class CartTests
         var userId = "test-user-id";
         var cart = new Cart(userId);
         
-        // Default expiry is 7 days from now
+        // Default expiry is 30 days from now
         // Act & Assert
         Assert.False(cart.IsExpired());
     }
@@ -267,11 +267,11 @@ public class CartTests
         var originalExpiry = cart.ExpiresAt;
 
         // Act
-        cart.ExtendExpiry(14); // Extend by 14 days
+        cart.ExtendExpiry(30); // Extend by 30 days
 
         // Assert
         Assert.True(cart.ExpiresAt > originalExpiry);
-        Assert.True(cart.ExpiresAt >= DateTime.UtcNow.AddDays(13)); // Allow some margin for execution time
+        Assert.True(cart.ExpiresAt >= DateTime.UtcNow.AddDays(29)); // Allow some margin for execution time
     }
 
     private Course CreateValidCourse()

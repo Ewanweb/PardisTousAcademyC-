@@ -28,7 +28,7 @@ public class Cart : BaseEntity
         UserId = userId;
         TotalAmount = 0;
         Currency = "IRR";
-        ExpiresAt = DateTime.Now.AddDays(7); // سبد خرید 7 روز معتبر است
+        ExpiresAt = DateTime.Now.AddDays(30); // سبد خرید 30 روز (یک ماه) معتبر است
         CreatedAt = DateTime.Now;
         UpdatedAt = DateTime.Now;
     }
@@ -59,6 +59,10 @@ public class Cart : BaseEntity
         Items.Add(cartItem);
         
         RecalculateTotal();
+        
+        // تمدید تاریخ انقضای سبد خرید به 30 روز از الان
+        ExtendExpiry(30);
+        
         UpdatedAt = DateTime.Now;
     }
 
@@ -84,7 +88,7 @@ public class Cart : BaseEntity
 
     public bool IsExpired() => ExpiresAt.HasValue && DateTime.Now > ExpiresAt.Value;
 
-    public void ExtendExpiry(int days = 7)
+    public void ExtendExpiry(int days = 30)
     {
         ExpiresAt = DateTime.Now.AddDays(days);
         UpdatedAt = DateTime.Now;

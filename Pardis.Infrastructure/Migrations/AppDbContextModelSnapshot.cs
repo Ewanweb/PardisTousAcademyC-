@@ -187,7 +187,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("Transactions", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Attendance.CourseSession", b =>
@@ -234,7 +234,7 @@ namespace Pardis.Infrastructure.Migrations
                     b.HasIndex("CourseId", "SessionNumber")
                         .IsUnique();
 
-                    b.ToTable("CourseSessions");
+                    b.ToTable("CourseSessions", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Attendance.StudentAttendance", b =>
@@ -280,7 +280,7 @@ namespace Pardis.Infrastructure.Migrations
                     b.HasIndex("SessionId", "StudentId")
                         .IsUnique();
 
-                    b.ToTable("StudentAttendances");
+                    b.ToTable("StudentAttendances", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Audit.PaymentAuditLog", b =>
@@ -346,7 +346,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PaymentAuditLogs");
+                    b.ToTable("PaymentAuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Blog.BlogCategory", b =>
@@ -406,7 +406,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("UserId1");
 
-                    b.ToTable("BlogCategories");
+                    b.ToTable("BlogCategories", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Blog.Post", b =>
@@ -503,7 +503,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("Status", "PublishedAt");
 
-                    b.ToTable("Posts");
+                    b.ToTable("Posts", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Blog.PostSlugHistory", b =>
@@ -540,7 +540,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("PostSlugHistories");
+                    b.ToTable("PostSlugHistories", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Blog.PostTag", b =>
@@ -555,7 +555,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("PostTags");
+                    b.ToTable("PostTags", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Blog.Tag", b =>
@@ -585,7 +585,7 @@ namespace Pardis.Infrastructure.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Tags");
+                    b.ToTable("Tags", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Categories.Category", b =>
@@ -632,7 +632,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
 
                     b.HasData(
                         new
@@ -729,7 +729,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("CourseComments");
+                    b.ToTable("CourseComments", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Consultation.ConsultationRequest", b =>
@@ -776,7 +776,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ConsultationRequests");
+                    b.ToTable("ConsultationRequests", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Courses.Course", b =>
@@ -851,7 +851,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("InstructorId");
 
-                    b.ToTable("Courses");
+                    b.ToTable("Courses", (string)null);
 
                     b.HasData(
                         new
@@ -960,7 +960,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("CourseSchedules");
+                    b.ToTable("CourseSchedules", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Courses.UserCourse", b =>
@@ -1014,7 +1014,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("UserCourses");
+                    b.ToTable("UserCourses", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Courses.UserCourseSchedule", b =>
@@ -1044,7 +1044,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("CourseScheduleId");
 
-                    b.ToTable("UserCourseSchedules");
+                    b.ToTable("UserCourseSchedules", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Idempotency.IdempotencyRecord", b =>
@@ -1093,7 +1093,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("IdempotencyRecords");
+                    b.ToTable("IdempotencyRecords", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Logging.SystemLog", b =>
@@ -1143,7 +1143,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("Source", "Time");
 
-                    b.ToTable("SystemLogs");
+                    b.ToTable("SystemLogs", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Payments.CourseEnrollment", b =>
@@ -1199,7 +1199,7 @@ namespace Pardis.Infrastructure.Migrations
                     b.HasIndex("CourseId", "StudentId")
                         .IsUnique();
 
-                    b.ToTable("CourseEnrollments");
+                    b.ToTable("CourseEnrollments", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Payments.InstallmentPayment", b =>
@@ -1249,7 +1249,7 @@ namespace Pardis.Infrastructure.Migrations
                     b.HasIndex("EnrollmentId", "InstallmentNumber")
                         .IsUnique();
 
-                    b.ToTable("InstallmentPayments");
+                    b.ToTable("InstallmentPayments", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Settings.PaymentSettings", b =>
@@ -1284,7 +1284,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PaymentSettings");
+                    b.ToTable("PaymentSettings", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Settings.SystemSetting", b =>
@@ -1318,7 +1318,7 @@ namespace Pardis.Infrastructure.Migrations
                     b.HasIndex("Key")
                         .IsUnique();
 
-                    b.ToTable("SystemSettings");
+                    b.ToTable("SystemSettings", (string)null);
 
                     b.HasData(
                         new
@@ -1394,7 +1394,7 @@ namespace Pardis.Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Carts");
+                    b.ToTable("Carts", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Shopping.CartItem", b =>
@@ -1435,7 +1435,7 @@ namespace Pardis.Infrastructure.Migrations
                     b.HasIndex("CartId", "CourseId")
                         .IsUnique();
 
-                    b.ToTable("CartItems");
+                    b.ToTable("CartItems", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Shopping.Order", b =>
@@ -1494,7 +1494,7 @@ namespace Pardis.Infrastructure.Migrations
                         .HasDatabaseName("IX_Orders_UserId_CartId_Active")
                         .HasFilter("[Status] IN (0, 1)");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Shopping.PaymentAttempt", b =>
@@ -1568,7 +1568,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PaymentAttempts");
+                    b.ToTable("PaymentAttempts", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Sliders.HeroSlide", b =>
@@ -1616,7 +1616,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("HeroSlides");
+                    b.ToTable("HeroSlides", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Sliders.SuccessStory", b =>
@@ -1664,7 +1664,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SuccessStories");
+                    b.ToTable("SuccessStories", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Users.AuthLog", b =>
@@ -1695,7 +1695,7 @@ namespace Pardis.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AuthLogs");
+                    b.ToTable("AuthLogs", (string)null);
                 });
 
             modelBuilder.Entity("Pardis.Domain.Users.Role", b =>
@@ -2085,7 +2085,7 @@ namespace Pardis.Infrastructure.Migrations
 
                             b1.HasKey("BlogCategoryId");
 
-                            b1.ToTable("BlogCategories");
+                            b1.ToTable("BlogCategories", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("BlogCategoryId");
@@ -2187,7 +2187,7 @@ namespace Pardis.Infrastructure.Migrations
 
                             b1.HasKey("PostId");
 
-                            b1.ToTable("Posts");
+                            b1.ToTable("Posts", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("PostId");
@@ -2307,7 +2307,7 @@ namespace Pardis.Infrastructure.Migrations
 
                             b1.HasKey("CategoryId");
 
-                            b1.ToTable("Categories");
+                            b1.ToTable("Categories", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("CategoryId");
@@ -2402,6 +2402,42 @@ namespace Pardis.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.OwnsMany("Pardis.Domain.Courses.CourseSection", "Sections", b1 =>
+                        {
+                            b1.Property<Guid>("CourseId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<Guid>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<DateTime>("CreatedAt")
+                                .HasColumnType("datetime2");
+
+                            b1.Property<string>("Description")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<int>("Order")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("Title")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<DateTime>("UpdatedAt")
+                                .HasColumnType("datetime2");
+
+                            b1.HasKey("CourseId", "Id");
+
+                            b1.ToTable("CourseSections", (string)null);
+
+                            b1.WithOwner("Course")
+                                .HasForeignKey("CourseId");
+
+                            b1.Navigation("Course");
+                        });
+
                     b.OwnsOne("Pardis.Domain.Seo.SeoMetadata", "Seo", b1 =>
                         {
                             b1.Property<Guid>("CourseId")
@@ -2468,7 +2504,7 @@ namespace Pardis.Infrastructure.Migrations
 
                             b1.HasKey("CourseId");
 
-                            b1.ToTable("Courses");
+                            b1.ToTable("Courses", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("CourseId");
@@ -2504,42 +2540,6 @@ namespace Pardis.Infrastructure.Migrations
                                     OpenGraphType = "website",
                                     TwitterCardType = "summary_large_image"
                                 });
-                        });
-
-                    b.OwnsMany("Pardis.Domain.Courses.CourseSection", "Sections", b1 =>
-                        {
-                            b1.Property<Guid>("CourseId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<DateTime>("CreatedAt")
-                                .HasColumnType("datetime2");
-
-                            b1.Property<string>("Description")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)");
-
-                            b1.Property<int>("Order")
-                                .HasColumnType("int");
-
-                            b1.Property<string>("Title")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)");
-
-                            b1.Property<DateTime>("UpdatedAt")
-                                .HasColumnType("datetime2");
-
-                            b1.HasKey("CourseId", "Id");
-
-                            b1.ToTable("CourseSections");
-
-                            b1.WithOwner("Course")
-                                .HasForeignKey("CourseId");
-
-                            b1.Navigation("Course");
                         });
 
                     b.Navigation("Category");
