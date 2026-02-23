@@ -2,13 +2,13 @@
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Pardis.Application._Shared.Pagination;
 using Pardis.Domain.Dto.Users;
 using Pardis.Domain.Users;
-using static Pardis.Domain.Dto.Dtos;
 
 namespace Pardis.Query.Users.GetUsers
 {
-    public class GetUsersHandler : IRequestHandler<GetUsersQuery, List<UserResource>>
+    public class GetUsersHandler : IRequestHandler<GetUsersQuery, PagedResult<UserResource>>
     {
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
@@ -19,27 +19,50 @@ namespace Pardis.Query.Users.GetUsers
             _mapper = mapper;
         }
 
-        public async Task<List<UserResource>> Handle(GetUsersQuery request, CancellationToken token)
+        public async Task<PagedResult<UserResource>> Handle(GetUsersQuery request, CancellationToken token)
         {
-            IList<User> users;
+            IQueryable<User> query;
 
             if (!string.IsNullOrEmpty(request.Role))
             {
-                // استفاده از متد داخلی Identity برای گرفتن کاربران یک نقش خاص
-                users = await _userManager.GetUsersInRoleAsync(request.Role);
+                // دریافت کاربران با نقش خاص
+                var usersInRole = await _userManager.GetUsersInRoleAsync(request.Role);
+                query = usersInRole.AsQueryable();
             }
             else
             {
                 // دریافت همه کاربران
-                users = await _userManager.Users.ToListAsync(token);
+                query = _userManager.Users;
+            }
+
+            // محاسبه تعداد کل
+            var totalCount = await query.CountAsync(token);
+
+            // اگر GetAll فعال نباشد، صفحه‌بندی اعمال می‌شود
+            List<User> users;
+            if (request.GetAll)
+            {
+                users = await query.ToListAsync(token);
+            }
+            else
+            {
+                var pagination = PaginationHelper.Normalize(new PaginationRequest
+                {
+                    Page = request.Page,
+                    PageSize = request.PageSize
+                });
+
+                users = await query
+                    .OrderBy(u => u.FullName)
+                    .Skip((pagination.Page - 1) * pagination.PageSize)
+                    .Take(pagination.PageSize)
+                    .ToListAsync(token);
             }
 
             // تبدیل به DTO
             var userResources = _mapper.Map<List<UserResource>>(users);
 
-            // پر کردن لیست نقش‌ها برای هر کاربر (چون Identity نقش‌ها را جدا نگه می‌دارد)
-            // نکته: برای تعداد زیاد کاربر، این روش N+1 Query ایجاد می‌کند که می‌توان با کوئری مستقیم SQL بهینه کرد.
-            // اما برای پنل ادمین با پیجینیشن معمولاً قابل قبول است.
+            // پر کردن لیست نقش‌ها برای هر کاربر
             foreach (var resource in userResources)
             {
                 var user = users.First(u => u.Id == resource.Id);
@@ -47,7 +70,28 @@ namespace Pardis.Query.Users.GetUsers
                 resource.Roles = roles.ToList();
             }
 
-            return userResources;
+            // ایجاد نتیجه صفحه‌بندی شده
+            if (request.GetAll)
+            {
+                return new PagedResult<UserResource>
+                {
+                    Items = userResources,
+                    Page = 1,
+                    PageSize = totalCount,
+                    TotalCount = totalCount,
+                    TotalPages = 1,
+                    HasNext = false,
+                    HasPrev = false
+                };
+            }
+
+            var normalizedPagination = PaginationHelper.Normalize(new PaginationRequest
+            {
+                Page = request.Page,
+                PageSize = request.PageSize
+            });
+
+            return PaginationHelper.Create(userResources, normalizedPagination, totalCount);
         }
     }
 }

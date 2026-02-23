@@ -26,6 +26,18 @@ public class ManualPaymentRequestDto
     public string? TrackingCode { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public List<string> CourseNames { get; set; } = new();
+    public List<CourseItemDto> CourseItems { get; set; } = new();
+}
+
+/// <summary>
+/// اطلاعات دوره در سفارش
+/// </summary>
+public class CourseItemDto
+{
+    public Guid CourseId { get; set; }
+    public string CourseTitle { get; set; } = string.Empty;
+    public long Price { get; set; }
 }
 
 /// <summary>

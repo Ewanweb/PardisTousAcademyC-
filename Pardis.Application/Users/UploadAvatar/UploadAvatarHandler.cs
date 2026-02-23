@@ -11,19 +11,18 @@ namespace Pardis.Application.Users.UploadAvatar;
 public class UploadAvatarHandler : IRequestHandler<UploadAvatarCommand, OperationResult<UserProfileDto>>
 {
     private readonly UserManager<User> _userManager;
-    private readonly IFileService _fileService;
+    private readonly ISecureFileService _secureFileService;
     private readonly IMapper _mapper;
 
     // Allowed image types and max size
     private readonly string[] _allowedExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
     private readonly string[] _allowedMimeTypes = { "image/jpeg", "image/jpg", "image/png", "image/webp" };
     private const long MaxFileSize = 2 * 1024 * 1024; // 2MB
-    private const string AvatarDirectory = "uploads/avatars";
 
-    public UploadAvatarHandler(UserManager<User> userManager, IFileService fileService, IMapper mapper)
+    public UploadAvatarHandler(UserManager<User> userManager, ISecureFileService secureFileService, IMapper mapper)
     {
         _userManager = userManager;
-        _fileService = fileService;
+        _secureFileService = secureFileService;
         _mapper = mapper;
     }
 
@@ -43,25 +42,23 @@ public class UploadAvatarHandler : IRequestHandler<UploadAvatarCommand, Operatio
 
         try
         {
-            // Delete old avatar if exists
-            if (!string.IsNullOrEmpty(user.AvatarFileId))
-            {
-                try
-                {
-                    _fileService.DeleteFile(AvatarDirectory, user.AvatarFileId);
-                }
-                catch
-                {
-                    // Log but don't fail if old file deletion fails
-                }
-            }
+            // Upload avatar using secure file service
+            var uploadResult = await _secureFileService.SaveFileSecurely(
+                request.Avatar,
+                "avatars",
+                user.Id
+            );
 
-            // Save new avatar
-            var fileName = await _fileService.SaveFileAndGenerateName(request.Avatar, AvatarDirectory);
+            if (!uploadResult.IsSuccess)
+                return OperationResult<UserProfileDto>.Error(uploadResult.ErrorMessage ?? "خطا در آپلود فایل");
+
+            // Delete old avatar if exists (optional - old files can be kept for audit)
+            // Note: We're not deleting old files to maintain audit trail
             
             // Update user avatar info
-            user.AvatarFileId = fileName;
-            user.AvatarUrl = $"/{AvatarDirectory}/{fileName}";
+            // Store the file path for direct access (compatible with static file serving)
+            user.AvatarFileId = uploadResult.SecureFileName;
+            user.AvatarUrl = $"/uploads/{uploadResult.Category}/{uploadResult.SecureFileName}";
             user.AvatarUpdatedAt = DateTime.UtcNow;
             
             // Keep backward compatibility with existing Avatar field
@@ -70,19 +67,13 @@ public class UploadAvatarHandler : IRequestHandler<UploadAvatarCommand, Operatio
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
             {
-                // Clean up uploaded file if user update fails
-                try
-                {
-                    _fileService.DeleteFile(AvatarDirectory, fileName);
-                }
-                catch { }
-
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
                 return OperationResult<UserProfileDto>.Error($"خطا در به‌روزرسانی آواتار: {errors}");
             }
 
             var profileDto = _mapper.Map<UserProfileDto>(user);
 
+            // Add cache busting parameter
             if (!string.IsNullOrEmpty(profileDto.AvatarUrl))
             {
                 profileDto.AvatarUrl = $"{profileDto.AvatarUrl}?v={user.AvatarUpdatedAt?.Ticks ?? DateTime.UtcNow.Ticks}";

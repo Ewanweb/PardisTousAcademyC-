@@ -57,6 +57,16 @@ public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand
             user.Address = Normalize(request.Address);
         }
 
+        if (request.NationalCode != null)
+        {
+            user.NationalCode = Normalize(request.NationalCode);
+        }
+
+        if (request.FatherName != null)
+        {
+            user.FatherName = Normalize(request.FatherName);
+        }
+
         if (request.PhoneNumber != null)
         {
             var normalizedPhone = Normalize(request.PhoneNumber);

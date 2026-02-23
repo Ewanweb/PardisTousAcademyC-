@@ -1,75 +1,95 @@
-using AutoMapper;
 using MediatR;
 using Pardis.Application._Shared;
 using Pardis.Domain;
 using Pardis.Domain.Courses;
-using Pardis.Domain.Dto.Courses;
 
 namespace Pardis.Application.Courses.Schedules;
 
-public class CreateScheduleHandler : IRequestHandler<CreateScheduleCommand, OperationResult<CourseScheduleDto>>
+/// <summary>
+/// Handler برای ایجاد زمان‌بندی جدید
+/// </summary>
+public class CreateScheduleHandler : IRequestHandler<CreateScheduleCommand, OperationResult<Guid>>
 {
-    private readonly IRepository<CourseSchedule> _scheduleRepository;
     private readonly IRepository<Course> _courseRepository;
-    private readonly IMapper _mapper;
+    private readonly IRepository<CourseSchedule> _scheduleRepository;
 
-    public CreateScheduleHandler(IRepository<CourseSchedule> scheduleRepository, IRepository<Course> courseRepository, IMapper mapper)
+    public CreateScheduleHandler(
+        IRepository<Course> courseRepository,
+        IRepository<CourseSchedule> scheduleRepository)
     {
-        _scheduleRepository = scheduleRepository;
         _courseRepository = courseRepository;
-        _mapper = mapper;
+        _scheduleRepository = scheduleRepository;
     }
 
-    public async Task<OperationResult<CourseScheduleDto>> Handle(CreateScheduleCommand request, CancellationToken cancellationToken)
+    public async Task<OperationResult<Guid>> Handle(CreateScheduleCommand request, CancellationToken cancellationToken)
     {
-        // 1. بررسی وجود دوره
-        var course = await _courseRepository.GetByIdAsync(request.Dto.CourseId);
-        if (course == null)
-            return OperationResult<CourseScheduleDto>.NotFound("دوره یافت نشد");
-
-        // 2. تبدیل و اعتبارسنجی زمان
-        if (!TimeOnly.TryParse(request.Dto.StartTime, out var startTime))
-            return OperationResult<CourseScheduleDto>.Error("فرمت ساعت شروع نامعتبر است");
-
-        if (!TimeOnly.TryParse(request.Dto.EndTime, out var endTime))
-            return OperationResult<CourseScheduleDto>.Error("فرمت ساعت پایان نامعتبر است");
-
-        if (startTime >= endTime)
-            return OperationResult<CourseScheduleDto>.Error("ساعت شروع باید کمتر از ساعت پایان باشد");
-
-        if (request.Dto.DayOfWeek < 0 || request.Dto.DayOfWeek > 6)
-            return OperationResult<CourseScheduleDto>.Error("روز هفته نامعتبر است");
-
-        if (request.Dto.MaxCapacity <= 0)
-            return OperationResult<CourseScheduleDto>.Error("ظرفیت باید بیشتر از صفر باشد");
-
-        // 3. بررسی تداخل زمانی
-        var hasConflict = await _scheduleRepository.AnyAsync(s => 
-            s.CourseId == request.Dto.CourseId &&
-            s.DayOfWeek == request.Dto.DayOfWeek &&
-            ((s.StartTime < endTime && s.EndTime > startTime)), 
-            cancellationToken);
-
-        if (hasConflict)
-            return OperationResult<CourseScheduleDto>.Error("این زمان با زمان‌بندی موجود تداخل دارد");
-
-        // 4. ایجاد زمان‌بندی
-        var schedule = new CourseSchedule
+        try
         {
-            CourseId = request.Dto.CourseId,
-            Course = null!, // EF will handle this
-            Title = request.Dto.Title,
-            DayOfWeek = request.Dto.DayOfWeek,
-            StartTime = startTime,
-            EndTime = endTime,
-            MaxCapacity = request.Dto.MaxCapacity,
-            Description = request.Dto.Description
-        };
+            // بررسی وجود دوره
+            var course = await _courseRepository.GetByIdAsync(request.CourseId);
+            if (course == null)
+            {
+                return OperationResult<Guid>.NotFound("دوره یافت نشد");
+            }
 
-        await _scheduleRepository.AddAsync(schedule);
-        await _scheduleRepository.SaveChangesAsync(cancellationToken);
+            // اعتبارسنجی ورودی‌ها
+            if (string.IsNullOrWhiteSpace(request.Title))
+            {
+                return OperationResult<Guid>.Error("عنوان زمان‌بندی الزامی است");
+            }
 
-        var result = _mapper.Map<CourseScheduleDto>(schedule);
-        return OperationResult<CourseScheduleDto>.Success(result);
+            if (request.DayOfWeek < 0 || request.DayOfWeek > 6)
+            {
+                return OperationResult<Guid>.Error("روز هفته نامعتبر است (باید بین 0 تا 6 باشد)");
+            }
+
+            if (request.MaxCapacity <= 0)
+            {
+                return OperationResult<Guid>.Error("ظرفیت باید بیشتر از صفر باشد");
+            }
+
+            // تبدیل زمان‌ها
+            if (!TimeOnly.TryParse(request.StartTime, out var startTime))
+            {
+                return OperationResult<Guid>.Error("فرمت ساعت شروع نامعتبر است (مثال: 12:00)");
+            }
+
+            if (!TimeOnly.TryParse(request.EndTime, out var endTime))
+            {
+                return OperationResult<Guid>.Error("فرمت ساعت پایان نامعتبر است (مثال: 14:00)");
+            }
+
+            if (endTime <= startTime)
+            {
+                return OperationResult<Guid>.Error("ساعت پایان باید بعد از ساعت شروع باشد");
+            }
+
+            // ایجاد زمان‌بندی جدید
+            var schedule = new CourseSchedule
+            {
+                Id = Guid.NewGuid(),
+                CourseId = request.CourseId,
+                Course = course,
+                Title = request.Title,
+                DayOfWeek = request.DayOfWeek,
+                StartTime = startTime,
+                EndTime = endTime,
+                MaxCapacity = request.MaxCapacity,
+                Description = request.Description,
+                IsActive = true,
+                EnrolledCount = 0,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await _scheduleRepository.AddAsync(schedule);
+            await _scheduleRepository.SaveChangesAsync(cancellationToken);
+
+            return OperationResult<Guid>.Success(schedule.Id);
+        }
+        catch (Exception ex)
+        {
+            return OperationResult<Guid>.Error($"خطا در ایجاد زمان‌بندی: {ex.Message}");
+        }
     }
 }

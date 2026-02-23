@@ -57,6 +57,7 @@ public class GetAllPendingPaymentsHandler : IRequestHandler<GetAllPendingPayment
             if (string.IsNullOrEmpty(cartSnapshot))
                 return new List<string>();
 
+            // CartSnapshot uses "Title" not "CourseTitle"
             var items = JsonSerializer.Deserialize<List<JsonElement>>(cartSnapshot);
             return items?.Select(item => 
                 item.TryGetProperty("Title", out JsonElement title) ? 
@@ -68,4 +69,12 @@ public class GetAllPendingPaymentsHandler : IRequestHandler<GetAllPendingPayment
             return new List<string>();
         }
     }
+}
+
+// Helper class for cart snapshot deserialization (not used anymore)
+public class CartItemSnapshot
+{
+    public Guid CourseId { get; set; }
+    public string CourseTitle { get; set; } = string.Empty;
+    public long Price { get; set; }
 }

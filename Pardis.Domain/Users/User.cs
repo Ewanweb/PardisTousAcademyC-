@@ -21,6 +21,8 @@ namespace Pardis.Domain.Users
         public DateTime? BirthDate { get; set; }
         public Gender? Gender { get; set; }
         public string? Address { get; set; }
+        public string? NationalCode { get; set; }  // کد ملی
+        public string? FatherName { get; set; }    // نام پدر
         public string? AvatarUrl { get; set; }
         public string? AvatarFileId { get; set; }
         public DateTime? AvatarUpdatedAt { get; set; }

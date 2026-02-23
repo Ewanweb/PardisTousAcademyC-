@@ -52,8 +52,20 @@ namespace Pardis.Application._Shared
             // ????? User ?? UserResource (???? Courses ???? ??????? ?? circular reference)
             CreateMap<User, UserResource>()
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
+                .ForMember(dest => dest.EmailConfirmed, opt => opt.MapFrom(src => src.EmailConfirmed))
+                .ForMember(dest => dest.Avatar, opt => opt.MapFrom(src => src.Avatar))
                 .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.AvatarUrl))
+                .ForMember(dest => dest.AvatarFileId, opt => opt.MapFrom(src => src.AvatarFileId))
                 .ForMember(dest => dest.AvatarUpdatedAt, opt => opt.MapFrom(src => src.AvatarUpdatedAt))
+                .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
+                .ForMember(dest => dest.Bio, opt => opt.MapFrom(src => src.Bio))
+                .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.BirthDate))
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address))
+                .ForMember(dest => dest.NationalCode, opt => opt.MapFrom(src => src.NationalCode))
+                .ForMember(dest => dest.FatherName, opt => opt.MapFrom(src => src.FatherName))
                 .ForMember(dest => dest.Roles, opt => opt.Ignore()) // Roles ?? ??????? handle ??
                 .ReverseMap();
 

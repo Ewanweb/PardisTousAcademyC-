@@ -189,21 +189,46 @@ public class AdminReviewPaymentHandler : IRequestHandler<AdminReviewPaymentComma
             {
                 try
                 {
-                    // Check if enrollment already exists (idempotency)
+                    // Check if enrollment already exists
                     var existingEnrollment = await _enrollmentRepository.Table
                         .FirstOrDefaultAsync(e => e.StudentId == order.UserId && e.CourseId == item.CourseId, ct);
 
                     if (existingEnrollment != null)
                     {
-                        results.Add($"دوره {item.CourseTitle}: قبلاً ثبت‌نام شده");
+                        // اگر ثبت‌نام قبلاً وجود داشت، پرداخت رو بهش اضافه کن
+                        var remainingAmount = existingEnrollment.GetRemainingAmount();
+                        if (remainingAmount > 0)
+                        {
+                            var paymentAmount = Math.Min(item.Price, remainingAmount);
+                            existingEnrollment.AddPayment(
+                                paymentAmount,
+                                currentPaymentAttempt.TrackingCode ?? "ADMIN_APPROVED",
+                                EnrollmentPaymentMethod.Online
+                            );
+                            await _enrollmentRepository.UpdateAsync(existingEnrollment);
+                            results.Add($"دوره {item.CourseTitle}: پرداخت ثبت شد");
+                        }
+                        else
+                        {
+                            results.Add($"دوره {item.CourseTitle}: قبلاً تسویه شده");
+                        }
                         continue;
                     }
 
+                    // اگر ثبت‌نام وجود نداشت، ایجاد کن
                     var enrollment = new CourseEnrollment(item.CourseId, order.UserId, item.Price);
+                    
+                    // ثبت پرداخت برای این ثبت‌نام (چون فیش تایید شده)
+                    enrollment.AddPayment(
+                        item.Price, 
+                        currentPaymentAttempt.TrackingCode ?? "ADMIN_APPROVED", 
+                        EnrollmentPaymentMethod.Online
+                    );
+                    
                     await _enrollmentRepository.AddAsync(enrollment);
                     createdEnrollments.Add(enrollment);
                     
-                    results.Add($"دوره {item.CourseTitle}: ثبت‌نام موفق");
+                    results.Add($"دوره {item.CourseTitle}: ثبت‌نام و پرداخت موفق");
                     
                     // Log successful enrollment
                     await _systemLogger.LogSuccessAsync(

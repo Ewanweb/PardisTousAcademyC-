@@ -2,11 +2,13 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
 using Pardis.Application._Shared;
 using Pardis.Application.Users.UpdateUserRole;
 using Pardis.Query.Users.GetRoles;
 using Pardis.Query.Users.GetUsers;
 using Pardis.Query.Users.GetUsersByRole;
+using Pardis.Query.Users.GetUserById;
 using System.Security.Claims;
 using static Pardis.Query.Users.GetUsers.CreateUserByAdminHandler;
 using Api.Controllers;
@@ -37,11 +39,13 @@ namespace Pardis.API.Controllers
         }
 
         /// <summary>
-        /// دریافت لیست کاربران با قابلیت فیلتر
+        /// دریافت لیست کاربران با قابلیت فیلتر و صفحه‌بندی
         /// </summary>
         /// <param name="role">نقش کاربر برای فیلتر</param>
-        /// <param name="all">دریافت همه کاربران</param>
-        /// <returns>لیست کاربران</returns>
+        /// <param name="all">دریافت همه کاربران بدون صفحه‌بندی</param>
+        /// <param name="page">شماره صفحه (پیش‌فرض: 1)</param>
+        /// <param name="pageSize">تعداد آیتم در هر صفحه (پیش‌فرض: 20)</param>
+        /// <returns>لیست صفحه‌بندی شده کاربران</returns>
         /// <response code="200">لیست کاربران با موفقیت دریافت شد</response>
         /// <response code="401">عدم احراز هویت</response>
         /// <response code="403">عدم دسترسی - فقط ادمین و منیجر</response>
@@ -51,29 +55,173 @@ namespace Pardis.API.Controllers
         [ProducesResponseType(typeof(object), 401)]
         [ProducesResponseType(typeof(object), 403)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> Index([FromQuery] string? role, [FromQuery] bool all = false)
+        public async Task<IActionResult> Index(
+            [FromQuery] string? role, 
+            [FromQuery] bool all = false,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20)
         {
             return await ExecuteAsync(async () =>
             {
-                var query = new GetUsersQuery { Role = role?.Trim(), GetAll = all };
+                var query = new GetUsersQuery 
+                { 
+                    Role = role?.Trim(), 
+                    GetAll = all,
+                    Page = page,
+                    PageSize = pageSize
+                };
                 var result = await _mediator.Send(query);
                 
-                if (result == null)
-                    return SuccessResponse(new List<object>(), "هیچ کاربری یافت نشد");
+                if (result == null || result.Items == null || !result.Items.Any())
+                    return SuccessResponse(new { items = new List<object>(), page = 1, pageSize = 20, totalCount = 0, totalPages = 0 }, "هیچ کاربری یافت نشد");
 
-                // فرض می‌کنیم result از نوع IEnumerable است
-                var users = result as IEnumerable<object>;
-                if (users != null && users.Any())
+                var message = string.IsNullOrWhiteSpace(role) 
+                    ? $"{result.TotalCount} کاربر یافت شد"
+                    : $"{result.TotalCount} کاربر با نقش {role} یافت شد";
+                    
+                return SuccessResponse(result, message);
+            }, "خطا در دریافت لیست کاربران");
+        }
+
+        /// <summary>
+        /// دریافت جزئیات کامل یک کاربر
+        /// </summary>
+        /// <param name="id">شناسه کاربر</param>
+        /// <returns>اطلاعات کامل کاربر</returns>
+        /// <response code="200">اطلاعات کاربر با موفقیت دریافت شد</response>
+        /// <response code="401">عدم احراز هویت</response>
+        /// <response code="403">عدم دسترسی</response>
+        /// <response code="404">کاربر یافت نشد</response>
+        /// <response code="500">خطای سرور</response>
+        [HttpGet("{id}")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 401)]
+        [ProducesResponseType(typeof(object), 403)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
+        public async Task<IActionResult> Show(string id)
+        {
+            return await ExecuteAsync(async () =>
+            {
+                if (string.IsNullOrWhiteSpace(id))
+                    return ValidationErrorResponse("شناسه کاربر الزامی است", new { id = "شناسه کاربر نمی‌تواند خالی باشد" });
+
+                var query = new GetUserByIdQuery { Id = id.Trim() };
+                var result = await _mediator.Send(query);
+
+                if (result == null)
+                    return NotFoundResponse("کاربر یافت نشد");
+
+                return SuccessResponse(result, "اطلاعات کاربر با موفقیت دریافت شد");
+            }, "خطا در دریافت اطلاعات کاربر");
+        }
+
+        /// <summary>
+        /// دانلود آواتار کاربر
+        /// </summary>
+        /// <param name="id">شناسه کاربر</param>
+        /// <param name="env">محیط میزبانی وب</param>
+        /// <returns>فایل آواتار</returns>
+        /// <response code="200">فایل آواتار</response>
+        /// <response code="401">عدم احراز هویت</response>
+        /// <response code="403">عدم دسترسی</response>
+        /// <response code="404">کاربر یا آواتار یافت نشد</response>
+        /// <response code="500">خطای سرور</response>
+        [HttpGet("{id}/avatar/download")]
+        [ProducesResponseType(typeof(FileResult), 200)]
+        [ProducesResponseType(typeof(object), 401)]
+        [ProducesResponseType(typeof(object), 403)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
+        public async Task<IActionResult> DownloadAvatar(string id, [FromServices] IWebHostEnvironment env)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(id))
+                    return BadRequest(new { success = false, message = "شناسه کاربر الزامی است" });
+
+                var query = new GetUserByIdQuery { Id = id.Trim() };
+                var user = await _mediator.Send(query);
+
+                if (user == null)
+                    return NotFound(new { success = false, message = "کاربر یافت نشد" });
+
+                if (string.IsNullOrWhiteSpace(user.AvatarFileId) && 
+                    string.IsNullOrWhiteSpace(user.Avatar) && 
+                    string.IsNullOrWhiteSpace(user.AvatarUrl))
+                    return NotFound(new { success = false, message = "این کاربر آواتار ندارد" });
+
+                // تلاش برای یافتن فایل از مسیرهای مختلف
+                string? filePath = null;
+                string? fileName = null;
+
+                // اولویت 1: AvatarFileId
+                if (!string.IsNullOrWhiteSpace(user.AvatarFileId))
                 {
-                    var count = users.Count();
-                    var message = string.IsNullOrWhiteSpace(role) 
-                        ? $"{count} کاربر یافت شد"
-                        : $"{count} کاربر با نقش {role} یافت شد";
-                    return SuccessResponse(result, message);
+                    fileName = user.AvatarFileId;
+                    if (fileName.Contains("/") || fileName.Contains("\\"))
+                        fileName = Path.GetFileName(fileName);
+                    
+                    filePath = Path.Combine(env.WebRootPath, "uploads", "avatars", fileName);
                 }
 
-                return SuccessResponse(new List<object>(), "هیچ کاربری یافت نشد");
-            }, "خطا در دریافت لیست کاربران");
+                // اولویت 2: Avatar
+                if ((filePath == null || !System.IO.File.Exists(filePath)) && !string.IsNullOrWhiteSpace(user.Avatar))
+                {
+                    fileName = user.Avatar;
+                    if (fileName.Contains("/") || fileName.Contains("\\"))
+                        fileName = Path.GetFileName(fileName);
+                    
+                    filePath = Path.Combine(env.WebRootPath, "uploads", "avatars", fileName);
+                }
+
+                // اولویت 3: AvatarUrl - استخراج مسیر از URL
+                if ((filePath == null || !System.IO.File.Exists(filePath)) && !string.IsNullOrWhiteSpace(user.AvatarUrl))
+                {
+                    // مثال: /uploads/avatars/filename.jpg
+                    var urlPath = user.AvatarUrl.TrimStart('/');
+                    filePath = Path.Combine(env.WebRootPath, urlPath.Replace("/", Path.DirectorySeparatorChar.ToString()));
+                    fileName = Path.GetFileName(filePath);
+                }
+
+                // بررسی وجود فایل
+                if (string.IsNullOrWhiteSpace(filePath) || !System.IO.File.Exists(filePath))
+                {
+                    _logger.LogWarning("Avatar file not found for user {UserId}. Tried path: {FilePath}", id, filePath);
+                    return NotFound(new { 
+                        success = false, 
+                        message = "فایل آواتار یافت نشد",
+                        debug = new {
+                            avatarFileId = user.AvatarFileId,
+                            avatar = user.Avatar,
+                            avatarUrl = user.AvatarUrl,
+                            attemptedPath = filePath,
+                            webRootPath = env.WebRootPath
+                        }
+                    });
+                }
+
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+                var fileExtension = Path.GetExtension(filePath).ToLowerInvariant();
+                
+                var contentType = fileExtension switch
+                {
+                    ".jpg" or ".jpeg" => "image/jpeg",
+                    ".png" => "image/png",
+                    ".gif" => "image/gif",
+                    ".webp" => "image/webp",
+                    _ => "application/octet-stream"
+                };
+
+                var downloadFileName = $"avatar-{user.FullName?.Replace(" ", "-") ?? "user"}{fileExtension}";
+                
+                return File(fileBytes, contentType, downloadFileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "خطا در دانلود آواتار کاربر {UserId}", id);
+                return StatusCode(500, new { success = false, message = "خطا در دانلود آواتار", error = ex.Message });
+            }
         }
 
         /// <summary>

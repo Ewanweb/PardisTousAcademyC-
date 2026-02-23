@@ -48,7 +48,7 @@ public class StudentsController : BaseController
     [ProducesResponseType(typeof(object), 403)]
     [ProducesResponseType(typeof(object), 500)]
     public async Task<IActionResult> GetStudentProfile(string studentId)
-    {
+        {
         return await ExecuteAsync(async () =>
         {
             if (string.IsNullOrWhiteSpace(studentId))

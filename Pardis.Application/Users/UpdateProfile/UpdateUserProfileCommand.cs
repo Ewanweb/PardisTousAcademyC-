@@ -21,6 +21,13 @@ public partial class UpdateUserProfileCommand : IRequest<OperationResult<UserPro
     [StringLength(500, ErrorMessage = "آدرس نمی‌تواند بیش از 500 کاراکتر باشد.")]
     public string? Address { get; set; }
 
+    [StringLength(10, MinimumLength = 10, ErrorMessage = "کد ملی باید 10 رقم باشد.")]
+    [RegularExpression(@"^\d{10}$", ErrorMessage = "کد ملی باید 10 رقم عددی باشد.")]
+    public string? NationalCode { get; set; }
+
+    [StringLength(100, ErrorMessage = "نام پدر نمی‌تواند بیش از 100 کاراکتر باشد.")]
+    public string? FatherName { get; set; }
+
     [Phone(ErrorMessage = "شماره موبایل معتبر نیست.")]
     [StringLength(15, ErrorMessage = "شماره موبایل نمی‌تواند بیش از 15 کاراکتر باشد.")]
     public string? PhoneNumber { get; set; }

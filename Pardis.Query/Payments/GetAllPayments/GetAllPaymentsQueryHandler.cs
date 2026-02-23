@@ -40,6 +40,18 @@ public class GetAllPaymentsQueryHandler : IRequestHandler<GetAllPaymentsQuery, O
                     admin = await _userManager.FindByIdAsync(item.AdminReviewedBy);
 
                 item.AdminReviewerName = admin?.FullName;
+                
+                // استخراج نام دوره‌ها و اطلاعات کامل از CartSnapshot
+                var paymentAttempt = pagedResult.Items.FirstOrDefault(p => p.Id == item.Id);
+                if (paymentAttempt?.Order?.CartSnapshot != null)
+                {
+                    var courseItems = ExtractCourseItems(paymentAttempt.Order.CartSnapshot);
+                    item.CourseItems = courseItems;
+                    item.CourseNames = courseItems
+                        .Where(c => !string.IsNullOrWhiteSpace(c.CourseTitle))
+                        .Select(c => c.CourseTitle)
+                        .ToList();
+                }
             }
 
             var response = new PagedResult<ManualPaymentRequestDto>
@@ -62,4 +74,36 @@ public class GetAllPaymentsQueryHandler : IRequestHandler<GetAllPaymentsQuery, O
             return OperationResult<PagedResult<ManualPaymentRequestDto>>.Success(new PagedResult<ManualPaymentRequestDto>());
         }
     }
+    
+    private List<Pardis.Domain.Dto.Payments.CourseItemDto> ExtractCourseItems(string cartSnapshot)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(cartSnapshot))
+                return new List<Pardis.Domain.Dto.Payments.CourseItemDto>();
+
+            // CartSnapshot uses "Title" not "CourseTitle"
+            var items = System.Text.Json.JsonSerializer.Deserialize<List<System.Text.Json.JsonElement>>(cartSnapshot);
+            
+            return items?.Select(item => new Pardis.Domain.Dto.Payments.CourseItemDto
+            {
+                CourseId = item.TryGetProperty("CourseId", out var courseId) ? courseId.GetGuid() : Guid.Empty,
+                CourseTitle = item.TryGetProperty("Title", out var title) ? title.GetString() ?? "نامشخص" : "نامشخص",
+                Price = item.TryGetProperty("Price", out var price) ? price.GetInt64() : 0
+            }).ToList() ?? new List<Pardis.Domain.Dto.Payments.CourseItemDto>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error extracting course items: {ex.Message}");
+            return new List<Pardis.Domain.Dto.Payments.CourseItemDto>();
+        }
+    }
+}
+
+// Helper class for cart snapshot deserialization (not used anymore, using JsonElement instead)
+public class CartItemSnapshot
+{
+    public Guid CourseId { get; set; }
+    public string CourseTitle { get; set; } = string.Empty;
+    public long Price { get; set; }
 }
